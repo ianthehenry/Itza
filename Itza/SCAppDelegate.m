@@ -7,12 +7,15 @@
 //
 
 #import "SCAppDelegate.h"
+#import "SCViewController.h"
 
 @implementation SCAppDelegate
 
-- (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions
-{
-    // Override point for customization after application launch.
+- (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions {
+    self.window = [[UIWindow alloc] initWithFrame:UIScreen.mainScreen.bounds];
+    self.window.rootViewController = [[SCViewController alloc] init];
+    [self.window makeKeyAndVisible];
+    
     return YES;
 }
 							
