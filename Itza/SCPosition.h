@@ -8,14 +8,14 @@
 
 #import <Foundation/Foundation.h>
 
-typedef enum {
+typedef NS_ENUM(NSUInteger, SCHexDirection)  {
     SCHexDirectionNorth = 0,
     SCHexDirectionNorthEast = 1,
     SCHexDirectionSouthEast = 2,
     SCHexDirectionSouth = 3,
     SCHexDirectionSouthWest = 4,
     SCHexDirectionNorthWest = 5
-} SCHexDirection;
+};
 
 SCHexDirection SCHexDirectionGetOpposite(SCHexDirection direction);
 

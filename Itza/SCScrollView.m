@@ -31,14 +31,15 @@
     return self;
 }
 
-- (CGSize) actualContentSize {
+- (CGSize)actualContentSize {
     return CGSizeMake(self.contentSize.width / self.zoomScale, self.contentSize.height / self.zoomScale);
 }
 
 - (void)setContentSize:(CGSize)contentSize {
     [super setContentSize:contentSize];
     if (self.zoomScale == 1) {
-        self.contentView.frame = CGRectMake(0, 0, self.contentSize.width, self.contentSize.height);
+        self.contentView.frame = CGRectMake(0, 0, contentSize.width, contentSize.height);
+        self.contentView.bounds = CGRectMake(contentSize.width * -0.5, contentSize.height * -0.5, contentSize.width, contentSize.height);
         [self updateZoomScale];
     }
 }

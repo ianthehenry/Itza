@@ -43,7 +43,7 @@ SCHexDirection SCHexDirectionGetOpposite(SCHexDirection direction) {
 }
 
 - (NSString *)description {
-    return [NSString stringWithFormat:@"SCHexPosition(%i, %i)", self.x, self.y];
+    return [NSString stringWithFormat:@"SCHexPosition(%ld, %ld)", (long)self.x, (long)self.y];
 }
 
 - (instancetype)positionInDirection:(SCHexDirection)direction {
