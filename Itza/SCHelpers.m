@@ -24,6 +24,10 @@ CGPoint CGPointScale(CGPoint point, CGFloat scale) {
     return CGPointMake(point.x * scale, point.y * scale);
 }
 
+double usefulrand() {
+    return ((double)arc4random() / 0x100000000u);
+}
+
 @implementation UIView (Helpers)
 
 - (CGPoint)localCenter {

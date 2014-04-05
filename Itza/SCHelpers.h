@@ -12,6 +12,7 @@ CGPoint CGPointAdd(CGPoint a, CGPoint b);
 CGPoint CGPointSubtract(CGPoint a, CGPoint b);
 CGPoint CGPointMultiply(CGPoint a, CGPoint b);
 CGPoint CGPointScale(CGPoint point, CGFloat scale);
+double usefulrand();
 
 @interface UIView (Helpers)
 

@@ -142,9 +142,9 @@
 				3CD604F718ECD30A00265338 /* SCAppDelegate.m */,
 				3CD604FF18ECD30A00265338 /* SCViewController.h */,
 				3CD6050018ECD30A00265338 /* SCViewController.m */,
+				3CD6051F18ED93EE00265338 /* SCViewController.xib */,
 				3CD6050218ECD30A00265338 /* Images.xcassets */,
 				3CD604EE18ECD30A00265338 /* Supporting Files */,
-				3CD6051F18ED93EE00265338 /* SCViewController.xib */,
 			);
 			path = Itza;
 			sourceTree = "<group>";

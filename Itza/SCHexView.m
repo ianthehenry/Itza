@@ -11,6 +11,7 @@
 @interface SCHexView ()
 
 @property (nonatomic, assign) CGFloat radius;
+@property (nonatomic, assign) CGFloat hue;
 @property (nonatomic, strong) UIBezierPath *path;
 
 @end
@@ -24,6 +25,12 @@
         self.opaque = NO;
         _radius = radius;
         _apothem = 0.5 * radius * sqrtf(3.0);
+        _hue = usefulrand();
+        @weakify(self);
+        [RACObserve(self, hue) subscribeNext:^(id x) {
+            @strongify(self);
+            [self setNeedsDisplay];
+        }];
     }
     return self;
 }
@@ -58,9 +65,9 @@
 
 - (UIColor *)fillColor {
     if (self.isHighlighted) {
-        return [UIColor colorWithHue:0.33 saturation:0.9 brightness:0.5 alpha:1.0];
+        return [UIColor colorWithHue:self.hue saturation:0.9 brightness:0.5 alpha:1.0];
     } else {
-        return [UIColor colorWithHue:0.33 saturation:0.9 brightness:0.6 alpha:1.0];
+        return [UIColor colorWithHue:self.hue saturation:0.9 brightness:0.6 alpha:1.0];
     }
 }
 
