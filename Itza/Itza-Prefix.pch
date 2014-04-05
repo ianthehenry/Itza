@@ -15,4 +15,5 @@
     #import <Foundation/Foundation.h>
     #import <ReactiveCocoa/ReactiveCocoa.h>
     #import <libextobjc/EXTScope.h>
+    #import "SCHelpers.h"
 #endif
