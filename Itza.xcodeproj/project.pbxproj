@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		22A6D89BE8FB4F0FA5F29016 /* libPods-Itza.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 2516362588AC43F68997AE5D /* libPods-Itza.a */; };
+		3C116E0718F21BE000A2F3BC /* SCWorld.m in Sources */ = {isa = PBXBuildFile; fileRef = 3C116E0618F21BE000A2F3BC /* SCWorld.m */; };
 		3C262CD918F09F2300F1BBB3 /* SCHelpers.m in Sources */ = {isa = PBXBuildFile; fileRef = 3C262CD018F09F2300F1BBB3 /* SCHelpers.m */; };
 		3C262CDA18F09F2300F1BBB3 /* SCHexView.m in Sources */ = {isa = PBXBuildFile; fileRef = 3C262CD218F09F2300F1BBB3 /* SCHexView.m */; };
 		3C262CDB18F09F2300F1BBB3 /* SCPosition.m in Sources */ = {isa = PBXBuildFile; fileRef = 3C262CD418F09F2300F1BBB3 /* SCPosition.m */; };
@@ -42,6 +43,8 @@
 
 /* Begin PBXFileReference section */
 		2516362588AC43F68997AE5D /* libPods-Itza.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-Itza.a"; sourceTree = BUILT_PRODUCTS_DIR; };
+		3C116E0518F21BE000A2F3BC /* SCWorld.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SCWorld.h; sourceTree = "<group>"; };
+		3C116E0618F21BE000A2F3BC /* SCWorld.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SCWorld.m; sourceTree = "<group>"; };
 		3C262CCF18F09F2300F1BBB3 /* SCHelpers.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SCHelpers.h; sourceTree = "<group>"; };
 		3C262CD018F09F2300F1BBB3 /* SCHelpers.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SCHelpers.m; sourceTree = "<group>"; };
 		3C262CD118F09F2300F1BBB3 /* SCHexView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SCHexView.h; sourceTree = "<group>"; };
@@ -163,6 +166,8 @@
 				3CB09EF318F1F8A9000AA987 /* SCTile.m */,
 				3CB09EF518F1F93A000AA987 /* SCTileView.h */,
 				3CB09EF618F1F93A000AA987 /* SCTileView.m */,
+				3C116E0518F21BE000A2F3BC /* SCWorld.h */,
+				3C116E0618F21BE000A2F3BC /* SCWorld.m */,
 			);
 			path = Itza;
 			sourceTree = "<group>";
@@ -337,6 +342,7 @@
 				3CD604F418ECD30A00265338 /* main.m in Sources */,
 				3C262CDC18F09F2300F1BBB3 /* SCScrollView.m in Sources */,
 				3C262CDB18F09F2300F1BBB3 /* SCPosition.m in Sources */,
+				3C116E0718F21BE000A2F3BC /* SCWorld.m in Sources */,
 				3CB09EF418F1F8A9000AA987 /* SCTile.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

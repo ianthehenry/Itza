@@ -83,7 +83,7 @@ static CGFloat lineRadius;
     [self.path fill];
 
     if (self.highlighted) {
-        [[UIColor colorWithWhite:1 alpha:0.1] setFill];
+        [[UIColor colorWithWhite:0 alpha:0.1] setFill];
         [self.path fill];
     }
     
