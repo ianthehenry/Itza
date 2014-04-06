@@ -73,7 +73,7 @@ static CGFloat APOTHEM;
         }];
         [self.scrollView.contentView addSubview:tileView];
     }
-    self.scrollView.backgroundColor = UIColor.darkGrayColor;
+    self.scrollView.backgroundColor = UIColor.blackColor;
     self.scrollView.indicatorStyle = UIScrollViewIndicatorStyleWhite;
     [self.view layoutIfNeeded];
     self.scrollView.contentSize = [self sizeWithRadius:radius];
@@ -177,7 +177,7 @@ static CGFloat APOTHEM;
 
 - (CGPoint)centerForPosition:(SCPosition *)position {
     CGFloat offset = ABS(position.x) % 2 == 1 ? APOTHEM : 0;
-    return CGPointMake(position.x * RADIUS * 1.5, offset + position.y * APOTHEM * 2);
+    return CGPointMake(position.x * RADIUS * 1.47, offset + position.y * APOTHEM * 2);
 }
 
 - (CGSize)sizeWithRadius:(NSInteger)radius {
