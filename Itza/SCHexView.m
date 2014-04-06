@@ -15,15 +15,24 @@
 
 @end
 
+static CGFloat lineApothem;
+static CGFloat lineRadius;
+
 @implementation SCHexView {
     CGFloat _apothem;
 }
 
++ (void)initialize {
+    lineApothem = 4;
+    lineRadius = (lineApothem * 2) / sqrtf(3.0f);
+}
+
 - (id)initWithRadius:(CGFloat)radius {
-    if (self = [super initWithFrame:CGRectMake(0, 0, radius * 2 + 5, radius * 2 + 5)]) {
+    CGFloat apothem = 0.5 * radius * sqrtf(3.0);
+    if (self = [super initWithFrame:CGRectMake(0, 0, radius * 2 + lineRadius, apothem * 2 + lineApothem)]) {
         self.opaque = NO;
         _radius = radius;
-        _apothem = 0.5 * radius * sqrtf(3.0);
+        _apothem = apothem;
                 
         @weakify(self);
         [RACObserve(self, fillColor) subscribeNext:^(id x) {
@@ -47,8 +56,8 @@
         
         [_path closePath];
         [_path applyTransform:CGAffineTransformMakeTranslation(center.x, center.y)];
-        _path.lineWidth = 2;
-        _path.lineJoinStyle = kCGLineJoinBevel;
+        _path.lineWidth = lineApothem;
+        _path.lineJoinStyle = kCGLineJoinRound;
     }
     return _path;
 }
