@@ -11,7 +11,6 @@
 @interface SCHexView ()
 
 @property (nonatomic, assign) CGFloat radius;
-@property (nonatomic, assign) CGFloat hue;
 @property (nonatomic, strong) UIBezierPath *path;
 
 @end
@@ -24,10 +23,11 @@
     if (self = [super initWithFrame:CGRectMake(0, 0, radius * 2, radius * 2)]) {
         self.opaque = NO;
         _radius = radius;
+        self.clearsContextBeforeDrawing = YES;
         _apothem = 0.5 * radius * sqrtf(3.0);
-        _hue = usefulrand();
+                
         @weakify(self);
-        [RACObserve(self, hue) subscribeNext:^(id x) {
+        [RACObserve(self, fillColor) subscribeNext:^(id x) {
             @strongify(self);
             [self setNeedsDisplay];
         }];
@@ -63,17 +63,14 @@
     [self setNeedsDisplay];
 }
 
-- (UIColor *)fillColor {
-    if (self.isHighlighted) {
-        return [UIColor colorWithHue:self.hue saturation:0.9 brightness:0.5 alpha:1.0];
-    } else {
-        return [UIColor colorWithHue:self.hue saturation:0.9 brightness:0.6 alpha:1.0];
-    }
-}
-
 - (void)drawRect:(CGRect)rect {
     [self.fillColor setFill];
     [self.path fill];
+
+    if (self.highlighted) {
+        [[UIColor colorWithWhite:1 alpha:0.1] setFill];
+        [self.path fill];
+    }
     
     CGContextRef c = UIGraphicsGetCurrentContext();
     

@@ -19,3 +19,9 @@ double usefulrand();
 - (CGPoint)localCenter;
 
 @end
+
+@interface RACSignal (Helpers)
+
+- (RACSignal *)index:(NSUInteger)index;
+
+@end

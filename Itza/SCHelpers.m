@@ -35,3 +35,13 @@ double usefulrand() {
 }
 
 @end
+
+@implementation RACSignal (Helpers)
+
+- (RACSignal *)index:(NSUInteger)index {
+    return [self map:^id(id value) {
+        return [value objectAtIndexedSubscript:index];
+    }];
+}
+
+@end

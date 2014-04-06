@@ -8,7 +8,8 @@
 
 #import "SCViewController.h"
 #import "SCScrollView.h"
-#import "SCHexView.h"
+#import "SCTileView.h"
+#import "SCTile.h"
 #import "SCPosition.h"
 
 static CGFloat RADIUS;
@@ -17,13 +18,11 @@ static CGFloat APOTHEM;
 @interface SCViewController () <UIScrollViewDelegate>
 
 @property (strong, nonatomic) IBOutlet SCScrollView *scrollView;
-@property (nonatomic, strong) NSMutableSet *hexes;
-@property (nonatomic, strong) NSMutableDictionary *hexMap;
+@property (nonatomic, strong) NSMutableSet *tiles;
+@property (nonatomic, strong) NSMutableDictionary *tileMap;
 
 @property (strong, nonatomic) IBOutlet UIButton *endTurnButton;
 @property (strong, nonatomic) IBOutlet UILabel *populationLabel;
-@property (strong, nonatomic) IBOutlet UILabel *turnLabel;
-@property (strong, nonatomic) IBOutlet UISlider *slider;
 
 @property (nonatomic, assign) NSUInteger turn;
 @property (nonatomic, assign) NSUInteger population;
@@ -49,12 +48,13 @@ static CGFloat APOTHEM;
 }
 
 - (void)setupGrid {
-    NSInteger radius = 10;
+    NSInteger radius = 4;
     
     [self makeHexGridWithRadius:radius];
-    for (SCHex *hex in self.hexes) {
-        SCHexView *cell = [[SCHexView alloc] initWithRadius:RADIUS];
-        cell.center = [self centerForPosition:hex.position];
+    for (SCTile *tile in self.tiles) {
+        SCTileView *cell = [[SCTileView alloc] initWithRadius:RADIUS];
+        cell.tile = tile;
+        cell.center = [self centerForPosition:tile.hex.position];
         [self.scrollView.contentView addSubview:cell];
     }
     self.scrollView.backgroundColor = UIColor.darkGrayColor;
@@ -82,29 +82,40 @@ static CGFloat APOTHEM;
                           return [NSString stringWithFormat:@"%@ population\n%@ meat\n%@ maize", population, meat, maize];
                       }];
     
-    [[[self.slider rac_signalForControlEvents:UIControlEventValueChanged] map:^(UISlider *slider) {
-        return @(slider.value);
-    }] subscribeNext:^(id x) {
-        NSLog(@"%@", x);
-    }];
-    
     [[self.endTurnButton rac_signalForControlEvents:UIControlEventTouchUpInside] subscribeNext:^(id x) {
         [self iterate];
     }];
 }
 
-- (void)addHexForPosition:(SCPosition *)position {
+- (SCTile *)tileAt:(SCPosition *)position {
+    return self.tileMap[position];
+}
+
+- (void)addTileForPosition:(SCPosition *)position type:(SCTileType)type {
     SCHex *hex = [[SCHex alloc] init];
     hex.position = position;
-    [self.hexes addObject:hex];
-    self.hexMap[hex.position] = hex;
+    SCTile *tile = [[SCTile alloc] initWithHex:hex];
+    tile.type = type;
+    
+    [self.tiles addObject:tile];
+    self.tileMap[hex.position] = tile;
+    
+    static NSArray *directions = nil;
+    if (directions == nil) {
+        directions = @[@(SCHexDirectionNorth), @(SCHexDirectionNorthEast), @(SCHexDirectionSouthEast), @(SCHexDirectionSouth), @(SCHexDirectionSouthWest), @(SCHexDirectionNorthWest)];
+    }
+    for (NSNumber *directionNumber in directions) {
+        SCHexDirection direction = directionNumber.unsignedIntegerValue;
+        [hex connectToHex:[self tileAt:[hex.position positionInDirection:direction]].hex inDirection:direction];
+    }
+
 }
 
 - (void)makeHexGridWithRadius:(NSInteger)radius {
-    self.hexMap = [[NSMutableDictionary alloc] init];
-    self.hexes = [[NSMutableSet alloc] init];
+    self.tileMap = [[NSMutableDictionary alloc] init];
+    self.tiles = [[NSMutableSet alloc] init];
 
-    [self addHexForPosition:[SCPosition x:0 y:0]];
+    [self addTileForPosition:[SCPosition x:0 y:0] type:SCTileTypeTemple];
     
     for (NSInteger distance = 1; distance <= radius; distance++) {
         SCPosition *position = [SCPosition x:0 y:-distance];
@@ -117,19 +128,9 @@ static CGFloat APOTHEM;
                                             @(SCHexDirectionNorthWest)]) {
             SCHexDirection direction = directionNumber.unsignedIntegerValue;
             for (NSInteger i = 0; i < distance; i++) {
-                [self addHexForPosition:position];
+                [self addTileForPosition:position type:arc4random_uniform(3)];
                 position = [position positionInDirection:direction];
             }
-        }
-    }
-    
-    NSArray *directions = @[@(SCHexDirectionNorth), @(SCHexDirectionNorthEast), @(SCHexDirectionSouthEast), @(SCHexDirectionSouth), @(SCHexDirectionSouthWest), @(SCHexDirectionNorthWest)];
-    for (SCHex *hex in self.hexes) {
-        for (NSNumber *directionNumber in directions) {
-            SCHexDirection direction = (SCHexDirection)directionNumber.integerValue;
-            SCPosition *otherPosition = [hex.position positionInDirection:direction];
-            SCHex *otherHex = self.hexMap[otherPosition];
-            [hex connectToHex:otherHex inDirection:direction];
         }
     }
 }

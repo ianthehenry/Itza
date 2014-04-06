@@ -11,5 +11,6 @@
 @interface SCHexView : UIControl
 
 - (id)initWithRadius:(CGFloat)radius;
+@property (nonatomic, strong) UIColor *fillColor;
 
 @end
