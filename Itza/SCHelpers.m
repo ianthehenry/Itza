@@ -45,3 +45,11 @@ double usefulrand() {
 }
 
 @end
+
+@implementation NSObject (Helpers)
+
+- (NSValue *)pointerValue {
+    return [NSValue valueWithNonretainedObject:self];
+}
+
+@end

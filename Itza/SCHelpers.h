@@ -25,3 +25,9 @@ double usefulrand();
 - (RACSignal *)index:(NSUInteger)index;
 
 @end
+
+@interface NSObject (Helpers)
+
+- (NSValue *)pointerValue;
+
+@end

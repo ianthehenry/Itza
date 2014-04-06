@@ -20,10 +20,9 @@
 }
 
 - (id)initWithRadius:(CGFloat)radius {
-    if (self = [super initWithFrame:CGRectMake(0, 0, radius * 2, radius * 2)]) {
+    if (self = [super initWithFrame:CGRectMake(0, 0, radius * 2 + 5, radius * 2 + 5)]) {
         self.opaque = NO;
         _radius = radius;
-        self.clearsContextBeforeDrawing = YES;
         _apothem = 0.5 * radius * sqrtf(3.0);
                 
         @weakify(self);
@@ -48,6 +47,8 @@
         
         [_path closePath];
         [_path applyTransform:CGAffineTransformMakeTranslation(center.x, center.y)];
+        _path.lineWidth = 2;
+        _path.lineJoinStyle = kCGLineJoinBevel;
     }
     return _path;
 }
@@ -64,6 +65,11 @@
 }
 
 - (void)drawRect:(CGRect)rect {
+    if (self.selected) {
+        [[UIColor colorWithWhite:1 alpha:1] setStroke];
+        [self.path stroke];
+    }
+
     [self.fillColor setFill];
     [self.path fill];
 
