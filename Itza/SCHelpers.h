@@ -8,6 +8,8 @@
 
 #import <UIKit/UIKit.h>
 
+#define ABSTRACT { @throw [NSException exceptionWithName:NSInternalInconsistencyException reason:[NSString stringWithFormat:@"You must override %@ in a subclass", NSStringFromSelector(_cmd)] userInfo:nil]; }
+
 CGPoint CGPointAdd(CGPoint a, CGPoint b);
 CGPoint CGPointSubtract(CGPoint a, CGPoint b);
 CGPoint CGPointMultiply(CGPoint a, CGPoint b);

@@ -60,7 +60,7 @@ static CGFloat APOTHEM;
         self.tileViewForTile[tile.pointerValue] = tileView;
         tileView.center = [self centerForPosition:tile.hex.position];
         [[tileView rac_signalForControlEvents:UIControlEventTouchUpInside] subscribeNext:^(SCTileView *tileView) {
-            self.selectedTile = tileView.tile;
+            self.selectedTile = self.selectedTile == tileView.tile ? nil : tileView.tile;
         }];
         [self.scrollView.contentView addSubview:tileView];
     }
@@ -85,14 +85,6 @@ static CGFloat APOTHEM;
 }
 
 - (UIView *)tileDetailViewForTile:(SCTile *)tile {
-    static NSDictionary *tileNameMap = nil;
-    if (tileNameMap == nil) {
-        tileNameMap = @{@(SCTileTypeForest): @"Forest",
-                        @(SCTileTypeGrass): @"Grass",
-                        @(SCTileTypeWater): @"Water",
-                        @(SCTileTypeTemple): @"Temple"};
-    }
-
     UIView *view = [[UIView alloc] initWithFrame:CGRectMake(0, 0, 500, APOTHEM * 3)];
     
     SCTileView *tileView = [[SCTileView alloc] initWithRadius:RADIUS];
@@ -100,14 +92,15 @@ static CGFloat APOTHEM;
     [view addSubview:tileView];
     tileView.center = CGPointMake(50, APOTHEM);
     tileView.autoresizingMask = UIViewAutoresizingFlexibleBottomMargin | UIViewAutoresizingFlexibleRightMargin;
+    @weakify(self);
     [[tileView rac_signalForControlEvents:UIControlEventTouchUpInside] subscribeNext:^(id x) {
+        @strongify(self);
         [self scrollToTile:tile];
     }];
 
-    
-    UILabel *nameLabel = [[UILabel alloc] initWithFrame:CGRectMake(0, CGRectGetMaxY(tileView.frame), 100, APOTHEM)];
+    UILabel *nameLabel = [[UILabel alloc] initWithFrame:CGRectMake(0, APOTHEM * 2, 100, APOTHEM)];
     nameLabel.autoresizingMask = UIViewAutoresizingFlexibleTopMargin | UIViewAutoresizingFlexibleRightMargin;
-    nameLabel.text = tileNameMap[@(tile.type)];
+    RAC(nameLabel, text) = RACObserve(tile, foreground.name);
     nameLabel.font = [UIFont fontWithName:@"Menlo" size:13];
     nameLabel.textAlignment = NSTextAlignmentCenter;
     [view addSubview:nameLabel];
@@ -128,7 +121,7 @@ static CGFloat APOTHEM;
     self.navigationItem.titleView = infoLabel;
     infoLabel.frame = self.navigationController.navigationBar.bounds;
     @weakify(self);
-    RAC(self, detailView) = [[RACObserve(self, selectedTile) distinctUntilChanged] map:^(SCTile *tile) {
+    RAC(self, detailView) = [RACObserve(self, selectedTile) map:^(SCTile *tile) {
         @strongify(self);
         return tile == nil ? self.commandView : [self tileDetailViewForTile:tile];
     }];

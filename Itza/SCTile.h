@@ -8,19 +8,13 @@
 
 #import <Foundation/Foundation.h>
 #import "SCPosition.h"
-
-typedef enum {
-    SCTileTypeForest = 0,
-    SCTileTypeGrass = 1,
-    SCTileTypeWater = 2,
-    SCTileTypeTemple = 3,
-} SCTileType;
+#import "SCForeground.h"
 
 @interface SCTile : NSObject
 
 - (id)initWithHex:(SCHex *)hex;
 
 @property (nonatomic, strong, readonly) SCHex *hex;
-@property (nonatomic, assign) SCTileType type;
+@property (nonatomic, strong) SCForeground *foreground;
 
 @end

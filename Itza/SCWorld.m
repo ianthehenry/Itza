@@ -34,7 +34,7 @@
     world.tileForLocation = [[NSMutableDictionary alloc] init];
     world.mutableTiles = [[NSMutableSet alloc] init];
     
-    [world addTileForPosition:[SCPosition x:0 y:0] type:SCTileTypeTemple];
+    [world addTileForPosition:[SCPosition x:0 y:0] foreground:[[SCTemple alloc] init]];
     
     for (NSInteger distance = 1; distance <= radius; distance++) {
         SCPosition *position = [SCPosition x:0 y:-distance];
@@ -47,12 +47,23 @@
                                             @(SCHexDirectionNorthWest)]) {
             SCHexDirection direction = directionNumber.unsignedIntegerValue;
             for (NSInteger i = 0; i < distance; i++) {
-                [world addTileForPosition:position type:arc4random_uniform(3)];
+                [world addTileForPosition:position foreground:[self randomForeground]];
                 position = [position positionInDirection:direction];
             }
         }
     }
     return world;
+}
+
++ (SCForeground *)randomForeground {
+    switch (arc4random_uniform(10)) {
+        case 0: case 1: case 2:
+            return [[SCForest alloc] init];
+        case 3: case 4:
+            return [[SCRiver alloc] init];
+        default:
+            return [[SCGrass alloc] init];
+    }
 }
 
 - (NSSet *)tiles {
@@ -63,12 +74,12 @@
     return self.tileForLocation[position];
 }
 
-- (void)addTileForPosition:(SCPosition *)position type:(SCTileType)type {
+- (void)addTileForPosition:(SCPosition *)position foreground:(SCForeground *)foreground {
     SCHex *hex = [[SCHex alloc] init];
     hex.position = position;
     SCTile *tile = [[SCTile alloc] initWithHex:hex];
-    tile.type = type;
-    
+    tile.foreground = foreground;
+
     [self.mutableTiles addObject:tile];
     self.tileForLocation[hex.position] = tile;
     
