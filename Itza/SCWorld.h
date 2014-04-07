@@ -21,7 +21,7 @@ typedef NS_ENUM(NSUInteger, SCSeason) {
 
 @property (nonatomic, assign, readonly) NSUInteger radius;
 
-@property (nonatomic, assign, readonly) SCSeason season;
+@property (nonatomic, readonly) SCSeason season;
 @property (nonatomic, assign, readonly) NSUInteger turn;
 
 - (void)iterate;

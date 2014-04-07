@@ -14,7 +14,6 @@
 @property (nonatomic, strong) NSMutableDictionary *tileForLocation;
 @property (nonatomic, assign, readwrite) NSUInteger radius;
 
-@property (nonatomic, assign, readwrite) SCSeason season;
 @property (nonatomic, assign, readwrite) NSUInteger turn;
 
 @end
@@ -22,14 +21,16 @@
 @implementation SCWorld
 
 - (void)iterate {
-    self.season = (self.season + 1) % 4;
     self.turn += 1;
+}
+
+- (SCSeason)season {
+    return self.turn % 4;
 }
 
 + (instancetype)worldWithRadius:(NSUInteger)radius {
     SCWorld *world = [[self alloc] init];
     world.radius = radius;
-    world.season = SCSeasonSpring;
     world.tileForLocation = [[NSMutableDictionary alloc] init];
     world.mutableTiles = [[NSMutableSet alloc] init];
     

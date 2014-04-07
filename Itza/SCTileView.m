@@ -27,7 +27,7 @@
             map = @{@(SCTileTypeForest): RACTuplePack(@"♣", @26, [UIColor colorWithHue:0.33 saturation:0.9 brightness:0.6 alpha:1.0]),
                     @(SCTileTypeGrass): RACTuplePack(@"", @0, [UIColor colorWithHue:0.33 saturation:0.9 brightness:0.6 alpha:1.0]),
                     @(SCTileTypeWater): RACTuplePack(@"", @0, [UIColor colorWithHue:0.66 saturation:0.9 brightness:0.6 alpha:1.0]),
-                    @(SCTileTypeTemple): RACTuplePack(@"⎈", @40, [UIColor colorWithHue:0.15 saturation:0.9 brightness:0.6 alpha:1.0])};
+                    @(SCTileTypeTemple): RACTuplePack(@"*", @40, [UIColor colorWithHue:0.15 saturation:0.9 brightness:0.6 alpha:1.0])};
         }
         RACSignal *result = [[RACObserve(self, tile.type) skip:1] map:^(NSNumber *type) {
             return map[type];

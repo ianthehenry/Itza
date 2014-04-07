@@ -117,13 +117,13 @@ static CGFloat APOTHEM;
     
     RAC(infoLabel, text) =
     [RACSignal combineLatest:@[RACObserve(self.world, turn),
-                               [RACObserve(self.world, season) of:seasonNameMap],
                                RACObserve(self.city, population),
                                RACObserve(self.city, meat),
                                RACObserve(self, labor),
                                RACObserve(self.city, maize)]
-                      reduce:^(NSNumber *turn, NSString *season, NSNumber *population, NSNumber *meat, NSNumber *labor, NSNumber *maize) {
+                      reduce:^(NSNumber *turn, NSNumber *population, NSNumber *meat, NSNumber *labor, NSNumber *maize) {
                           NSUInteger year = turn.unsignedIntegerValue / 4;
+                          NSString *season = seasonNameMap[@(self.world.season)];
                           return [NSString stringWithFormat:@"%@ - %u\n%@l %@p %@m %@c", season, year, labor, population, meat, maize];
                       }];
     
