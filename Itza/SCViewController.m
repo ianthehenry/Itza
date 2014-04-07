@@ -22,6 +22,8 @@ static CGFloat APOTHEM;
 
 @property (strong, nonatomic) IBOutlet UIButton *endTurnButton;
 @property (strong, nonatomic) IBOutlet UIView *commandView;
+@property (strong, nonatomic) IBOutlet UIToolbar *toolbar;
+@property (strong, nonatomic) IBOutlet UIButton *buildButton;
 
 @property (strong, nonatomic) UIView *detailView;
 
@@ -132,13 +134,8 @@ static CGFloat APOTHEM;
     
     [RACObserve(self, detailView) subscribeChanges:^(UIView *previous, UIView *current) {
         [previous removeFromSuperview];
-        current.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleTopMargin;
-        self.scrollView.frameHeight = self.view.bounds.size.height - current.frame.size.height;
-        current.frame = CGRectMake(0,
-                                   CGRectGetMaxY(self.scrollView.frame),
-                                   CGRectGetWidth(self.view.bounds),
-                                   current.frame.size.height);
-        [self.view addSubview:current];
+        current.frameWidth = self.toolbar.frameWidth;
+        [self.toolbar setItems:@[[UIBarButtonItem barButtonItemWithUsefulCustomView:current]] animated:NO];
     } start:nil];
     
     RAC(self, title) = [RACObserve(self.world, turn) map:^id(NSNumber *turn) {

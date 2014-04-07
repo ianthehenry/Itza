@@ -13,7 +13,15 @@ CGPoint CGPointSubtract(CGPoint a, CGPoint b);
 CGPoint CGPointMultiply(CGPoint a, CGPoint b);
 CGPoint CGPointScale(CGPoint point, CGFloat scale);
 CGPoint CGRectGetCenter(CGRect rect);
+CGRect CGRectMakeSize(CGFloat x, CGFloat y, CGSize size);
+CGRect CGRectMakeComponents(CGPoint origin, CGSize size);
+
 double usefulrand();
+
+@interface UIScrollView (Helpers)
+@property (nonatomic, assign) CGFloat contentInsetBottom, contentInsetTop, contentInsetLeft, contentInsetRight;
+@property (nonatomic, assign) CGFloat scrollIndicatorInsetsBottom, scrollIndicatorInsetsTop, scrollIndicatorInsetsLeft, scrollIndicatorInsetsRight;
+@end
 
 @interface UIView (Helpers)
 
@@ -34,5 +42,11 @@ double usefulrand();
 @interface NSObject (Helpers)
 
 - (NSValue *)pointerValue;
+
+@end
+
+@interface UIBarButtonItem (Helpers)
+
++ (instancetype)barButtonItemWithUsefulCustomView:(UIView *)view;
 
 @end

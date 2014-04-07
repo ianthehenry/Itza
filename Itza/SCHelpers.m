@@ -7,6 +7,15 @@
 //
 
 #import "SCHelpers.h"
+#import "SCAlignmentView.h"
+
+CGRect CGRectMakeSize(CGFloat x, CGFloat y, CGSize size) {
+    return (CGRect) {.origin = (CGPoint) {x, y}, .size = size};
+}
+
+CGRect CGRectMakeComponents(CGPoint origin, CGSize size) {
+    return (CGRect) {.origin = origin, .size = size};
+}
 
 CGPoint CGPointAdd(CGPoint a, CGPoint b) {
     return CGPointMake(a.x + b.x, a.y + b.y);
@@ -31,6 +40,68 @@ CGPoint CGRectGetCenter(CGRect rect) {
 double usefulrand() {
     return ((double)arc4random() / 0x100000000u);
 }
+
+@implementation UIScrollView (Helpers)
+
+- (CGFloat)contentInsetTop { return self.contentInset.top; }
+- (CGFloat)contentInsetBottom { return self.contentInset.bottom; }
+- (CGFloat)contentInsetLeft { return self.contentInset.left; }
+- (CGFloat)contentInsetRight { return self.contentInset.right; }
+
+- (void)setContentInsetTop:(CGFloat)contentInsetTop {
+    UIEdgeInsets contentInset = self.contentInset;
+    contentInset.top = contentInsetTop;
+    self.contentInset = contentInset;
+}
+
+- (void)setContentInsetLeft:(CGFloat)contentInsetLeft {
+    UIEdgeInsets contentInset = self.contentInset;
+    contentInset.left = contentInsetLeft;
+    self.contentInset = contentInset;
+}
+
+- (void)setContentInsetBottom:(CGFloat)contentInsetBottom {
+    UIEdgeInsets contentInset = self.contentInset;
+    contentInset.bottom = contentInsetBottom;
+    self.contentInset = contentInset;
+}
+
+- (void)setContentInsetRight:(CGFloat)contentInsetRight {
+    UIEdgeInsets contentInset = self.contentInset;
+    contentInset.right = contentInsetRight;
+    self.contentInset = contentInset;
+}
+
+- (CGFloat)scrollIndicatorInsetsTop { return self.scrollIndicatorInsets.top; }
+- (CGFloat)scrollIndicatorInsetsBottom { return self.scrollIndicatorInsets.bottom; }
+- (CGFloat)scrollIndicatorInsetsLeft { return self.scrollIndicatorInsets.left; }
+- (CGFloat)scrollIndicatorInsetsRight { return self.scrollIndicatorInsets.right; }
+
+- (void)setScrollIndicatorInsetsTop:(CGFloat)scrollIndicatorInsetsTop {
+    UIEdgeInsets scrollIndicatorInsets = self.scrollIndicatorInsets;
+    scrollIndicatorInsets.top = scrollIndicatorInsetsTop;
+    self.scrollIndicatorInsets = scrollIndicatorInsets;
+}
+
+- (void)setScrollIndicatorInsetsLeft:(CGFloat)scrollIndicatorInsetsLeft {
+    UIEdgeInsets scrollIndicatorInsets = self.scrollIndicatorInsets;
+    scrollIndicatorInsets.left = scrollIndicatorInsetsLeft;
+    self.scrollIndicatorInsets = scrollIndicatorInsets;
+}
+
+- (void)setScrollIndicatorInsetsBottom:(CGFloat)scrollIndicatorInsetsBottom {
+    UIEdgeInsets scrollIndicatorInsets = self.scrollIndicatorInsets;
+    scrollIndicatorInsets.bottom = scrollIndicatorInsetsBottom;
+    self.scrollIndicatorInsets = scrollIndicatorInsets;
+}
+
+- (void)setScrollIndicatorInsetsRight:(CGFloat)scrollIndicatorInsetsRight {
+    UIEdgeInsets scrollIndicatorInsets = self.scrollIndicatorInsets;
+    scrollIndicatorInsets.right = scrollIndicatorInsetsRight;
+    self.scrollIndicatorInsets = scrollIndicatorInsets;
+}
+
+@end
 
 @implementation UIView (Helpers)
 
@@ -100,6 +171,17 @@ double usefulrand() {
 
 - (NSValue *)pointerValue {
     return [NSValue valueWithNonretainedObject:self];
+}
+
+@end
+
+@implementation UIBarButtonItem (Helpers)
+
++ (instancetype)barButtonItemWithUsefulCustomView:(UIView *)view {
+    SCAlignmentView *alignmentView = [[SCAlignmentView alloc] initWithFrame:CGRectMakeSize(0, 0, view.frame.size)];
+    alignmentView.customAlignmentRectInsets = UIEdgeInsetsMake(0.0f, 16.0f, 0.0f, 16.0f);
+    [alignmentView addSubview:view];
+    return [[UIBarButtonItem alloc] initWithCustomView:alignmentView];
 }
 
 @end
