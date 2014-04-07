@@ -44,6 +44,12 @@ double usefulrand() {
     }];
 }
 
+- (RACSignal *)of:(NSDictionary *)dictionary {
+    return [self map:^id(id value) {
+        return dictionary[value];
+    }];
+}
+
 @end
 
 @implementation NSObject (Helpers)

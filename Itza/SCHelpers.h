@@ -23,6 +23,7 @@ double usefulrand();
 @interface RACSignal (Helpers)
 
 - (RACSignal *)index:(NSUInteger)index;
+- (RACSignal *)of:(NSDictionary *)dictionary;
 
 @end
 

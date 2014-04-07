@@ -9,7 +9,7 @@
 #import "SCViewController.h"
 #import "SCScrollView.h"
 #import "SCTileView.h"
-#import "SCWorld.h"
+#import "SCCity.h"
 
 static CGFloat RADIUS;
 static CGFloat APOTHEM;
@@ -17,19 +17,15 @@ static CGFloat APOTHEM;
 @interface SCViewController () <UIScrollViewDelegate>
 
 @property (strong, nonatomic) IBOutlet SCScrollView *scrollView;
-@property (nonatomic, strong) SCWorld *world;
+@property (nonatomic, strong) SCCity *city;
 @property (nonatomic, strong) NSMutableDictionary *tileViewForTile;
 
 @property (strong, nonatomic) IBOutlet UIButton *endTurnButton;
 @property (strong, nonatomic) IBOutlet UILabel *populationLabel;
 
-@property (nonatomic, assign) NSUInteger turn;
-@property (nonatomic, assign) NSUInteger labor;
-@property (nonatomic, assign) NSUInteger population;
-@property (nonatomic, assign) NSUInteger meat;
-@property (nonatomic, assign) NSUInteger maize;
-
 @property (nonatomic, strong) SCTile *selectedTile;
+
+@property (nonatomic, assign) NSUInteger labor;
 
 @end
 
@@ -40,23 +36,15 @@ static CGFloat APOTHEM;
     RADIUS = APOTHEM / 0.5 / sqrtf(3.0f);
 }
 
-- (void)iterate {
-    self.turn += 1;
-    
-    if (self.population > 0) {
-        self.population -= 1;
-        self.maize -= 1;
-        self.meat -= 1;
-    }
-    
-    self.labor = self.population;
-}
-
 - (SCTileView *)tileViewForTile:(SCTile *)tile {
     if (tile == nil) {
         return nil;
     }
     return self.tileViewForTile[tile.pointerValue];
+}
+
+- (SCWorld *)world {
+    return self.city.world;
 }
 
 - (void)setupGrid {    
@@ -72,7 +60,7 @@ static CGFloat APOTHEM;
         }];
         [self.scrollView.contentView addSubview:tileView];
     }
-    self.scrollView.backgroundColor = UIColor.blackColor;
+    self.scrollView.backgroundColor = UIColor.darkGrayColor;
     self.scrollView.indicatorStyle = UIScrollViewIndicatorStyleWhite;
     [self.view layoutIfNeeded];
     self.scrollView.contentSize = [self sizeWithRadius:self.world.radius];
@@ -86,43 +74,57 @@ static CGFloat APOTHEM;
     }] subscribeNext:^(id x) {}];
 }
 
+- (void)iterate {
+    [self.city iterate];
+    [self.world iterate];
+    self.labor = self.city.population;
+}
+
 - (void)viewDidLoad {
-    self.world = [SCWorld worldWithRadius:4];
+    self.city = [SCCity cityWithWorld:[SCWorld worldWithRadius:4]];
+    self.labor = self.city.population;
     [self setupGrid];
     
-    self.population = 100;
-    self.maize = 100;
-    self.meat = 100;
-    self.labor = self.population;
-    
-    
     UILabel *infoLabel = [[UILabel alloc] init];
+    infoLabel.font = [UIFont fontWithName:@"Menlo" size:13];
+    infoLabel.numberOfLines = 0;
+    infoLabel.textAlignment = NSTextAlignmentCenter;
     self.navigationItem.titleView = infoLabel;
     infoLabel.frame = self.navigationController.navigationBar.bounds;
     
-    RAC(self, title) = [RACObserve(self, turn) map:^id(NSNumber *turn) {
+    RAC(self, title) = [RACObserve(self.world, turn) map:^id(NSNumber *turn) {
         return [NSString stringWithFormat:@"turn %@", turn];
     }];
     
-    static NSDictionary *map = nil;
-    if (map == nil) {
-        map = @{@(SCTileTypeForest): @"Forest",
-                @(SCTileTypeGrass): @"Grass",
-                @(SCTileTypeWater): @"Water",
-                @(SCTileTypeTemple): @"Temple"};
+    static NSDictionary *tileNameMap = nil;
+    if (tileNameMap == nil) {
+        tileNameMap = @{@(SCTileTypeForest): @"Forest",
+                        @(SCTileTypeGrass): @"Grass",
+                        @(SCTileTypeWater): @"Water",
+                        @(SCTileTypeTemple): @"Temple"};
+    }
+    static NSDictionary *seasonNameMap = nil;
+    if (seasonNameMap == nil) {
+        seasonNameMap = @{@(SCSeasonSpring): @"Spring",
+                          @(SCSeasonSummer): @"Summer",
+                          @(SCSeasonAutumn): @"Autumn",
+                          @(SCSeasonWinter): @"Winter"};
     }
 
     RAC(self.populationLabel, text) = [RACObserve(self, selectedTile) map:^(SCTile *tile) {
-        return tile == nil ? @"No selected tile" : map[@(tile.type)];
+        return tile == nil ? @"No selected tile" : tileNameMap[@(tile.type)];
     }];
     
     RAC(infoLabel, text) =
-    [RACSignal combineLatest:@[RACObserve(self, population),
-                               RACObserve(self, meat),
+    [RACSignal combineLatest:@[RACObserve(self.world, turn),
+                               [RACObserve(self.world, season) of:seasonNameMap],
+                               RACObserve(self.city, population),
+                               RACObserve(self.city, meat),
                                RACObserve(self, labor),
-                               RACObserve(self, maize)]
-                      reduce:^(NSNumber *population, NSNumber *meat, NSNumber *labor, NSNumber *maize) {
-                          return [NSString stringWithFormat:@"%@ labor, %@ pop; %@ meat; %@ maize", labor, population, meat, maize];
+                               RACObserve(self.city, maize)]
+                      reduce:^(NSNumber *turn, NSString *season, NSNumber *population, NSNumber *meat, NSNumber *labor, NSNumber *maize) {
+                          NSUInteger year = turn.unsignedIntegerValue / 4;
+                          return [NSString stringWithFormat:@"%@ - %u\n%@l %@p %@m %@c", season, year, labor, population, meat, maize];
                       }];
     
     [[self.endTurnButton rac_signalForControlEvents:UIControlEventTouchUpInside] subscribeNext:^(id x) {

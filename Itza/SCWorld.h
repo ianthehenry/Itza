@@ -10,9 +10,21 @@
 #import "SCPosition.h"
 #import "SCTile.h"
 
+typedef NS_ENUM(NSUInteger, SCSeason) {
+    SCSeasonSpring = 0,
+    SCSeasonSummer = 1,
+    SCSeasonAutumn = 2,
+    SCSeasonWinter = 3
+};
+
 @interface SCWorld : NSObject
 
 @property (nonatomic, assign, readonly) NSUInteger radius;
+
+@property (nonatomic, assign, readonly) SCSeason season;
+@property (nonatomic, assign, readonly) NSUInteger turn;
+
+- (void)iterate;
 - (NSSet *)tiles;
 - (SCTile *)tileAt:(SCPosition *)position;
 - (void)addTileForPosition:(SCPosition *)position type:(SCTileType)type;
