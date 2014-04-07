@@ -44,9 +44,3 @@ double usefulrand();
 - (NSValue *)pointerValue;
 
 @end
-
-@interface UIBarButtonItem (Helpers)
-
-+ (instancetype)barButtonItemWithUsefulCustomView:(UIView *)view;
-
-@end

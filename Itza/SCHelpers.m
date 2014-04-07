@@ -7,7 +7,6 @@
 //
 
 #import "SCHelpers.h"
-#import "SCAlignmentView.h"
 
 CGRect CGRectMakeSize(CGFloat x, CGFloat y, CGSize size) {
     return (CGRect) {.origin = (CGPoint) {x, y}, .size = size};
@@ -171,17 +170,6 @@ double usefulrand() {
 
 - (NSValue *)pointerValue {
     return [NSValue valueWithNonretainedObject:self];
-}
-
-@end
-
-@implementation UIBarButtonItem (Helpers)
-
-+ (instancetype)barButtonItemWithUsefulCustomView:(UIView *)view {
-    SCAlignmentView *alignmentView = [[SCAlignmentView alloc] initWithFrame:CGRectMakeSize(0, 0, view.frame.size)];
-    alignmentView.customAlignmentRectInsets = UIEdgeInsetsMake(0.0f, 16.0f, 0.0f, 16.0f);
-    [alignmentView addSubview:view];
-    return [[UIBarButtonItem alloc] initWithCustomView:alignmentView];
 }
 
 @end

@@ -119,6 +119,7 @@ static CGFloat APOTHEM;
     self.city = [SCCity cityWithWorld:[SCWorld worldWithRadius:6]];
     self.labor = self.city.population;
     [self setupGrid];
+    [self.view layoutIfNeeded];
     
     UILabel *infoLabel = [[UILabel alloc] init];
     infoLabel.font = [UIFont fontWithName:@"Menlo" size:13];
@@ -134,8 +135,10 @@ static CGFloat APOTHEM;
     
     [RACObserve(self, detailView) subscribeChanges:^(UIView *previous, UIView *current) {
         [previous removeFromSuperview];
+        current.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
         current.frameWidth = self.toolbar.frameWidth;
-        [self.toolbar setItems:@[[UIBarButtonItem barButtonItemWithUsefulCustomView:current]] animated:NO];
+        current.frame = self.toolbar.bounds;
+        [self.toolbar addSubview:current];
     } start:nil];
     
     RAC(self, title) = [RACObserve(self.world, turn) map:^id(NSNumber *turn) {
