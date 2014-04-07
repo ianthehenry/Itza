@@ -24,10 +24,10 @@
         
         static NSDictionary *map = nil;
         if (map == nil) {
-            map = @{@(SCTileTypeForest): RACTuplePack(@"♣", @26, [UIColor colorWithHue:0.33 saturation:0.9 brightness:0.6 alpha:1.0]),
-                    @(SCTileTypeGrass): RACTuplePack(@"", @0, [UIColor colorWithHue:0.33 saturation:0.9 brightness:0.6 alpha:1.0]),
-                    @(SCTileTypeWater): RACTuplePack(@"", @0, [UIColor colorWithHue:0.66 saturation:0.9 brightness:0.6 alpha:1.0]),
-                    @(SCTileTypeTemple): RACTuplePack(@"*", @40, [UIColor colorWithHue:0.15 saturation:0.9 brightness:0.6 alpha:1.0])};
+            map = @{@(SCTileTypeForest): RACTuplePack(@"♣", @26, [UIColor colorWithHue:0.33 saturation:0.9 brightness:0.6 alpha:1]),
+                    @(SCTileTypeGrass): RACTuplePack(@"", @0, [UIColor colorWithHue:0.33 saturation:0.9 brightness:0.6 alpha:1]),
+                    @(SCTileTypeWater): RACTuplePack(@"", @0, [UIColor colorWithHue:0.66 saturation:0.9 brightness:0.6 alpha:1]),
+                    @(SCTileTypeTemple): RACTuplePack(@"*", @40, [UIColor colorWithHue:0.15 saturation:1.0 brightness:0.7 alpha:1])};
         }
         RACSignal *result = [[RACObserve(self, tile.type) skip:1] map:^(NSNumber *type) {
             return map[type];

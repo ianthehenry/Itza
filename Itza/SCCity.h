@@ -14,6 +14,8 @@
 @property (nonatomic, assign, readonly) NSUInteger population;
 @property (nonatomic, assign, readonly) NSUInteger meat;
 @property (nonatomic, assign, readonly) NSUInteger maize;
+@property (nonatomic, assign, readonly) NSUInteger wood;
+@property (nonatomic, assign, readonly) NSUInteger stone;
 
 @property (nonatomic, strong, readonly) SCWorld *world;
 

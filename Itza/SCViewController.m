@@ -21,7 +21,9 @@ static CGFloat APOTHEM;
 @property (nonatomic, strong) NSMutableDictionary *tileViewForTile;
 
 @property (strong, nonatomic) IBOutlet UIButton *endTurnButton;
-@property (strong, nonatomic) IBOutlet UILabel *populationLabel;
+@property (strong, nonatomic) IBOutlet UIView *commandView;
+
+@property (strong, nonatomic) UIView *detailView;
 
 @property (nonatomic, strong) SCTile *selectedTile;
 
@@ -80,8 +82,39 @@ static CGFloat APOTHEM;
     self.labor = self.city.population;
 }
 
+- (UIView *)tileDetailViewForTile:(SCTile *)tile {
+    static NSDictionary *tileNameMap = nil;
+    if (tileNameMap == nil) {
+        tileNameMap = @{@(SCTileTypeForest): @"Forest",
+                        @(SCTileTypeGrass): @"Grass",
+                        @(SCTileTypeWater): @"Water",
+                        @(SCTileTypeTemple): @"Temple"};
+    }
+
+    UIView *view = [[UIView alloc] initWithFrame:CGRectMake(0, 0, 500, APOTHEM * 3)];
+    
+    SCTileView *tileView = [[SCTileView alloc] initWithRadius:RADIUS];
+    tileView.tile = tile;
+    [view addSubview:tileView];
+    tileView.center = CGPointMake(50, APOTHEM);
+    tileView.autoresizingMask = UIViewAutoresizingFlexibleBottomMargin | UIViewAutoresizingFlexibleRightMargin;
+    [[tileView rac_signalForControlEvents:UIControlEventTouchUpInside] subscribeNext:^(id x) {
+        [self scrollToTile:tile];
+    }];
+
+    
+    UILabel *nameLabel = [[UILabel alloc] initWithFrame:CGRectMake(0, CGRectGetMaxY(tileView.frame), 100, APOTHEM)];
+    nameLabel.autoresizingMask = UIViewAutoresizingFlexibleTopMargin | UIViewAutoresizingFlexibleRightMargin;
+    nameLabel.text = tileNameMap[@(tile.type)];
+    nameLabel.font = [UIFont fontWithName:@"Menlo" size:13];
+    nameLabel.textAlignment = NSTextAlignmentCenter;
+    [view addSubview:nameLabel];
+    
+    return view;
+}
+
 - (void)viewDidLoad {
-    self.city = [SCCity cityWithWorld:[SCWorld worldWithRadius:4]];
+    self.city = [SCCity cityWithWorld:[SCWorld worldWithRadius:6]];
     self.labor = self.city.population;
     [self setupGrid];
     
@@ -91,18 +124,27 @@ static CGFloat APOTHEM;
     infoLabel.textAlignment = NSTextAlignmentCenter;
     self.navigationItem.titleView = infoLabel;
     infoLabel.frame = self.navigationController.navigationBar.bounds;
+    @weakify(self);
+    RAC(self, detailView) = [[RACObserve(self, selectedTile) distinctUntilChanged] map:^(SCTile *tile) {
+        @strongify(self);
+        return tile == nil ? self.commandView : [self tileDetailViewForTile:tile];
+    }];
+    
+    [RACObserve(self, detailView) subscribeChanges:^(UIView *previous, UIView *current) {
+        [previous removeFromSuperview];
+        current.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleTopMargin;
+        self.scrollView.frameHeight = self.view.bounds.size.height - current.frame.size.height;
+        current.frame = CGRectMake(0,
+                                   CGRectGetMaxY(self.scrollView.frame),
+                                   CGRectGetWidth(self.view.bounds),
+                                   current.frame.size.height);
+        [self.view addSubview:current];
+    } start:nil];
     
     RAC(self, title) = [RACObserve(self.world, turn) map:^id(NSNumber *turn) {
         return [NSString stringWithFormat:@"turn %@", turn];
     }];
     
-    static NSDictionary *tileNameMap = nil;
-    if (tileNameMap == nil) {
-        tileNameMap = @{@(SCTileTypeForest): @"Forest",
-                        @(SCTileTypeGrass): @"Grass",
-                        @(SCTileTypeWater): @"Water",
-                        @(SCTileTypeTemple): @"Temple"};
-    }
     static NSDictionary *seasonNameMap = nil;
     if (seasonNameMap == nil) {
         seasonNameMap = @{@(SCSeasonSpring): @"Spring",
@@ -110,26 +152,32 @@ static CGFloat APOTHEM;
                           @(SCSeasonAutumn): @"Autumn",
                           @(SCSeasonWinter): @"Winter"};
     }
-
-    RAC(self.populationLabel, text) = [RACObserve(self, selectedTile) map:^(SCTile *tile) {
-        return tile == nil ? @"No selected tile" : tileNameMap[@(tile.type)];
-    }];
     
     RAC(infoLabel, text) =
     [RACSignal combineLatest:@[RACObserve(self.world, turn),
                                RACObserve(self.city, population),
                                RACObserve(self.city, meat),
                                RACObserve(self, labor),
-                               RACObserve(self.city, maize)]
-                      reduce:^(NSNumber *turn, NSNumber *population, NSNumber *meat, NSNumber *labor, NSNumber *maize) {
+                               RACObserve(self.city, maize),
+                               RACObserve(self.city, wood),
+                               RACObserve(self.city, stone)]
+                      reduce:^(NSNumber *turn, NSNumber *population, NSNumber *meat, NSNumber *labor, NSNumber *maize, NSNumber *wood, NSNumber *stone) {
                           NSUInteger year = turn.unsignedIntegerValue / 4;
                           NSString *season = seasonNameMap[@(self.world.season)];
-                          return [NSString stringWithFormat:@"%@ - %u\n%@l %@p %@m %@c", season, year, labor, population, meat, maize];
+                          return [NSString stringWithFormat:@"%@ - %u\n%@l %@p %@m %@c %@w %@s", season, year, labor, population, meat, maize, wood, stone];
                       }];
     
     [[self.endTurnButton rac_signalForControlEvents:UIControlEventTouchUpInside] subscribeNext:^(id x) {
         [self iterate];
     }];
+}
+
+- (void)scrollToTile:(SCTile *)tile {
+    CGPoint center = [self centerForPosition:tile.hex.position];
+    CGRect rect = self.scrollView.bounds;
+    rect.origin.x = center.x - rect.size.width * 0.5;
+    rect.origin.y = center.y - rect.size.height * 0.5;
+    [self.scrollView zoomToRect:rect animated:YES];
 }
 
 - (CGPoint)centerForPosition:(SCPosition *)position {

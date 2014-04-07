@@ -12,11 +12,14 @@ CGPoint CGPointAdd(CGPoint a, CGPoint b);
 CGPoint CGPointSubtract(CGPoint a, CGPoint b);
 CGPoint CGPointMultiply(CGPoint a, CGPoint b);
 CGPoint CGPointScale(CGPoint point, CGFloat scale);
+CGPoint CGRectGetCenter(CGRect rect);
 double usefulrand();
 
 @interface UIView (Helpers)
 
-- (CGPoint)localCenter;
+@property (nonatomic, readonly) CGPoint boundsCenter;
+- (void)removeAllSubviews;
+@property (nonatomic, assign) CGFloat frameHeight, frameWidth, frameOriginX, frameOriginY;
 
 @end
 
@@ -24,6 +27,7 @@ double usefulrand();
 
 - (RACSignal *)index:(NSUInteger)index;
 - (RACSignal *)of:(NSDictionary *)dictionary;
+- (RACDisposable *)subscribeChanges:(void(^)(id previous, id current))block start:(id)start;
 
 @end
 

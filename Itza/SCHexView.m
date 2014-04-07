@@ -47,7 +47,7 @@ static CGFloat lineRadius;
     if (_path == nil) {
         _path = [UIBezierPath bezierPath];
         
-        CGPoint center = self.localCenter;
+        CGPoint center = self.boundsCenter;
         [_path moveToPoint:CGPointMake(self.radius, 0)];
         for (NSInteger i = 1; i <= 5; i++) {
             CGFloat angle = (2 * M_PI / 6.0f) * i;
@@ -63,7 +63,7 @@ static CGFloat lineRadius;
 }
 
 - (BOOL)pointInside:(CGPoint)point withEvent:(UIEvent *)event {
-    CGPoint relativeToCenter = CGPointSubtract(point, self.localCenter);
+    CGPoint relativeToCenter = CGPointSubtract(point, self.boundsCenter);
     CGPoint relativeSquared = CGPointMultiply(relativeToCenter, relativeToCenter);
     return relativeSquared.x + relativeSquared.y < _apothem * _apothem;
 }
@@ -98,7 +98,7 @@ static CGFloat lineRadius;
     CGColorSpaceRef rgbColorspace = CGColorSpaceCreateDeviceRGB();
     CGGradientRef gradient = CGGradientCreateWithColorComponents(rgbColorspace, components, locations, sizeof(locations) / sizeof(*locations));
     
-    CGPoint center = self.localCenter;
+    CGPoint center = self.boundsCenter;
     CGPoint topCenter = CGPointMake(center.x, center.y - _apothem);
     CGPoint bottomCenter = CGPointMake(center.x, center.y + _apothem);
     CGContextSetBlendMode(c, kCGBlendModeSourceAtop);
