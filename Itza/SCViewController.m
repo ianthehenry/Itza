@@ -139,7 +139,7 @@ static CGFloat APOTHEM;
 
 - (CGSize)sizeWithRadius:(NSInteger)radius {
     NSInteger diameter = 2 * radius + 1;
-    return CGSizeMake(1.5 * RADIUS * (diameter + 1) - RADIUS, diameter * APOTHEM * 2);
+    return CGSizeMake(1.47 * RADIUS * (diameter + 1) - RADIUS, diameter * APOTHEM * 2);
 }
 
 - (void)scrollViewDidEndZooming:(UIScrollView *)scrollView withView:(UIView *)view atScale:(CGFloat)scale {
