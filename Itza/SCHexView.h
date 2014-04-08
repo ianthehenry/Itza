@@ -10,7 +10,7 @@
 
 @interface SCHexView : UIControl
 
-- (id)initWithRadius:(CGFloat)radius;
+- (id)initWithApothem:(CGFloat)apothem;
 @property (nonatomic, strong) UIColor *fillColor;
 
 @end

@@ -36,6 +36,34 @@ CGPoint CGRectGetCenter(CGRect rect) {
     return CGPointMake(CGRectGetMidX(rect), CGRectGetMidY(rect));
 }
 
+CGSize boundingSizeForHexagonWithApothem(CGFloat apothem) {
+    return CGSizeMake(radiusForApothem(apothem) * 2, apothem * 2);
+}
+
+CGSize boundingSizeForHexagonWithRadius(CGFloat radius) {
+    return CGSizeMake(radius * 2, apothemForRadius(radius) * 2);
+}
+
+CGFloat apothemForRadius(CGFloat radius) {
+    return 0.5 * radius * sqrtf(3.0);
+}
+
+CGFloat radiusForApothem(CGFloat apothem) {
+    return apothem * 2 / sqrtf(3.0f);
+}
+
+CGPoint hexCenter(NSInteger x, NSInteger y, CGFloat apothem) {
+    CGFloat radius = radiusForApothem(apothem);
+    CGFloat offset = ABS(x) % 2 == 1 ? apothem : 0;
+    return CGPointMake(x * radius * 1.47, offset + y * apothem * 2);
+}
+
+CGSize boundingSizeForHexagons(CGFloat apothem, NSInteger diameter) {
+    CGFloat radius = radiusForApothem(apothem);
+    return CGSizeMake(1.47 * radius * (diameter + 1) - radius, diameter * apothem * 2);
+}
+
+
 double usefulrand() {
     return ((double)arc4random() / 0x100000000u);
 }

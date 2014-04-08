@@ -17,8 +17,8 @@
 
 @implementation SCTileView
 
-- (id)initWithRadius:(CGFloat)radius {
-    if (self = [super initWithRadius:radius]) {
+- (id)initWithApothem:(CGFloat)apothem {
+    if (self = [super initWithApothem:apothem]) {
         _label = [[UILabel alloc] initWithFrame:self.bounds];
         _label.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
         

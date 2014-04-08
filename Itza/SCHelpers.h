@@ -19,6 +19,12 @@ CGRect CGRectMakeSize(CGFloat x, CGFloat y, CGSize size);
 CGRect CGRectMakeComponents(CGPoint origin, CGSize size);
 
 double usefulrand();
+CGSize boundingSizeForHexagonWithApothem(CGFloat apothem);
+CGSize boundingSizeForHexagonWithRadius(CGFloat radius);
+CGFloat apothemForRadius(CGFloat radius);
+CGFloat radiusForApothem(CGFloat apothem);
+CGPoint hexCenter(NSInteger x, NSInteger y, CGFloat apothem);
+CGSize boundingSizeForHexagons(CGFloat apothem, NSInteger diameter);
 
 @interface UIScrollView (Helpers)
 @property (nonatomic, assign) CGFloat contentInsetBottom, contentInsetTop, contentInsetLeft, contentInsetRight;

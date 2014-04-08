@@ -65,15 +65,11 @@
 }
 
 - (NSString *)symbol {
-    return @"*";
+    return @"T";
 }
 
 - (UIColor *)tileColor {
     return [UIColor colorWithHue:0.15 saturation:1.0 brightness:0.7 alpha:1];
-}
-
-- (CGFloat)fontSize {
-    return 30;
 }
 
 @end

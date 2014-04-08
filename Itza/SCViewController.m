@@ -10,6 +10,8 @@
 #import "SCScrollView.h"
 #import "SCTileView.h"
 #import "SCCity.h"
+#import "SCRadialMenuView.h"
+#import "SCPassthroughView.h"
 
 static CGFloat RADIUS;
 static CGFloat APOTHEM;
@@ -17,6 +19,7 @@ static CGFloat APOTHEM;
 @interface SCViewController () <UIScrollViewDelegate>
 
 @property (strong, nonatomic) IBOutlet SCScrollView *scrollView;
+@property (strong, nonatomic) UIView *tilesView;
 @property (nonatomic, strong) SCCity *city;
 @property (nonatomic, strong) NSMutableDictionary *tileViewForTile;
 
@@ -25,11 +28,15 @@ static CGFloat APOTHEM;
 @property (strong, nonatomic) IBOutlet UIToolbar *toolbar;
 @property (strong, nonatomic) IBOutlet UIButton *buildButton;
 
+@property (nonatomic, strong) SCRadialMenuView *currentMenuView;
+
 @property (strong, nonatomic) UIView *detailView;
 
 @property (nonatomic, strong) SCTile *selectedTile;
 
 @property (nonatomic, assign) NSUInteger labor;
+
+@property (nonatomic, assign) CGSize contentSize;
 
 @end
 
@@ -55,27 +62,86 @@ static CGFloat APOTHEM;
     self.tileViewForTile = [[NSMutableDictionary alloc] init];
 
     for (SCTile *tile in self.world.tiles) {
-        SCTileView *tileView = [[SCTileView alloc] initWithRadius:RADIUS];
+        SCTileView *tileView = [[SCTileView alloc] initWithApothem:APOTHEM];
         tileView.tile = tile;
         self.tileViewForTile[tile.pointerValue] = tileView;
         tileView.center = [self centerForPosition:tile.hex.position];
         [[tileView rac_signalForControlEvents:UIControlEventTouchUpInside] subscribeNext:^(SCTileView *tileView) {
             self.selectedTile = self.selectedTile == tileView.tile ? nil : tileView.tile;
         }];
-        [self.scrollView.contentView addSubview:tileView];
+        [self.tilesView addSubview:tileView];
     }
     self.scrollView.backgroundColor = UIColor.darkGrayColor;
     self.scrollView.indicatorStyle = UIScrollViewIndicatorStyleWhite;
     [self.view layoutIfNeeded];
-    self.scrollView.contentSize = [self sizeWithRadius:self.world.radius];
+    RAC(self, contentSize) = [RACObserve(self, world.radius) map:^(NSNumber *worldRadius) {
+        return [NSValue valueWithCGSize:boundingSizeForHexagons(APOTHEM, worldRadius.unsignedIntegerValue * 2 + 1)];
+    }];
+    RAC(self.scrollView, contentSize) = RACObserve(self, contentSize);
+    self.scrollView.contentSize = [self contentSize];
     
-    [[RACObserve(self, selectedTile) combinePreviousWithStart:nil reduce:^id(SCTile *previous, SCTile *current) {
+    @weakify(self);
+    [RACObserve(self, selectedTile) subscribeChanges:^(SCTile *previous, SCTile *current) {
+        @strongify(self);
+        [self removeCurrentMenuView];
+        if (current != nil) {
+            [self addMenuViewForTile:current];
+        }
+        
         [self tileViewForTile:previous].selected = NO;
         SCTileView *selectedTileView = [self tileViewForTile:current];
         selectedTileView.selected = YES;
         [selectedTileView.superview bringSubviewToFront:selectedTileView];
+    } start:self.selectedTile];
+}
+
+- (void)removeCurrentMenuView {
+    UIView *view = self.currentMenuView;
+    [UIView animateWithDuration:0.25
+                          delay:0
+                        options:UIViewAnimationOptionBeginFromCurrentState
+                     animations:^{
+                         view.transform = CGAffineTransformMakeScale(0.1, 0.1);
+                     } completion:^(BOOL finished) {
+                         [view removeFromSuperview];
+                     }];
+    self.currentMenuView = nil;
+}
+
+- (NSArray *)buttonsForTile:(SCTile *)tile {
+    SCButtonDescription *(^button)(NSString *name) = ^(NSString *name) {
+        return [SCButtonDescription buttonWithText:name handler:^{
+            self.labor -= 1;
+            NSLog(@"%@", name);
+        }];
+    };
+    
+    if ([tile.foreground isKindOfClass:SCRiver.class]) {
+        return @[button(@"Fish")];
+    } else if ([tile.foreground isKindOfClass:SCGrass.class]) {
+        return @[button(@"Farm"), button(@"Build")];
+    } else if ([tile.foreground isKindOfClass:SCTemple.class]) {
+        return @[button(@"Worship"), button(@"Sacrifice")];
+    } else if ([tile.foreground isKindOfClass:SCForest.class]) {
+        return @[button(@"Hunt"), button(@"Forage"), button(@"Chop")];
+    } else {
         return nil;
-    }] subscribeNext:^(id x) {}];
+    }
+}
+
+- (void)addMenuViewForTile:(SCTile *)tile {
+    self.currentMenuView = [[SCRadialMenuView alloc] initWithApothem:APOTHEM buttons:[self buttonsForTile:tile]];
+    self.currentMenuView.center = [self centerForPosition:tile.hex.position];
+    self.currentMenuView.transform = CGAffineTransformMakeScale(0.1, 0.1);
+    [self.tilesView addSubview:self.currentMenuView];
+    
+    [UIView animateWithDuration:0.25
+                          delay:0
+                        options:UIViewAnimationOptionBeginFromCurrentState
+                     animations:^{
+                         self.currentMenuView.transform = CGAffineTransformIdentity;
+                     } completion:^(BOOL finished) {
+                     }];
 }
 
 - (void)iterate {
@@ -87,7 +153,7 @@ static CGFloat APOTHEM;
 - (UIView *)tileDetailViewForTile:(SCTile *)tile {
     UIView *view = [[UIView alloc] initWithFrame:CGRectMake(0, 0, 500, APOTHEM * 3)];
     
-    SCTileView *tileView = [[SCTileView alloc] initWithRadius:RADIUS];
+    SCTileView *tileView = [[SCTileView alloc] initWithApothem:APOTHEM];
     tileView.tile = tile;
     [view addSubview:tileView];
     tileView.center = CGPointMake(50, APOTHEM);
@@ -109,6 +175,22 @@ static CGFloat APOTHEM;
 }
 
 - (void)viewDidLoad {
+    self.tilesView = [[SCPassthroughView alloc] initWithFrame:self.scrollView.contentView.bounds];
+    [self.scrollView.contentView addSubview:self.tilesView];
+    
+    RACSignal *boundsSignal = [RACObserve(self, contentSize) map:^(NSValue *contentSizeValue) {
+        CGSize contentSize = contentSizeValue.CGSizeValue;
+        CGRect bounds = CGRectMake(contentSize.width * -0.5, contentSize.height * -0.5, contentSize.width, contentSize.height);
+        return [NSValue valueWithCGRect:bounds];
+    }];
+    
+    RACSignal *frameSignal = [RACObserve(self, contentSize) map:^(NSValue *contentSizeValue) {
+        return [NSValue valueWithCGRect:CGRectMakeSize(0, 0, contentSizeValue.CGSizeValue)];
+    }];
+    
+    RAC(self.tilesView, bounds) = boundsSignal;
+    RAC(self.tilesView, frame) = frameSignal;
+    
     self.city = [SCCity cityWithWorld:[SCWorld worldWithRadius:6]];
     self.labor = self.city.population;
     [self setupGrid];
@@ -174,13 +256,7 @@ static CGFloat APOTHEM;
 }
 
 - (CGPoint)centerForPosition:(SCPosition *)position {
-    CGFloat offset = ABS(position.x) % 2 == 1 ? APOTHEM : 0;
-    return CGPointMake(position.x * RADIUS * 1.47, offset + position.y * APOTHEM * 2);
-}
-
-- (CGSize)sizeWithRadius:(NSInteger)radius {
-    NSInteger diameter = 2 * radius + 1;
-    return CGSizeMake(1.47 * RADIUS * (diameter + 1) - RADIUS, diameter * APOTHEM * 2);
+    return hexCenter(position.x, position.y, APOTHEM);
 }
 
 - (void)scrollViewDidEndZooming:(UIScrollView *)scrollView withView:(UIView *)view atScale:(CGFloat)scale {

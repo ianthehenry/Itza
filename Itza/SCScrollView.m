@@ -20,8 +20,9 @@
     if (self = [super initWithCoder:aDecoder]) {
         CGRect rect = CGRectZero;
         rect.size = self.contentSize;
-        self.contentView = [[UIView alloc] initWithFrame:rect];
-        [self addSubview:self.contentView];
+        _contentView = [[UIView alloc] initWithFrame:rect];
+        _contentView.autoresizesSubviews = NO;
+        [self addSubview:_contentView];
         
         self.delaysContentTouches = NO;
         self.alwaysBounceHorizontal = YES;
@@ -39,8 +40,9 @@
     [super setContentSize:contentSize];
     if (self.zoomScale == 1) {
         self.contentView.frame = CGRectMake(0, 0, contentSize.width, contentSize.height);
-        self.contentView.bounds = CGRectMake(contentSize.width * -0.5, contentSize.height * -0.5, contentSize.width, contentSize.height);
         [self updateZoomScale];
+    } else {
+        NSAssert(NO, @"doesn't work yet");
     }
 }
 

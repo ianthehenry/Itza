@@ -11,27 +11,19 @@
 @interface SCHexView ()
 
 @property (nonatomic, assign) CGFloat radius;
+@property (nonatomic, assign) CGFloat apothem;
 @property (nonatomic, strong) UIBezierPath *path;
 
 @end
 
-static CGFloat lineApothem;
-static CGFloat lineRadius;
+static CGFloat lineWidth = 4;
 
-@implementation SCHexView {
-    CGFloat _apothem;
-}
+@implementation SCHexView
 
-+ (void)initialize {
-    lineApothem = 4;
-    lineRadius = (lineApothem * 2) / sqrtf(3.0f);
-}
-
-- (id)initWithRadius:(CGFloat)radius {
-    CGFloat apothem = 0.5 * radius * sqrtf(3.0);
-    if (self = [super initWithFrame:CGRectMake(0, 0, radius * 2 + lineRadius, apothem * 2 + lineApothem)]) {
+- (id)initWithApothem:(CGFloat)apothem {
+    if (self = [super initWithFrame:CGRectMakeSize(0, 0, boundingSizeForHexagonWithApothem(apothem + lineWidth))]) {
         self.opaque = NO;
-        _radius = radius;
+        _radius = radiusForApothem(apothem);
         _apothem = apothem;
                 
         @weakify(self);
@@ -48,15 +40,15 @@ static CGFloat lineRadius;
         _path = [UIBezierPath bezierPath];
         
         CGPoint center = self.boundsCenter;
-        [_path moveToPoint:CGPointMake(self.radius, 0)];
+        [_path moveToPoint:CGPointMake(_radius, 0)];
         for (NSInteger i = 1; i <= 5; i++) {
             CGFloat angle = (2 * M_PI / 6.0f) * i;
-            [_path addLineToPoint:CGPointScale(CGPointMake(cosf(angle), sinf(angle)), self.radius)];
+            [_path addLineToPoint:CGPointScale(CGPointMake(cosf(angle), sinf(angle)), _radius)];
         }
         
         [_path closePath];
         [_path applyTransform:CGAffineTransformMakeTranslation(center.x, center.y)];
-        _path.lineWidth = lineApothem;
+        _path.lineWidth = lineWidth;
         _path.lineJoinStyle = kCGLineJoinRound;
     }
     return _path;

@@ -10,11 +10,13 @@
 		22A6D89BE8FB4F0FA5F29016 /* libPods-Itza.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 2516362588AC43F68997AE5D /* libPods-Itza.a */; };
 		3C116E0718F21BE000A2F3BC /* SCWorld.m in Sources */ = {isa = PBXBuildFile; fileRef = 3C116E0618F21BE000A2F3BC /* SCWorld.m */; };
 		3C12372A18F2676D00E83534 /* SCForeground.m in Sources */ = {isa = PBXBuildFile; fileRef = 3C12372918F2676D00E83534 /* SCForeground.m */; };
+		3C12373418F366AB00E83534 /* SCRadialMenuView.m in Sources */ = {isa = PBXBuildFile; fileRef = 3C12373318F366AB00E83534 /* SCRadialMenuView.m */; };
 		3C262CD918F09F2300F1BBB3 /* SCHelpers.m in Sources */ = {isa = PBXBuildFile; fileRef = 3C262CD018F09F2300F1BBB3 /* SCHelpers.m */; };
 		3C262CDA18F09F2300F1BBB3 /* SCHexView.m in Sources */ = {isa = PBXBuildFile; fileRef = 3C262CD218F09F2300F1BBB3 /* SCHexView.m */; };
 		3C262CDB18F09F2300F1BBB3 /* SCPosition.m in Sources */ = {isa = PBXBuildFile; fileRef = 3C262CD418F09F2300F1BBB3 /* SCPosition.m */; };
 		3C262CDC18F09F2300F1BBB3 /* SCScrollView.m in Sources */ = {isa = PBXBuildFile; fileRef = 3C262CD618F09F2300F1BBB3 /* SCScrollView.m */; };
 		3C4DB4DB18F2231B009A73D1 /* SCCity.m in Sources */ = {isa = PBXBuildFile; fileRef = 3C4DB4DA18F2231B009A73D1 /* SCCity.m */; };
+		3C58A33B18F41D230025206A /* SCPassthroughView.m in Sources */ = {isa = PBXBuildFile; fileRef = 3C58A33A18F41D230025206A /* SCPassthroughView.m */; };
 		3CB09EF418F1F8A9000AA987 /* SCTile.m in Sources */ = {isa = PBXBuildFile; fileRef = 3CB09EF318F1F8A9000AA987 /* SCTile.m */; };
 		3CB09EF718F1F93A000AA987 /* SCTileView.m in Sources */ = {isa = PBXBuildFile; fileRef = 3CB09EF618F1F93A000AA987 /* SCTileView.m */; };
 		3CD604E818ECD30A00265338 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 3CD604E718ECD30A00265338 /* Foundation.framework */; };
@@ -49,6 +51,8 @@
 		3C116E0618F21BE000A2F3BC /* SCWorld.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SCWorld.m; sourceTree = "<group>"; };
 		3C12372818F2676D00E83534 /* SCForeground.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SCForeground.h; sourceTree = "<group>"; };
 		3C12372918F2676D00E83534 /* SCForeground.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SCForeground.m; sourceTree = "<group>"; };
+		3C12373218F366AB00E83534 /* SCRadialMenuView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SCRadialMenuView.h; sourceTree = "<group>"; };
+		3C12373318F366AB00E83534 /* SCRadialMenuView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SCRadialMenuView.m; sourceTree = "<group>"; };
 		3C262CCF18F09F2300F1BBB3 /* SCHelpers.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SCHelpers.h; sourceTree = "<group>"; };
 		3C262CD018F09F2300F1BBB3 /* SCHelpers.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SCHelpers.m; sourceTree = "<group>"; };
 		3C262CD118F09F2300F1BBB3 /* SCHexView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SCHexView.h; sourceTree = "<group>"; };
@@ -59,6 +63,8 @@
 		3C262CD618F09F2300F1BBB3 /* SCScrollView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SCScrollView.m; sourceTree = "<group>"; };
 		3C4DB4D918F2231B009A73D1 /* SCCity.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SCCity.h; sourceTree = "<group>"; };
 		3C4DB4DA18F2231B009A73D1 /* SCCity.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SCCity.m; sourceTree = "<group>"; };
+		3C58A33918F41D230025206A /* SCPassthroughView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SCPassthroughView.h; sourceTree = "<group>"; };
+		3C58A33A18F41D230025206A /* SCPassthroughView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SCPassthroughView.m; sourceTree = "<group>"; };
 		3CB09EF218F1F8A9000AA987 /* SCTile.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SCTile.h; sourceTree = "<group>"; };
 		3CB09EF318F1F8A9000AA987 /* SCTile.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SCTile.m; sourceTree = "<group>"; };
 		3CB09EF518F1F93A000AA987 /* SCTileView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SCTileView.h; sourceTree = "<group>"; };
@@ -119,6 +125,8 @@
 				3C262CD218F09F2300F1BBB3 /* SCHexView.m */,
 				3C262CD518F09F2300F1BBB3 /* SCScrollView.h */,
 				3C262CD618F09F2300F1BBB3 /* SCScrollView.m */,
+				3C58A33918F41D230025206A /* SCPassthroughView.h */,
+				3C58A33A18F41D230025206A /* SCPassthroughView.m */,
 			);
 			name = Views;
 			sourceTree = "<group>";
@@ -186,6 +194,8 @@
 				3CD6051F18ED93EE00265338 /* SCViewController.xib */,
 				3CD6050218ECD30A00265338 /* Images.xcassets */,
 				3CD604EE18ECD30A00265338 /* Supporting Files */,
+				3C12373218F366AB00E83534 /* SCRadialMenuView.h */,
+				3C12373318F366AB00E83534 /* SCRadialMenuView.m */,
 			);
 			path = Itza;
 			sourceTree = "<group>";
@@ -361,9 +371,11 @@
 				3C12372A18F2676D00E83534 /* SCForeground.m in Sources */,
 				3C4DB4DB18F2231B009A73D1 /* SCCity.m in Sources */,
 				3C262CDC18F09F2300F1BBB3 /* SCScrollView.m in Sources */,
+				3C58A33B18F41D230025206A /* SCPassthroughView.m in Sources */,
 				3C262CDB18F09F2300F1BBB3 /* SCPosition.m in Sources */,
 				3C116E0718F21BE000A2F3BC /* SCWorld.m in Sources */,
 				3CB09EF418F1F8A9000AA987 /* SCTile.m in Sources */,
+				3C12373418F366AB00E83534 /* SCRadialMenuView.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

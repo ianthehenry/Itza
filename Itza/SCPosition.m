@@ -27,6 +27,10 @@ SCHexDirection SCHexDirectionGetOpposite(SCHexDirection direction) {
     return copy;
 }
 
++ (instancetype)origin {
+    return [self x:0 y:0];
+}
+
 + (instancetype)x:(NSInteger)x y:(NSInteger)y {
     SCPosition *position = [[SCPosition alloc] init];
     position.x = x;

@@ -25,6 +25,7 @@ SCHexDirection SCHexDirectionGetOpposite(SCHexDirection direction);
 
 @property (nonatomic, readonly, assign) NSInteger x, y;
 + (instancetype)x:(NSInteger)x y:(NSInteger)y;
++ (instancetype)origin;
 - (instancetype)positionInDirection:(SCHexDirection)direction;
 
 @end
