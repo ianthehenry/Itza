@@ -41,8 +41,6 @@
     if (self.zoomScale == 1) {
         self.contentView.frame = CGRectMake(0, 0, contentSize.width, contentSize.height);
         [self updateZoomScale];
-    } else {
-        NSAssert(NO, @"doesn't work yet");
     }
 }
 

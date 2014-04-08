@@ -15,6 +15,7 @@
 
 static CGFloat RADIUS;
 static CGFloat APOTHEM;
+static CGFloat PADDING;
 
 @interface SCViewController () <UIScrollViewDelegate>
 
@@ -45,6 +46,7 @@ static CGFloat APOTHEM;
 + (void)initialize {
     APOTHEM = 22;
     RADIUS = APOTHEM / 0.5 / sqrtf(3.0f);
+    PADDING = APOTHEM * 3;
 }
 
 - (SCTileView *)tileViewForTile:(SCTile *)tile {
@@ -77,8 +79,12 @@ static CGFloat APOTHEM;
     RAC(self, contentSize) = [RACObserve(self, world.radius) map:^(NSNumber *worldRadius) {
         return [NSValue valueWithCGSize:boundingSizeForHexagons(APOTHEM, worldRadius.unsignedIntegerValue * 2 + 1)];
     }];
-    RAC(self.scrollView, contentSize) = RACObserve(self, contentSize);
-    self.scrollView.contentSize = [self contentSize];
+    RAC(self.scrollView, contentSize) = [RACObserve(self, contentSize) map:^id(NSValue *sizeValue) {
+        CGSize size = sizeValue.CGSizeValue;
+        size.width += PADDING * 2;
+        size.height += PADDING * 2;
+        return [NSValue valueWithCGSize:size];
+    }];
     
     @weakify(self);
     [RACObserve(self, selectedTile) subscribeChanges:^(SCTile *previous, SCTile *current) {
@@ -185,7 +191,7 @@ static CGFloat APOTHEM;
     }];
     
     RACSignal *frameSignal = [RACObserve(self, contentSize) map:^(NSValue *contentSizeValue) {
-        return [NSValue valueWithCGRect:CGRectMakeSize(0, 0, contentSizeValue.CGSizeValue)];
+        return [NSValue valueWithCGRect:CGRectMakeSize(PADDING, PADDING, contentSizeValue.CGSizeValue)];
     }];
     
     RAC(self.tilesView, bounds) = boundsSignal;
