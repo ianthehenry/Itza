@@ -17,7 +17,7 @@ static CGFloat RADIUS;
 static CGFloat APOTHEM;
 static CGFloat PADDING;
 
-static const CGFloat menuAnimationSpringDamping = 0.5;
+static const CGFloat menuAnimationSpringDamping = 0.75;
 static const NSTimeInterval menuAnimationDuration = 0.5;
 
 @interface SCViewController () <UIScrollViewDelegate>
