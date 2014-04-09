@@ -17,6 +17,9 @@ static CGFloat RADIUS;
 static CGFloat APOTHEM;
 static CGFloat PADDING;
 
+static const CGFloat menuAnimationSpringDamping = 0.5;
+static const NSTimeInterval menuAnimationDuration = 0.5;
+
 @interface SCViewController () <UIScrollViewDelegate>
 
 @property (strong, nonatomic) IBOutlet SCScrollView *scrollView;
@@ -103,13 +106,21 @@ static CGFloat PADDING;
 
 - (void)removeCurrentMenuView {
     UIView *view = self.currentMenuView;
-    [UIView animateWithDuration:0.25
+    
+    [UIView animateWithDuration:menuAnimationDuration * 0.25
                           delay:0
-                        options:UIViewAnimationOptionBeginFromCurrentState
+                        options:UIViewAnimationOptionBeginFromCurrentState | UIViewAnimationOptionCurveEaseOut
                      animations:^{
-                         view.transform = CGAffineTransformMakeScale(0.1, 0.1);
+                         view.transform = CGAffineTransformMakeScale(1.1, 1.1);
                      } completion:^(BOOL finished) {
-                         [view removeFromSuperview];
+                         [UIView animateWithDuration:menuAnimationDuration * 0.25
+                                               delay:0
+                                             options:UIViewAnimationOptionBeginFromCurrentState | UIViewAnimationOptionCurveEaseIn
+                                          animations:^{
+                                              view.transform = CGAffineTransformMakeScale(0.01, 0.01);
+                                          } completion:^(BOOL finished) {
+                                              [view removeFromSuperview];
+                                          }];
                      }];
     self.currentMenuView = nil;
 }
@@ -138,16 +149,18 @@ static CGFloat PADDING;
 - (void)addMenuViewForTile:(SCTile *)tile {
     self.currentMenuView = [[SCRadialMenuView alloc] initWithApothem:APOTHEM buttons:[self buttonsForTile:tile]];
     self.currentMenuView.center = [self centerForPosition:tile.hex.position];
+    
     self.currentMenuView.transform = CGAffineTransformMakeScale(0.1, 0.1);
     [self.tilesView addSubview:self.currentMenuView];
     
-    [UIView animateWithDuration:0.25
+    [UIView animateWithDuration:menuAnimationDuration
                           delay:0
+         usingSpringWithDamping:menuAnimationSpringDamping
+          initialSpringVelocity:0
                         options:UIViewAnimationOptionBeginFromCurrentState
                      animations:^{
                          self.currentMenuView.transform = CGAffineTransformIdentity;
-                     } completion:^(BOOL finished) {
-                     }];
+                     } completion:nil];
 }
 
 - (void)iterate {
