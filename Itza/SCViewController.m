@@ -267,10 +267,8 @@ static const NSTimeInterval menuAnimationDuration = 0.5;
 }
 
 - (void)scrollToTile:(SCTile *)tile {
-    CGPoint center = [self centerForPosition:tile.hex.position];
-    CGRect rect = self.scrollView.bounds;
-    rect.origin.x = center.x - rect.size.width * 0.5;
-    rect.origin.y = center.y - rect.size.height * 0.5;
+    UIView *tileView = [self tileViewForTile:tile];
+    CGRect rect = [self.scrollView.contentView convertRect:tileView.frame fromView:tileView.superview];
     [self.scrollView zoomToRect:rect animated:YES];
 }
 
