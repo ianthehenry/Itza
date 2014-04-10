@@ -41,6 +41,7 @@ static const NSTimeInterval menuAnimationDuration = 0.5;
 @property (nonatomic, assign) NSUInteger labor;
 
 @property (nonatomic, assign) CGSize contentSize;
+@property (nonatomic, assign) CGRect unobscuredFrame;
 
 @end
 
@@ -63,7 +64,7 @@ static const NSTimeInterval menuAnimationDuration = 0.5;
     return self.city.world;
 }
 
-- (void)setupGrid {    
+- (void)setupGrid {
     self.tileViewForTile = [[NSMutableDictionary alloc] init];
 
     for (SCTile *tile in self.world.tiles) {
@@ -140,10 +141,95 @@ static const NSTimeInterval menuAnimationDuration = 0.5;
     } else if ([tile.foreground isKindOfClass:SCTemple.class]) {
         return @[button(@"Worship"), button(@"Sacrifice")];
     } else if ([tile.foreground isKindOfClass:SCForest.class]) {
-        return @[button(@"Hunt"), button(@"Forage"), button(@"Chop")];
+        return @[button(@"Hunt"), button(@"Forage"), [SCButtonDescription buttonWithText:@"CHOP" handler:^{
+            self.labor -= 1;
+            [self displayLaborModalWithName:@"CHOP"];
+        }]];
     } else {
         return nil;
     }
+}
+
+- (void)displayLaborModalWithName:(NSString *)name {
+    CGFloat width = 300;
+    
+    UIColor *color = UIColor.whiteColor;
+    
+    SCPassthroughView *passthroughView = [[SCPassthroughView alloc] initWithFrame:CGRectMake(0, 0, width, 0)];
+    passthroughView.backgroundColor = UIColor.clearColor;
+    
+    UILabel *titleLabel = [[UILabel alloc] initWithFrame:CGRectZero];
+    [titleLabel size:@"k"];
+    titleLabel.text = name;
+    titleLabel.font = [UIFont fontWithName:@"Menlo" size:13];
+    titleLabel.backgroundColor = color;
+    titleLabel.frameHeight = 44;
+    [titleLabel sizeToFit];
+
+    UILabel *explanationLabel = [[UILabel alloc] initWithFrame:CGRectMake(0, 0, width, 44)];
+    explanationLabel.text = @"3 labor -> 1 wood";
+    explanationLabel.font = [UIFont fontWithName:@"Menlo" size:13];
+    explanationLabel.textAlignment = NSTextAlignmentCenter;
+    [explanationLabel size:@"k"];
+    
+    UILabel *promptLabel = [[UILabel alloc] initWithFrame:CGRectZero];
+    promptLabel.text = @"How much labor? ";
+    promptLabel.font = [UIFont fontWithName:@"Menlo" size:13];
+    [promptLabel sizeToFit];
+    [promptLabel size:@"h"];
+    
+    UITextField *textField = [[UITextField alloc] initWithFrame:CGRectMake(0, 0, 0, 44)];
+    textField.keyboardType = UIKeyboardTypeNumberPad;
+    textField.frameWidth = width - CGRectGetMaxX(promptLabel.frame);
+    textField.font = [UIFont fontWithName:@"Menlo" size:13];
+    [textField size:@"hl"];
+    
+    NSInteger conversion = 3;
+
+    RACSignal *numberSignal = [textField.rac_textSignal map:^id(NSString *text) {
+        NSInteger labor = MIN(text.integerValue, self.labor);
+        NSInteger rounded = conversion * (labor / conversion);
+        
+        return @(rounded);
+    }];
+    
+    UIView *textFieldAndPromptView = [[UIView alloc] initWithFrame:CGRectMake(0, 0, width, 44)];
+    [textFieldAndPromptView size:@"hlk"];
+    [textFieldAndPromptView stackViewsHorizontallyCentered:@[promptLabel, textField]];
+    
+    UILabel *outputLabel = [[UILabel alloc] initWithFrame:CGRectMake(0, 0, width, 44)];
+    RAC(outputLabel, text) = [numberSignal map:^(NSNumber *labor) {
+        return [NSString stringWithFormat:@"%@ labor -> %@ wood", labor, @(labor.integerValue * conversion)];
+    }];
+    outputLabel.textAlignment = NSTextAlignmentCenter;
+    outputLabel.font = [UIFont fontWithName:@"Menlo" size:13];
+    [outputLabel size:@"k"];
+
+    
+    UIView *contentView = [[UIView alloc] initWithFrame:CGRectMake(0, 0, width, 88)];
+    contentView.backgroundColor = UIColor.redColor;
+    [contentView size:@"jk"];
+    
+    [contentView stackViewsVerticallyCentered:@[explanationLabel, textFieldAndPromptView, outputLabel]];
+    
+    UIButton *commitButton = [UIButton buttonWithType:UIButtonTypeSystem];
+    [[commitButton rac_signalForControlEvents:UIControlEventTouchUpInside] subscribeNext:^(id x) {
+        [textField resignFirstResponder];
+    }];
+    [commitButton setTitle:@"DO IT" forState:UIControlStateNormal];
+    commitButton.titleLabel.font = [UIFont fontWithName:@"Menlo" size:13];
+    [commitButton size:@"j"];
+    commitButton.backgroundColor = color;
+    [commitButton sizeToFit];
+    
+    [passthroughView stackViewsVerticallyCentered:@[titleLabel, contentView, commitButton]];
+    passthroughView.center = self.view.boundsCenter;
+    RAC(passthroughView, center) = [RACObserve(self, unobscuredFrame) map:^id(NSValue *frame) {
+        return [NSValue valueWithCGPoint:CGRectGetCenter(frame.CGRectValue)];
+    }];
+
+    [self.view addSubview:passthroughView];
+    [textField becomeFirstResponder];
 }
 
 - (void)addMenuViewForTile:(SCTile *)tile {
@@ -193,7 +279,34 @@ static const NSTimeInterval menuAnimationDuration = 0.5;
     return view;
 }
 
+- (void)setUnobscuredFrame:(CGRect)unobscuredFrame withAnimationFromUserInfo:(NSDictionary *)userInfo {
+    [UIView beginAnimations:nil context:nil];
+    [UIView setAnimationCurve:[userInfo[UIKeyboardAnimationCurveUserInfoKey] unsignedIntegerValue]];
+    [UIView setAnimationDuration:[userInfo[UIKeyboardAnimationDurationUserInfoKey] doubleValue]];
+    self.unobscuredFrame = unobscuredFrame;
+    [UIView commitAnimations];
+}
+
+- (void)viewWillAppear:(BOOL)animated {
+    [super viewWillAppear:animated];
+    self.unobscuredFrame = self.view.bounds;
+}
+
 - (void)viewDidLoad {
+    @weakify(self);
+    [NSNotificationCenter.defaultCenter addObserverForName:UIKeyboardWillShowNotification object:nil queue:nil usingBlock:^(NSNotification *note) {
+        @strongify(self);
+        CGRect keyboardFrame = [self.view convertRect:[note.userInfo[UIKeyboardFrameEndUserInfoKey] CGRectValue] fromView:nil];
+        CGRect obscured = CGRectIntersection(self.view.bounds, keyboardFrame);
+        CGRect bounds = self.view.bounds;
+        bounds.size.height -= obscured.size.height;
+        [self setUnobscuredFrame:bounds withAnimationFromUserInfo:note.userInfo];
+    }];
+    [NSNotificationCenter.defaultCenter addObserverForName:UIKeyboardWillHideNotification object:nil queue:nil usingBlock:^(NSNotification *note) {
+        @strongify(self);
+        [self setUnobscuredFrame:self.view.bounds withAnimationFromUserInfo:note.userInfo];
+    }];
+    
     self.tilesView = [[SCPassthroughView alloc] initWithFrame:self.scrollView.contentView.bounds];
     [self.scrollView.contentView addSubview:self.tilesView];
     
@@ -221,7 +334,7 @@ static const NSTimeInterval menuAnimationDuration = 0.5;
     infoLabel.textAlignment = NSTextAlignmentCenter;
     self.navigationItem.titleView = infoLabel;
     infoLabel.frame = self.navigationController.navigationBar.bounds;
-    @weakify(self);
+
     RAC(self, detailView) = [RACObserve(self, selectedTile) map:^(SCTile *tile) {
         @strongify(self);
         return tile == nil ? self.commandView : [self tileDetailViewForTile:tile];

@@ -36,6 +36,9 @@ CGSize boundingSizeForHexagons(CGFloat apothem, NSInteger diameter);
 @property (nonatomic, readonly) CGPoint boundsCenter;
 - (void)removeAllSubviews;
 @property (nonatomic, assign) CGFloat frameHeight, frameWidth, frameOriginX, frameOriginY;
+- (void)size:(NSString *)format;
+- (void)stackViewsVerticallyCentered:(NSArray *)views;
+- (void)stackViewsHorizontallyCentered:(NSArray *)views;
 
 @end
 

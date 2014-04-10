@@ -63,7 +63,6 @@ CGSize boundingSizeForHexagons(CGFloat apothem, NSInteger diameter) {
     return CGSizeMake(1.47 * radius * (diameter + 1) - radius, diameter * apothem * 2);
 }
 
-
 double usefulrand() {
     return ((double)arc4random() / 0x100000000u);
 }
@@ -167,6 +166,66 @@ double usefulrand() {
     CGRect frame = self.frame;
     frame.origin.y = y;
     self.frame = frame;
+}
+
+- (void)size:(NSString *)format {
+    BOOL anchorLeft = [format rangeOfString:@"h"].location != NSNotFound;
+    BOOL anchorRight = [format rangeOfString:@"l"].location != NSNotFound;
+    BOOL anchorBottom = [format rangeOfString:@"j"].location != NSNotFound;
+    BOOL anchorTop = [format rangeOfString:@"k"].location != NSNotFound;
+    
+    UIViewAutoresizing mask = 0;
+    
+    if (anchorLeft && anchorRight) {
+        mask |= UIViewAutoresizingFlexibleWidth;
+    } else {
+        if (anchorLeft) {
+            mask |= UIViewAutoresizingFlexibleRightMargin;
+        }
+        if (anchorRight) {
+            mask |= UIViewAutoresizingFlexibleLeftMargin;
+        }
+    }
+    if (anchorBottom && anchorTop) {
+        mask |= UIViewAutoresizingFlexibleHeight;
+    } else {
+        if (anchorBottom) {
+            mask |= UIViewAutoresizingFlexibleTopMargin;
+        }
+        if (anchorTop) {
+            mask |= UIViewAutoresizingFlexibleBottomMargin;
+        }
+    }
+    
+    self.autoresizingMask = mask;
+}
+
+- (void)stackViewsVerticallyCentered:(NSArray *)views {
+    CGFloat top = 0;
+    for (UIView *view in views) {
+        view.frameOriginY = top;
+        view.center = CGPointMake(self.boundsCenter.x, view.center.y);
+        top += view.frameHeight;
+        [self addSubview:view];
+    }
+    BOOL old = self.autoresizesSubviews;
+    self.autoresizesSubviews = NO;
+    self.frameHeight = top;
+    self.autoresizesSubviews = old;
+}
+
+- (void)stackViewsHorizontallyCentered:(NSArray *)views {
+    CGFloat left = 0;
+    for (UIView *view in views) {
+        view.frameOriginX = left;
+        view.center = CGPointMake(view.center.x, self.boundsCenter.y);
+        left += view.frameWidth;
+        [self addSubview:view];
+    }
+    BOOL old = self.autoresizesSubviews;
+    self.autoresizesSubviews = NO;
+    self.frameWidth = left;
+    self.autoresizesSubviews = old;
 }
 
 @end
