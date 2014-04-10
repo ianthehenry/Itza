@@ -46,6 +46,7 @@ CGSize boundingSizeForHexagons(CGFloat apothem, NSInteger diameter);
 
 - (RACSignal *)index:(NSUInteger)index;
 - (RACSignal *)of:(NSDictionary *)dictionary;
+- (RACSignal *)is:(id)value;
 - (RACDisposable *)subscribeChanges:(void(^)(id previous, id current))block start:(id)start;
 
 @end

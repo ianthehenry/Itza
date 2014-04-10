@@ -12,6 +12,7 @@
 #import "SCCity.h"
 #import "SCRadialMenuView.h"
 #import "SCPassthroughView.h"
+#import "SCInputView.h"
 
 static CGFloat RADIUS;
 static CGFloat APOTHEM;
@@ -106,23 +107,7 @@ static const NSTimeInterval menuAnimationDuration = 0.5;
 }
 
 - (void)removeCurrentMenuView {
-    UIView *view = self.currentMenuView;
-    
-    [UIView animateWithDuration:menuAnimationDuration * 0.25
-                          delay:0
-                        options:UIViewAnimationOptionBeginFromCurrentState | UIViewAnimationOptionCurveEaseOut
-                     animations:^{
-                         view.transform = CGAffineTransformMakeScale(1.1, 1.1);
-                     } completion:^(BOOL finished) {
-                         [UIView animateWithDuration:menuAnimationDuration * 0.25
-                                               delay:0
-                                             options:UIViewAnimationOptionBeginFromCurrentState | UIViewAnimationOptionCurveEaseIn
-                                          animations:^{
-                                              view.transform = CGAffineTransformMakeScale(0.01, 0.01);
-                                          } completion:^(BOOL finished) {
-                                              [view removeFromSuperview];
-                                          }];
-                     }];
+    [self popClosed:self.currentMenuView];
     self.currentMenuView = nil;
 }
 
@@ -150,103 +135,98 @@ static const NSTimeInterval menuAnimationDuration = 0.5;
     }
 }
 
-- (void)displayLaborModalWithName:(NSString *)name {
-    CGFloat width = 300;
-    
-    UIColor *color = UIColor.whiteColor;
-    
-    SCPassthroughView *passthroughView = [[SCPassthroughView alloc] initWithFrame:CGRectMake(0, 0, width, 0)];
-    passthroughView.backgroundColor = UIColor.clearColor;
-    
-    UILabel *titleLabel = [[UILabel alloc] initWithFrame:CGRectZero];
-    [titleLabel size:@"k"];
-    titleLabel.text = name;
-    titleLabel.font = [UIFont fontWithName:@"Menlo" size:13];
-    titleLabel.backgroundColor = color;
-    titleLabel.frameHeight = 44;
-    [titleLabel sizeToFit];
+- (void)popOpen:(UIView *)view inView:(UIView *)superview {
+    view.transform = CGAffineTransformMakeScale(0.1, 0.1);
+    view.alpha = 0;
+    [superview addSubview:view];
 
-    UILabel *explanationLabel = [[UILabel alloc] initWithFrame:CGRectMake(0, 0, width, 44)];
-    explanationLabel.text = @"3 labor -> 1 wood";
-    explanationLabel.font = [UIFont fontWithName:@"Menlo" size:13];
-    explanationLabel.textAlignment = NSTextAlignmentCenter;
-    [explanationLabel size:@"k"];
-    
-    UILabel *promptLabel = [[UILabel alloc] initWithFrame:CGRectZero];
-    promptLabel.text = @"How much labor? ";
-    promptLabel.font = [UIFont fontWithName:@"Menlo" size:13];
-    [promptLabel sizeToFit];
-    [promptLabel size:@"h"];
-    
-    UITextField *textField = [[UITextField alloc] initWithFrame:CGRectMake(0, 0, 0, 44)];
-    textField.keyboardType = UIKeyboardTypeNumberPad;
-    textField.frameWidth = width - CGRectGetMaxX(promptLabel.frame);
-    textField.font = [UIFont fontWithName:@"Menlo" size:13];
-    [textField size:@"hl"];
-    
-    NSInteger conversion = 3;
-
-    RACSignal *numberSignal = [textField.rac_textSignal map:^id(NSString *text) {
-        NSInteger labor = MIN(text.integerValue, self.labor);
-        NSInteger rounded = conversion * (labor / conversion);
-        
-        return @(rounded);
-    }];
-    
-    UIView *textFieldAndPromptView = [[UIView alloc] initWithFrame:CGRectMake(0, 0, width, 44)];
-    [textFieldAndPromptView size:@"hlk"];
-    [textFieldAndPromptView stackViewsHorizontallyCentered:@[promptLabel, textField]];
-    
-    UILabel *outputLabel = [[UILabel alloc] initWithFrame:CGRectMake(0, 0, width, 44)];
-    RAC(outputLabel, text) = [numberSignal map:^(NSNumber *labor) {
-        return [NSString stringWithFormat:@"%@ labor -> %@ wood", labor, @(labor.integerValue * conversion)];
-    }];
-    outputLabel.textAlignment = NSTextAlignmentCenter;
-    outputLabel.font = [UIFont fontWithName:@"Menlo" size:13];
-    [outputLabel size:@"k"];
-
-    
-    UIView *contentView = [[UIView alloc] initWithFrame:CGRectMake(0, 0, width, 88)];
-    contentView.backgroundColor = UIColor.redColor;
-    [contentView size:@"jk"];
-    
-    [contentView stackViewsVerticallyCentered:@[explanationLabel, textFieldAndPromptView, outputLabel]];
-    
-    UIButton *commitButton = [UIButton buttonWithType:UIButtonTypeSystem];
-    [[commitButton rac_signalForControlEvents:UIControlEventTouchUpInside] subscribeNext:^(id x) {
-        [textField resignFirstResponder];
-    }];
-    [commitButton setTitle:@"DO IT" forState:UIControlStateNormal];
-    commitButton.titleLabel.font = [UIFont fontWithName:@"Menlo" size:13];
-    [commitButton size:@"j"];
-    commitButton.backgroundColor = color;
-    [commitButton sizeToFit];
-    
-    [passthroughView stackViewsVerticallyCentered:@[titleLabel, contentView, commitButton]];
-    passthroughView.center = self.view.boundsCenter;
-    RAC(passthroughView, center) = [RACObserve(self, unobscuredFrame) map:^id(NSValue *frame) {
-        return [NSValue valueWithCGPoint:CGRectGetCenter(frame.CGRectValue)];
-    }];
-
-    [self.view addSubview:passthroughView];
-    [textField becomeFirstResponder];
-}
-
-- (void)addMenuViewForTile:(SCTile *)tile {
-    self.currentMenuView = [[SCRadialMenuView alloc] initWithApothem:APOTHEM buttons:[self buttonsForTile:tile]];
-    self.currentMenuView.center = [self centerForPosition:tile.hex.position];
-    
-    self.currentMenuView.transform = CGAffineTransformMakeScale(0.1, 0.1);
-    [self.tilesView addSubview:self.currentMenuView];
-    
     [UIView animateWithDuration:menuAnimationDuration
                           delay:0
          usingSpringWithDamping:menuAnimationSpringDamping
           initialSpringVelocity:0
                         options:UIViewAnimationOptionBeginFromCurrentState
                      animations:^{
-                         self.currentMenuView.transform = CGAffineTransformIdentity;
+                         view.alpha = 1;
+                         view.transform = CGAffineTransformIdentity;
                      } completion:nil];
+
+}
+
+- (void)popClosed:(UIView *)view {
+    [UIView animateWithDuration:menuAnimationDuration * 0.25
+                          delay:0
+                        options:UIViewAnimationOptionBeginFromCurrentState | UIViewAnimationOptionCurveEaseOut
+                     animations:^{
+                         view.transform = CGAffineTransformMakeScale(1.1, 1.1);
+                     } completion:^(BOOL finished) {
+                         [UIView animateWithDuration:menuAnimationDuration * 0.25
+                                               delay:0
+                                             options:UIViewAnimationOptionBeginFromCurrentState | UIViewAnimationOptionCurveEaseIn
+                                          animations:^{
+                                              view.alpha = 0;
+                                              view.transform = CGAffineTransformMakeScale(0.01, 0.01);
+                                          } completion:^(BOOL finished) {
+                                              [view removeFromSuperview];
+                                          }];
+                     }];
+}
+
+- (void)displayLaborModalWithName:(NSString *)name {
+    SCInputView *inputView = [[UINib nibWithNibName:@"SCInputView" bundle:nil] instantiateWithOwner:nil options:nil][0];
+    
+    NSUInteger inputRate = 3;
+    NSUInteger outputRate = 1;
+    
+    RACSignal *inputSignal = [inputView.textField.rac_textSignal map:^id(NSString *text) {
+        NSUInteger labor = MAX(0, MIN(text.integerValue, self.labor));
+        NSUInteger rounded = inputRate * (labor / inputRate);
+        return @(rounded);
+    }];
+    
+    RACSignal *outputSignal = [inputSignal map:^(NSNumber *inputNumber) {
+        return @((inputNumber.unsignedIntegerValue / inputRate) * outputRate);
+    }];
+    
+    inputView.topLabel.text = [NSString stringWithFormat:@"%u labor -> %u wood", inputRate, outputRate];
+    inputView.titleLabel.text = name;
+    
+    RAC(inputView.bottomLabel, text) = [RACSignal combineLatest:@[inputSignal, outputSignal] reduce:^(NSNumber *input, NSNumber *output) {
+        return [NSString stringWithFormat:@"%@ labor -> %@ wood", input, output];
+    }];
+    
+    [inputView.button setTitle:@"DO IT" forState:UIControlStateNormal];
+    
+    __block BOOL dismissed = NO;
+    void (^dismiss)() = ^{
+        dismissed = YES;
+        [inputView.textField resignFirstResponder];
+        [self popClosed:inputView];
+    };
+    
+    [[inputView.button rac_signalForControlEvents:UIControlEventTouchUpInside] subscribeNext:^(id x) {
+        dismiss();
+    }];
+    
+    [[inputView.cancelButton rac_signalForControlEvents:UIControlEventTouchUpInside] subscribeNext:^(id x) {
+        dismiss();
+    }];
+    
+    RAC(inputView, center) = [[RACObserve(self, unobscuredFrame) map:^id(NSValue *frame) {
+        return [NSValue valueWithCGPoint:CGRectGetCenter(frame.CGRectValue)];
+    }] takeUntilBlock:^BOOL(id x) {
+        return dismissed;
+    }];
+
+    inputView.transform = CGAffineTransformMakeScale(0.01, 0.01);
+    [self popOpen:inputView inView:self.view];
+    [inputView.textField becomeFirstResponder];
+}
+
+- (void)addMenuViewForTile:(SCTile *)tile {
+    self.currentMenuView = [[SCRadialMenuView alloc] initWithApothem:APOTHEM buttons:[self buttonsForTile:tile]];
+    self.currentMenuView.center = [self centerForPosition:tile.hex.position];
+    
+    [self popOpen:self.currentMenuView inView:self.tilesView];
 }
 
 - (void)iterate {

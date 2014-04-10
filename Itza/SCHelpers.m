@@ -251,6 +251,12 @@ double usefulrand() {
     }] subscribeNext:^(id x) {}];
 }
 
+- (RACSignal *)is:(id)y {
+    return [self map:^id(id x) {
+        return @([x isEqual:y]);
+    }];
+}
+
 @end
 
 @implementation NSObject (Helpers)

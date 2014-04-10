@@ -11,6 +11,8 @@
 		3C116E0718F21BE000A2F3BC /* SCWorld.m in Sources */ = {isa = PBXBuildFile; fileRef = 3C116E0618F21BE000A2F3BC /* SCWorld.m */; };
 		3C12372A18F2676D00E83534 /* SCForeground.m in Sources */ = {isa = PBXBuildFile; fileRef = 3C12372918F2676D00E83534 /* SCForeground.m */; };
 		3C12373418F366AB00E83534 /* SCRadialMenuView.m in Sources */ = {isa = PBXBuildFile; fileRef = 3C12373318F366AB00E83534 /* SCRadialMenuView.m */; };
+		3C1F7C1D18F759F60060E463 /* SCInputView.xib in Resources */ = {isa = PBXBuildFile; fileRef = 3C1F7C1C18F759F60060E463 /* SCInputView.xib */; };
+		3C1F7C2018F75AC90060E463 /* SCInputView.m in Sources */ = {isa = PBXBuildFile; fileRef = 3C1F7C1F18F75AC90060E463 /* SCInputView.m */; };
 		3C262CD918F09F2300F1BBB3 /* SCHelpers.m in Sources */ = {isa = PBXBuildFile; fileRef = 3C262CD018F09F2300F1BBB3 /* SCHelpers.m */; };
 		3C262CDA18F09F2300F1BBB3 /* SCHexView.m in Sources */ = {isa = PBXBuildFile; fileRef = 3C262CD218F09F2300F1BBB3 /* SCHexView.m */; };
 		3C262CDB18F09F2300F1BBB3 /* SCPosition.m in Sources */ = {isa = PBXBuildFile; fileRef = 3C262CD418F09F2300F1BBB3 /* SCPosition.m */; };
@@ -53,6 +55,9 @@
 		3C12372918F2676D00E83534 /* SCForeground.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SCForeground.m; sourceTree = "<group>"; };
 		3C12373218F366AB00E83534 /* SCRadialMenuView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SCRadialMenuView.h; sourceTree = "<group>"; };
 		3C12373318F366AB00E83534 /* SCRadialMenuView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SCRadialMenuView.m; sourceTree = "<group>"; };
+		3C1F7C1C18F759F60060E463 /* SCInputView.xib */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.xib; path = SCInputView.xib; sourceTree = "<group>"; };
+		3C1F7C1E18F75AC90060E463 /* SCInputView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SCInputView.h; sourceTree = "<group>"; };
+		3C1F7C1F18F75AC90060E463 /* SCInputView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SCInputView.m; sourceTree = "<group>"; };
 		3C262CCF18F09F2300F1BBB3 /* SCHelpers.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SCHelpers.h; sourceTree = "<group>"; };
 		3C262CD018F09F2300F1BBB3 /* SCHelpers.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SCHelpers.m; sourceTree = "<group>"; };
 		3C262CD118F09F2300F1BBB3 /* SCHexView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SCHexView.h; sourceTree = "<group>"; };
@@ -127,6 +132,9 @@
 				3C262CD618F09F2300F1BBB3 /* SCScrollView.m */,
 				3C58A33918F41D230025206A /* SCPassthroughView.h */,
 				3C58A33A18F41D230025206A /* SCPassthroughView.m */,
+				3C1F7C1E18F75AC90060E463 /* SCInputView.h */,
+				3C1F7C1F18F75AC90060E463 /* SCInputView.m */,
+				3C1F7C1C18F759F60060E463 /* SCInputView.xib */,
 			);
 			name = Views;
 			sourceTree = "<group>";
@@ -308,6 +316,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				3C1F7C1D18F759F60060E463 /* SCInputView.xib in Resources */,
 				3CD6050318ECD30A00265338 /* Images.xcassets in Resources */,
 				3CD6052018ED93EE00265338 /* SCViewController.xib in Resources */,
 				3CD604F218ECD30A00265338 /* InfoPlist.strings in Resources */,
@@ -370,6 +379,7 @@
 				3CD604F418ECD30A00265338 /* main.m in Sources */,
 				3C12372A18F2676D00E83534 /* SCForeground.m in Sources */,
 				3C4DB4DB18F2231B009A73D1 /* SCCity.m in Sources */,
+				3C1F7C2018F75AC90060E463 /* SCInputView.m in Sources */,
 				3C262CDC18F09F2300F1BBB3 /* SCScrollView.m in Sources */,
 				3C58A33B18F41D230025206A /* SCPassthroughView.m in Sources */,
 				3C262CDB18F09F2300F1BBB3 /* SCPosition.m in Sources */,
