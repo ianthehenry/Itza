@@ -127,7 +127,6 @@ static const NSTimeInterval menuAnimationDuration = 0.5;
         return @[button(@"Worship"), button(@"Sacrifice")];
     } else if ([tile.foreground isKindOfClass:SCForest.class]) {
         return @[button(@"Hunt"), button(@"Forage"), [SCButtonDescription buttonWithText:@"CHOP" handler:^{
-            self.labor -= 1;
             [self displayLaborModalWithName:@"CHOP"];
         }]];
     } else {
@@ -173,6 +172,7 @@ static const NSTimeInterval menuAnimationDuration = 0.5;
 
 - (void)displayLaborModalWithName:(NSString *)name {
     SCInputView *inputView = [[UINib nibWithNibName:@"SCInputView" bundle:nil] instantiateWithOwner:nil options:nil][0];
+    [inputView size:@""];
     
     NSUInteger inputRate = 3;
     NSUInteger outputRate = 1;
@@ -187,8 +187,9 @@ static const NSTimeInterval menuAnimationDuration = 0.5;
         return @((inputNumber.unsignedIntegerValue / inputRate) * outputRate);
     }];
     
+    inputView.promptLabel.text = @"labor> ";
     inputView.topLabel.text = [NSString stringWithFormat:@"%u labor -> %u wood", inputRate, outputRate];
-    inputView.titleLabel.text = name;
+    inputView.titleLabel.text = @"Chop some wood";
     
     RAC(inputView.bottomLabel, text) = [RACSignal combineLatest:@[inputSignal, outputSignal] reduce:^(NSNumber *input, NSNumber *output) {
         return [NSString stringWithFormat:@"%@ labor -> %@ wood", input, output];
@@ -204,6 +205,10 @@ static const NSTimeInterval menuAnimationDuration = 0.5;
     };
     
     [[inputView.button rac_signalForControlEvents:UIControlEventTouchUpInside] subscribeNext:^(id x) {
+        NSUInteger input = [[inputSignal first] unsignedIntegerValue];
+        NSUInteger output = [[outputSignal first] unsignedIntegerValue];
+        self.labor -= input;
+        [self.city gainWood:output];
         dismiss();
     }];
     

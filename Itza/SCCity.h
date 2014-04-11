@@ -23,4 +23,6 @@
 
 + (instancetype)cityWithWorld:(SCWorld *)world;
 
+- (void)gainWood:(NSUInteger)wood;
+
 @end

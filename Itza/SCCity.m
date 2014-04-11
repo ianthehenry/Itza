@@ -34,4 +34,8 @@
     return city;
 }
 
+- (void)gainWood:(NSUInteger)wood {
+    self.wood += wood;
+}
+
 @end
