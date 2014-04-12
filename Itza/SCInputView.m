@@ -11,27 +11,20 @@
 @interface SCInputView ()
 
 @property (strong, nonatomic) IBOutlet UIView *contentView;
-@property (strong, nonatomic, readwrite) IBOutlet UILabel *titleLabel;
-@property (strong, nonatomic, readwrite) IBOutlet UILabel *promptLabel;
+@property (strong, nonatomic, readwrite) IBOutlet SCLabel *titleLabel;
+@property (strong, nonatomic, readwrite) IBOutlet SCLabel *promptLabel;
 @property (strong, nonatomic, readwrite) IBOutlet UIButton *button;
-@property (strong, nonatomic, readwrite) IBOutlet UILabel *topLabel;
+@property (strong, nonatomic, readwrite) IBOutlet SCLabel *topLabel;
 @property (strong, nonatomic, readwrite) IBOutlet UITextField *textField;
-@property (strong, nonatomic, readwrite) IBOutlet UILabel *bottomLabel;
+@property (strong, nonatomic, readwrite) IBOutlet SCLabel *bottomLabel;
 @property (strong, nonatomic, readwrite) IBOutlet UIButton *cancelButton;
 
 @end
 
-@implementation SCInputView {
-    BOOL _initialized;
-}
+@implementation SCInputView
 
-- (void)willMoveToSuperview:(UIView *)newSuperview {
-    // because i'm sick of overriding every fucking init method
-    if (_initialized) {
-        return;
-    }
-    _initialized = YES;
-    self.contentBackgroundColor = [UIColor colorWithWhite:1 alpha:0.75];
+- (void)awakeFromNib {
+    self.contentBackgroundColor = [UIColor colorWithWhite:1 alpha:0.9];
     self.contentForegroundColor = UIColor.blackColor;
     
     RAC(self.titleLabel, backgroundColor) =
@@ -47,6 +40,12 @@
     RAC(self.bottomLabel, textColor) =
     RAC(self.textField, textColor) =
     RACObserve(self, contentForegroundColor);
+    
+    self.titleLabel.insets =
+    self.topLabel.insets =
+    self.bottomLabel.insets = UIEdgeInsetsMake(5, 5, 5, 5);
+    self.promptLabel.insets = UIEdgeInsetsMake(5, 5, 5, 0);
+
 }
 
 @end

@@ -7,18 +7,19 @@
 //
 
 #import "SCPassthroughView.h"
+#import "SCLabel.h"
 
 @interface SCInputView : SCPassthroughView
 
 @property (strong, nonatomic) UIColor *contentBackgroundColor;
 @property (strong, nonatomic) UIColor *contentForegroundColor;
 
-@property (strong, nonatomic, readonly) IBOutlet UILabel *titleLabel;
-@property (strong, nonatomic, readonly) IBOutlet UILabel *promptLabel;
+@property (strong, nonatomic, readonly) IBOutlet SCLabel *titleLabel;
+@property (strong, nonatomic, readonly) IBOutlet SCLabel *promptLabel;
 @property (strong, nonatomic, readonly) IBOutlet UIButton *button;
-@property (strong, nonatomic, readonly) IBOutlet UILabel *topLabel;
+@property (strong, nonatomic, readonly) IBOutlet SCLabel *topLabel;
 @property (strong, nonatomic, readonly) IBOutlet UITextField *textField;
-@property (strong, nonatomic, readonly) IBOutlet UILabel *bottomLabel;
+@property (strong, nonatomic, readonly) IBOutlet SCLabel *bottomLabel;
 @property (strong, nonatomic, readonly) IBOutlet UIButton *cancelButton;
 
 @end
