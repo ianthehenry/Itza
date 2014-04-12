@@ -132,14 +132,16 @@ static const NSTimeInterval menuAnimationDuration = 0.5;
         return @[button(@"Worship"), button(@"Sacrifice")];
     } else if ([tile.foreground isKindOfClass:SCForest.class]) {
         return @[[SCButtonDescription buttonWithText:@"Hunt" handler:^{
-            [self displayLaborModalWithTitle:@"Hunt" inputRate:1 outputRate:2 outputName:@"meat" commitBlock:^(NSUInteger input, NSUInteger output) {
+            [self displayLaborModalWithTitle:@"Hunt" inputRate:1 outputRateMin:1 outputRateMax:3 outputName:@"meat" commitBlock:^(NSUInteger input, NSUInteger output) {
                 self.labor -= input;
                 [self.city gainMeat:output];
+                [self flashMessage:[NSString stringWithFormat:@"+ %u meat", output]];
             }];
         }], [SCButtonDescription buttonWithText:@"Frg" handler:^{
-            [self displayLaborModalWithTitle:@"Forage for Maize" inputRate:2 outputRate:1 outputName:@"maize" commitBlock:^(NSUInteger input, NSUInteger output) {
+            [self displayLaborModalWithTitle:@"Forage for Maize" inputRate:2 outputRateMin:0 outputRateMax:2 outputName:@"maize" commitBlock:^(NSUInteger input, NSUInteger output) {
                 self.labor -= input;
                 [self.city gainMaize:output];
+                [self flashMessage:[NSString stringWithFormat:@"+ %u maize", output]];
             }];
         }], [SCButtonDescription buttonWithText:@"Chop" handler:^{
             [self displayLaborModalWithTitle:@"Chop Wood" inputRate:3 outputRate:1 outputName:@"wood" commitBlock:^(NSUInteger input, NSUInteger output) {
@@ -216,7 +218,8 @@ static const NSTimeInterval menuAnimationDuration = 0.5;
 
 - (void)displayLaborModalWithTitle:(NSString *)title
                          inputRate:(NSUInteger)inputRate
-                        outputRate:(NSUInteger)outputRate
+                     outputRateMin:(NSUInteger)outputRateMin
+                     outputRateMax:(NSUInteger)outputRateMax
                         outputName:(NSString *)outputName
                        commitBlock:(void(^)(NSUInteger input, NSUInteger output))commitBlock {
     SCInputView *inputView = [[UINib nibWithNibName:@"SCInputView" bundle:nil] instantiateWithOwner:nil options:nil][0];
@@ -228,16 +231,27 @@ static const NSTimeInterval menuAnimationDuration = 0.5;
         return @(rounded);
     }];
     
-    RACSignal *outputSignal = [inputSignal map:^(NSNumber *inputNumber) {
-        return @((inputNumber.unsignedIntegerValue / inputRate) * outputRate);
+    RACSignal *outputMinSignal = [inputSignal map:^(NSNumber *inputNumber) {
+        return @((inputNumber.unsignedIntegerValue / inputRate) * outputRateMin);
+    }];
+    RACSignal *outputMaxSignal = [inputSignal map:^(NSNumber *inputNumber) {
+        return @((inputNumber.unsignedIntegerValue / inputRate) * outputRateMax);
     }];
     
     inputView.promptLabel.text = @"labor> ";
-    inputView.topLabel.text = [NSString stringWithFormat:@"%u labor -> %u %@", inputRate, outputRate, outputName];
+    if (outputRateMin == outputRateMax) {
+        inputView.topLabel.text = [NSString stringWithFormat:@"%u labor -> %u %@", inputRate, outputRateMin, outputName];
+    } else {
+        inputView.topLabel.text = [NSString stringWithFormat:@"%u labor -> %u-%u %@", inputRate, outputRateMin, outputRateMax, outputName];
+    }
     inputView.titleLabel.text = title;
     
-    RAC(inputView.bottomLabel, text) = [RACSignal combineLatest:@[inputSignal, outputSignal] reduce:^(NSNumber *input, NSNumber *output) {
-        return [NSString stringWithFormat:@"%@ labor -> %@ %@", input, output, outputName];
+    RAC(inputView.bottomLabel, text) = [RACSignal combineLatest:@[inputSignal, outputMinSignal, outputMaxSignal] reduce:^(NSNumber *input, NSNumber *outputMin, NSNumber *outputMax) {
+        if ([outputMin isEqual:outputMax]) {
+            return [NSString stringWithFormat:@"%@ labor -> %@ %@", input, outputMin, outputName];
+        } else {
+            return [NSString stringWithFormat:@"%@ labor -> %@-%@ %@", input, outputMin, outputMax, outputName];
+        }
     }];
     
     [inputView.button setTitle:@"Commit" forState:UIControlStateNormal];
@@ -251,7 +265,17 @@ static const NSTimeInterval menuAnimationDuration = 0.5;
     
     [[inputView.button rac_signalForControlEvents:UIControlEventTouchUpInside] subscribeNext:^(id x) {
         NSUInteger input = [[inputSignal first] unsignedIntegerValue];
-        NSUInteger output = [[outputSignal first] unsignedIntegerValue];
+        assert(input % inputRate == 0);
+        NSUInteger inputEvents = input / inputRate;
+        NSUInteger output = 0;
+        NSUInteger outputSpread = outputRateMax - outputRateMin;
+        if (outputSpread == 0) {
+            output = outputRateMin * inputEvents;
+        } else {
+            for (NSUInteger i = 0; i < inputEvents; i++) {
+                output += arc4random_uniform(outputSpread) + outputRateMin;
+            }
+        }
         commitBlock(input, output);
         dismiss();
     }];
@@ -273,6 +297,14 @@ static const NSTimeInterval menuAnimationDuration = 0.5;
     inputView.transform = CGAffineTransformMakeScale(0.01, 0.01);
     [self popOpen:inputView inView:self.view];
     [inputView.textField becomeFirstResponder];
+}
+
+- (void)displayLaborModalWithTitle:(NSString *)title
+                         inputRate:(NSUInteger)inputRate
+                        outputRate:(NSUInteger)outputRate
+                        outputName:(NSString *)outputName
+                       commitBlock:(void(^)(NSUInteger input, NSUInteger output))commitBlock {
+    [self displayLaborModalWithTitle:title inputRate:inputRate outputRateMin:outputRate outputRateMax:outputRate outputName:outputName commitBlock:commitBlock];
 }
 
 - (void)addMenuViewForTile:(SCTile *)tile {
