@@ -22,7 +22,21 @@
 @implementation SCCity
 
 - (void)iterate {
-
+    NSUInteger hunger = self.population;
+    
+    NSUInteger meatToEat = MIN(hunger, self.meat);
+    self.meat -= meatToEat;
+    hunger -= meatToEat;
+    NSLog(@"ate %u meat", meatToEat);
+    
+    NSUInteger maizeToEat = MIN(hunger, self.maize);
+    self.maize -= maizeToEat;
+    hunger -= maizeToEat;
+    NSLog(@"ate %u maize", maizeToEat);
+    
+    NSUInteger starvation = hunger;
+    NSLog(@"%u people starved to death", starvation);
+    self.population -= starvation;
 }
 
 + (instancetype)cityWithWorld:(SCWorld *)world {
