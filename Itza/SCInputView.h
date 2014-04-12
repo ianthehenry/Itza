@@ -7,7 +7,8 @@
 //
 
 #import "SCPassthroughView.h"
-#import "SCLabel.h"
+
+@class SCLabel;
 
 @interface SCInputView : SCPassthroughView
 

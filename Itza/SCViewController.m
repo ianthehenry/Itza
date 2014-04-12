@@ -13,6 +13,7 @@
 #import "SCRadialMenuView.h"
 #import "SCPassthroughView.h"
 #import "SCInputView.h"
+#import "SCLabel.h"
 
 static CGFloat RADIUS;
 static CGFloat APOTHEM;
@@ -119,7 +120,7 @@ static const NSTimeInterval menuAnimationDuration = 0.5;
     SCButtonDescription *(^button)(NSString *name) = ^(NSString *name) {
         return [SCButtonDescription buttonWithText:name handler:^{
             self.labor -= 1;
-            NSLog(@"%@", name);
+            [self flashMessage:name];
         }];
     };
     
@@ -144,6 +145,7 @@ static const NSTimeInterval menuAnimationDuration = 0.5;
             [self displayLaborModalWithTitle:@"Chop Wood" inputRate:3 outputRate:1 outputName:@"wood" commitBlock:^(NSUInteger input, NSUInteger output) {
                 self.labor -= input;
                 [self.city gainWood:output];
+                [self flashMessage:[NSString stringWithFormat:@"+ %u wood", output]];
             }];
         }]];
     } else {
@@ -151,7 +153,28 @@ static const NSTimeInterval menuAnimationDuration = 0.5;
     }
 }
 
+- (void)flashMessage:(NSString *)message {
+    SCLabel *label = [[SCLabel alloc] initWithFrame:CGRectZero];
+    [label size:@"k"];
+    label.text = message;
+    label.insets = UIEdgeInsetsMake(5, 5, 5, 5);
+    [label sizeToFit];
+    label.center = CGPointMake(CGRectGetMidX(self.view.bounds), 0);
+    label.frameOriginY = CGRectGetMaxY(self.navigationController.navigationBar.frame) + 5;
+    label.backgroundColor = [UIColor colorWithWhite:1 alpha:0.9];
+    label.layer.cornerRadius = label.frameHeight * 0.5;
+    label.layer.masksToBounds = YES;
+    
+    [self popOpen:label inView:self.view completion:^(BOOL finished) {
+        [self popClosed:label delay:0.25];
+    }];
+}
+
 - (void)popOpen:(UIView *)view inView:(UIView *)superview {
+    [self popOpen:view inView:superview completion:nil];
+}
+
+- (void)popOpen:(UIView *)view inView:(UIView *)superview completion:(void(^)(BOOL))completion {
     view.transform = CGAffineTransformMakeScale(0.1, 0.1);
     view.alpha = 0;
     [superview addSubview:view];
@@ -164,13 +187,17 @@ static const NSTimeInterval menuAnimationDuration = 0.5;
                      animations:^{
                          view.alpha = 1;
                          view.transform = CGAffineTransformIdentity;
-                     } completion:nil];
+                     } completion:completion];
 
 }
 
 - (void)popClosed:(UIView *)view {
+    [self popClosed:view delay:0];
+}
+
+- (void)popClosed:(UIView *)view delay:(NSTimeInterval)delay {
     [UIView animateWithDuration:menuAnimationDuration * 0.25
-                          delay:0
+                          delay:delay
                         options:UIViewAnimationOptionBeginFromCurrentState | UIViewAnimationOptionCurveEaseOut
                      animations:^{
                          view.transform = CGAffineTransformMakeScale(1.1, 1.1);

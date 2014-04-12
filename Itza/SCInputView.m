@@ -7,6 +7,7 @@
 //
 
 #import "SCInputView.h"
+#import "SCLabel.h"
 
 @interface SCInputView ()
 
