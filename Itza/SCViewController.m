@@ -84,12 +84,7 @@ static const NSTimeInterval menuAnimationDuration = 0.5;
     RAC(self, contentSize) = [RACObserve(self, world.radius) map:^(NSNumber *worldRadius) {
         return [NSValue valueWithCGSize:boundingSizeForHexagons(APOTHEM, worldRadius.unsignedIntegerValue * 2 + 1)];
     }];
-    RAC(self.scrollView, contentSize) = [RACObserve(self, contentSize) map:^id(NSValue *sizeValue) {
-        CGSize size = sizeValue.CGSizeValue;
-        size.width += PADDING * 2;
-        size.height += PADDING * 2;
-        return [NSValue valueWithCGSize:size];
-    }];
+    RAC(self.scrollView, contentSize) = [self paddedContentSize];
     
     @weakify(self);
     [RACObserve(self, selectedTile) subscribeChanges:^(SCTile *previous, SCTile *current) {
@@ -104,6 +99,15 @@ static const NSTimeInterval menuAnimationDuration = 0.5;
         selectedTileView.selected = YES;
         [selectedTileView.superview bringSubviewToFront:selectedTileView];
     } start:self.selectedTile];
+}
+
+- (RACSignal *)paddedContentSize {
+    return [RACObserve(self, contentSize) map:^id(NSValue *sizeValue) {
+        CGSize size = sizeValue.CGSizeValue;
+        size.width += PADDING * 2;
+        size.height += PADDING * 2;
+        return [NSValue valueWithCGSize:size];
+    }];
 }
 
 - (void)removeCurrentMenuView {
@@ -295,18 +299,14 @@ static const NSTimeInterval menuAnimationDuration = 0.5;
     self.tilesView = [[SCPassthroughView alloc] initWithFrame:self.scrollView.contentView.bounds];
     [self.scrollView.contentView addSubview:self.tilesView];
     
-    RACSignal *boundsSignal = [RACObserve(self, contentSize) map:^(NSValue *contentSizeValue) {
+    RAC(self.tilesView, bounds) = [self.paddedContentSize map:^(NSValue *contentSizeValue) {
         CGSize contentSize = contentSizeValue.CGSizeValue;
         CGRect bounds = CGRectMake(contentSize.width * -0.5, contentSize.height * -0.5, contentSize.width, contentSize.height);
         return [NSValue valueWithCGRect:bounds];
     }];
-    
-    RACSignal *frameSignal = [RACObserve(self, contentSize) map:^(NSValue *contentSizeValue) {
-        return [NSValue valueWithCGRect:CGRectMakeSize(PADDING, PADDING, contentSizeValue.CGSizeValue)];
+    RAC(self.tilesView, frame) = [self.paddedContentSize map:^(NSValue *contentSizeValue) {
+        return [NSValue valueWithCGRect:CGRectMakeSize(0, 0, contentSizeValue.CGSizeValue)];
     }];
-    
-    RAC(self.tilesView, bounds) = boundsSignal;
-    RAC(self.tilesView, frame) = frameSignal;
     
     self.city = [SCCity cityWithWorld:[SCWorld worldWithRadius:6]];
     self.labor = self.city.population;
