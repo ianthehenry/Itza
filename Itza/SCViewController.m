@@ -361,9 +361,7 @@ static const NSTimeInterval menuAnimationDuration = 0.5;
     
     [[self.endTurnButton rac_signalForControlEvents:UIControlEventTouchUpInside] subscribeNext:^(id x) {
         [self iterate];
-    }];
-    
-    [self displayLaborModalWithName:@"hmm"];
+    }];    
 }
 
 - (void)scrollToTile:(SCTile *)tile {

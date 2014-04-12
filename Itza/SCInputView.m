@@ -7,7 +7,6 @@
 //
 
 #import "SCInputView.h"
-#import "SCCornerView.h"
 
 @interface SCInputView ()
 
@@ -20,15 +19,9 @@
 @property (strong, nonatomic, readwrite) IBOutlet SCLabel *bottomLabel;
 @property (strong, nonatomic, readwrite) IBOutlet UIButton *cancelButton;
 
-@property (strong, nonatomic) IBOutlet SCCornerView *leftTitleCornerView;
-@property (strong, nonatomic) IBOutlet SCCornerView *rightTitleCornerView;
-@property (strong, nonatomic) IBOutlet SCCornerView *cancelCorner;
-@property (strong, nonatomic) IBOutlet SCCornerView *buttonCorner;
-
 @end
 
 static const CGFloat padding = 10;
-static const CGFloat cornerRadius = 5;
 
 @implementation SCInputView
 
@@ -41,10 +34,6 @@ static const CGFloat cornerRadius = 5;
     RAC(self.button, backgroundColor) =
     RAC(self.cancelButton, backgroundColor) =
     RAC(self.textField, backgroundColor) =
-    RAC(self.leftTitleCornerView, color) =
-    RAC(self.rightTitleCornerView, color) =
-    RAC(self.cancelCorner, color) =
-    RAC(self.buttonCorner, color) =
     RACObserve(self, contentBackgroundColor);
     
     RAC(self.titleLabel, textColor) =
@@ -61,30 +50,6 @@ static const CGFloat cornerRadius = 5;
     
     self.cancelButton.contentEdgeInsets =
     self.button.contentEdgeInsets = UIEdgeInsetsMake(padding, padding, padding, padding);
-    
-    self.leftTitleCornerView.radius =
-    self.buttonCorner.radius =
-    self.cancelCorner.radius =
-    self.rightTitleCornerView.radius = cornerRadius;
-    self.leftTitleCornerView.corner = UIRectCornerBottomRight;
-    self.rightTitleCornerView.corner = UIRectCornerBottomLeft;
-    self.cancelCorner.corner = UIRectCornerTopLeft;
-    self.buttonCorner.corner = UIRectCornerTopRight;
-}
-
-- (void)roundCorners:(UIRectCorner)corners ofView:(UIView *)view {
-    UIBezierPath *path = [UIBezierPath bezierPathWithRoundedRect:view.layer.bounds byRoundingCorners:corners cornerRadii:CGSizeMake(cornerRadius, cornerRadius)];
-    CAShapeLayer *mask = [CAShapeLayer layer];
-    mask.path = path.CGPath;
-    view.layer.mask = mask;
-}
-
-- (void)layoutSubviews {
-    [super layoutSubviews];
-    [self roundCorners:(UIRectCornerTopLeft | UIRectCornerTopRight) ofView:self.contentView];
-    [self roundCorners:(UIRectCornerTopLeft | UIRectCornerTopRight) ofView:self.titleLabel];
-    [self roundCorners:(UIRectCornerBottomLeft | UIRectCornerBottomRight) ofView:self.cancelButton];
-    [self roundCorners:(UIRectCornerBottomLeft | UIRectCornerBottomRight) ofView:self.button];
 }
 
 @end
