@@ -119,7 +119,6 @@ static const NSTimeInterval menuAnimationDuration = 0.5;
 - (NSArray *)buttonsForTile:(SCTile *)tile {
     SCButtonDescription *(^button)(NSString *name) = ^(NSString *name) {
         return [SCButtonDescription buttonWithText:name handler:^{
-            self.labor -= 1;
             [self flashMessage:name];
         }];
     };
