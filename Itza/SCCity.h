@@ -24,5 +24,7 @@
 + (instancetype)cityWithWorld:(SCWorld *)world;
 
 - (void)gainWood:(NSUInteger)wood;
+- (void)gainMaize:(NSUInteger)maize;
+- (void)gainMeat:(NSUInteger)meat;
 
 @end

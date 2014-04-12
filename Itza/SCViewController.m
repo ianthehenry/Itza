@@ -130,8 +130,21 @@ static const NSTimeInterval menuAnimationDuration = 0.5;
     } else if ([tile.foreground isKindOfClass:SCTemple.class]) {
         return @[button(@"Worship"), button(@"Sacrifice")];
     } else if ([tile.foreground isKindOfClass:SCForest.class]) {
-        return @[button(@"Hunt"), button(@"Forage"), [SCButtonDescription buttonWithText:@"CHOP" handler:^{
-            [self displayLaborModalWithName:@"CHOP"];
+        return @[[SCButtonDescription buttonWithText:@"Hunt" handler:^{
+            [self displayLaborModalWithTitle:@"Hunt" inputRate:1 outputRate:2 outputName:@"meat" commitBlock:^(NSUInteger input, NSUInteger output) {
+                self.labor -= input;
+                [self.city gainMeat:output];
+            }];
+        }], [SCButtonDescription buttonWithText:@"Frg" handler:^{
+            [self displayLaborModalWithTitle:@"Forage for Maize" inputRate:2 outputRate:1 outputName:@"maize" commitBlock:^(NSUInteger input, NSUInteger output) {
+                self.labor -= input;
+                [self.city gainMaize:output];
+            }];
+        }], [SCButtonDescription buttonWithText:@"Chop" handler:^{
+            [self displayLaborModalWithTitle:@"Chop Wood" inputRate:3 outputRate:1 outputName:@"wood" commitBlock:^(NSUInteger input, NSUInteger output) {
+                self.labor -= input;
+                [self.city gainWood:output];
+            }];
         }]];
     } else {
         return nil;
@@ -174,12 +187,13 @@ static const NSTimeInterval menuAnimationDuration = 0.5;
                      }];
 }
 
-- (void)displayLaborModalWithName:(NSString *)name {
+- (void)displayLaborModalWithTitle:(NSString *)title
+                         inputRate:(NSUInteger)inputRate
+                        outputRate:(NSUInteger)outputRate
+                        outputName:(NSString *)outputName
+                       commitBlock:(void(^)(NSUInteger input, NSUInteger output))commitBlock {
     SCInputView *inputView = [[UINib nibWithNibName:@"SCInputView" bundle:nil] instantiateWithOwner:nil options:nil][0];
     [inputView size:@""];
-    
-    NSUInteger inputRate = 3;
-    NSUInteger outputRate = 1;
     
     RACSignal *inputSignal = [inputView.textField.rac_textSignal map:^id(NSString *text) {
         NSUInteger labor = MAX(0, MIN(text.integerValue, self.labor));
@@ -192,11 +206,11 @@ static const NSTimeInterval menuAnimationDuration = 0.5;
     }];
     
     inputView.promptLabel.text = @"labor> ";
-    inputView.topLabel.text = [NSString stringWithFormat:@"%u labor -> %u wood", inputRate, outputRate];
-    inputView.titleLabel.text = @"Chop some wood";
+    inputView.topLabel.text = [NSString stringWithFormat:@"%u labor -> %u %@", inputRate, outputRate, outputName];
+    inputView.titleLabel.text = title;
     
     RAC(inputView.bottomLabel, text) = [RACSignal combineLatest:@[inputSignal, outputSignal] reduce:^(NSNumber *input, NSNumber *output) {
-        return [NSString stringWithFormat:@"%@ labor -> %@ wood", input, output];
+        return [NSString stringWithFormat:@"%@ labor -> %@ %@", input, output, outputName];
     }];
     
     [inputView.button setTitle:@"Commit" forState:UIControlStateNormal];
@@ -211,8 +225,7 @@ static const NSTimeInterval menuAnimationDuration = 0.5;
     [[inputView.button rac_signalForControlEvents:UIControlEventTouchUpInside] subscribeNext:^(id x) {
         NSUInteger input = [[inputSignal first] unsignedIntegerValue];
         NSUInteger output = [[outputSignal first] unsignedIntegerValue];
-        self.labor -= input;
-        [self.city gainWood:output];
+        commitBlock(input, output);
         dismiss();
     }];
     
@@ -225,7 +238,7 @@ static const NSTimeInterval menuAnimationDuration = 0.5;
     }] takeUntilBlock:^BOOL(id x) {
         return dismissed;
     }];
-
+    
     // This is dumb, but I don't know a better way to do it.
     [inputView layoutIfNeeded];
     inputView.frameHeight = CGRectGetMaxY(inputView.button.frame);

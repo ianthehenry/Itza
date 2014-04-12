@@ -37,6 +37,14 @@
     NSUInteger starvation = hunger;
     NSLog(@"%u people starved to death", starvation);
     self.population -= starvation;
+    
+    NSUInteger meatToRot = self.meat / 2;
+    self.meat -= meatToRot;
+    NSLog(@"%u meat rotted", meatToRot);
+    
+    NSUInteger maizeToRot = self.maize / 10;
+    self.maize -= maizeToRot;
+    NSLog(@"%u maize rotted", maizeToRot);
 }
 
 + (instancetype)cityWithWorld:(SCWorld *)world {
@@ -50,6 +58,14 @@
 
 - (void)gainWood:(NSUInteger)wood {
     self.wood += wood;
+}
+
+- (void)gainMaize:(NSUInteger)maize {
+    self.maize += maize;
+}
+
+- (void)gainMeat:(NSUInteger)meat {
+    self.meat += meat;
 }
 
 @end
