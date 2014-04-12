@@ -226,6 +226,10 @@ static const NSTimeInterval menuAnimationDuration = 0.5;
         return dismissed;
     }];
 
+    // This is dumb, but I don't know a better way to do it.
+    [inputView layoutIfNeeded];
+    inputView.frameHeight = CGRectGetMaxY(inputView.button.frame);
+    
     inputView.transform = CGAffineTransformMakeScale(0.01, 0.01);
     [self popOpen:inputView inView:self.view];
     [inputView.textField becomeFirstResponder];
@@ -361,7 +365,7 @@ static const NSTimeInterval menuAnimationDuration = 0.5;
     
     [[self.endTurnButton rac_signalForControlEvents:UIControlEventTouchUpInside] subscribeNext:^(id x) {
         [self iterate];
-    }];    
+    }];
 }
 
 - (void)scrollToTile:(SCTile *)tile {
