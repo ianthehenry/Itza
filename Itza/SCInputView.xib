@@ -17,8 +17,18 @@
                     <color key="textColor" cocoaTouchSystemColor="darkTextColor"/>
                     <nil key="highlightedColor"/>
                 </label>
+                <view contentMode="scaleToFill" placeholderIntrinsicWidth="5" placeholderIntrinsicHeight="5" translatesAutoresizingMaskIntoConstraints="NO" id="Ylm-31-9Qz" customClass="SCCornerView">
+                    <rect key="frame" x="125" y="11" width="5" height="5"/>
+                    <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
+                    <color key="backgroundColor" white="1" alpha="1" colorSpace="custom" customColorSpace="calibratedWhite"/>
+                </view>
+                <view contentMode="scaleToFill" placeholderIntrinsicWidth="5" placeholderIntrinsicHeight="5" translatesAutoresizingMaskIntoConstraints="NO" id="rjd-9V-9Kt" customClass="SCCornerView">
+                    <rect key="frame" x="170" y="11" width="5" height="5"/>
+                    <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
+                    <color key="backgroundColor" white="1" alpha="1" colorSpace="custom" customColorSpace="calibratedWhite"/>
+                </view>
                 <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="F3g-WX-UkQ">
-                    <rect key="frame" x="0.0" y="16" width="300" height="126"/>
+                    <rect key="frame" x="0.0" y="16" width="300" height="49"/>
                     <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
                     <subviews>
                         <label opaque="NO" clipsSubviews="YES" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="something something" textAlignment="center" lineBreakMode="tailTruncation" numberOfLines="0" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" preferredMaxLayoutWidth="300" translatesAutoresizingMaskIntoConstraints="NO" id="4i2-9N-nyQ" customClass="SCLabel">
@@ -57,6 +67,7 @@
                         <constraint firstItem="X6I-Or-elF" firstAttribute="height" secondItem="7vn-Nk-lXG" secondAttribute="height" id="UcN-mq-9R2"/>
                         <constraint firstItem="4i2-9N-nyQ" firstAttribute="leading" secondItem="F3g-WX-UkQ" secondAttribute="leading" id="YjQ-ft-hng"/>
                         <constraint firstAttribute="trailing" secondItem="4i2-9N-nyQ" secondAttribute="trailing" id="aLf-5X-zgX"/>
+                        <constraint firstAttribute="bottom" secondItem="EyX-wC-OF4" secondAttribute="bottom" id="aZ0-O5-Cu6"/>
                         <constraint firstItem="X6I-Or-elF" firstAttribute="top" secondItem="7vn-Nk-lXG" secondAttribute="top" id="ian-in-cYt"/>
                         <constraint firstItem="7vn-Nk-lXG" firstAttribute="leading" secondItem="F3g-WX-UkQ" secondAttribute="leading" id="kIu-3e-LEY"/>
                         <constraint firstAttribute="trailing" secondItem="X6I-Or-elF" secondAttribute="trailing" id="qMY-d8-ooB"/>
@@ -64,39 +75,60 @@
                     </constraints>
                 </view>
                 <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="z1m-ic-7ld">
-                    <rect key="frame" x="254" y="142" width="46" height="30"/>
+                    <rect key="frame" x="254" y="65" width="46" height="30"/>
                     <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
                     <state key="normal" title="Button">
                         <color key="titleShadowColor" white="0.5" alpha="1" colorSpace="calibratedWhite"/>
                     </state>
                 </button>
                 <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="3Nv-q3-Nlj">
-                    <rect key="frame" x="0.0" y="142" width="48" height="30"/>
+                    <rect key="frame" x="0.0" y="65" width="48" height="30"/>
                     <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
                     <state key="normal" title="Cancel">
                         <color key="titleShadowColor" white="0.5" alpha="1" colorSpace="calibratedWhite"/>
                     </state>
                 </button>
+                <view contentMode="scaleToFill" placeholderIntrinsicWidth="5" placeholderIntrinsicHeight="5" translatesAutoresizingMaskIntoConstraints="NO" id="BSU-eG-7ET" customClass="SCCornerView">
+                    <rect key="frame" x="48" y="65" width="5" height="5"/>
+                    <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
+                    <color key="backgroundColor" white="1" alpha="1" colorSpace="custom" customColorSpace="calibratedWhite"/>
+                </view>
+                <view contentMode="scaleToFill" placeholderIntrinsicWidth="5" placeholderIntrinsicHeight="5" translatesAutoresizingMaskIntoConstraints="NO" id="Sro-FG-WnZ" customClass="SCCornerView">
+                    <rect key="frame" x="249" y="65" width="5" height="5"/>
+                    <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
+                    <color key="backgroundColor" white="1" alpha="1" colorSpace="custom" customColorSpace="calibratedWhite"/>
+                </view>
             </subviews>
             <constraints>
-                <constraint firstAttribute="bottom" secondItem="z1m-ic-7ld" secondAttribute="bottom" id="2jl-4W-eFL"/>
+                <constraint firstItem="3Nv-q3-Nlj" firstAttribute="top" secondItem="F3g-WX-UkQ" secondAttribute="bottom" id="1oV-Ba-ty8"/>
+                <constraint firstItem="IvA-VT-Q7c" firstAttribute="leading" secondItem="Ylm-31-9Qz" secondAttribute="trailing" id="6Y4-av-ZUl"/>
                 <constraint firstAttribute="trailing" secondItem="z1m-ic-7ld" secondAttribute="trailing" id="EJF-YQ-pUf"/>
+                <constraint firstItem="F3g-WX-UkQ" firstAttribute="top" secondItem="Ylm-31-9Qz" secondAttribute="bottom" id="FE3-PU-Jyt"/>
                 <constraint firstItem="F3g-WX-UkQ" firstAttribute="top" secondItem="IvA-VT-Q7c" secondAttribute="bottom" id="Gp4-eb-cTM"/>
                 <constraint firstItem="3Nv-q3-Nlj" firstAttribute="leading" secondItem="iN0-l3-epB" secondAttribute="leading" id="M5W-1o-at2"/>
-                <constraint firstAttribute="bottom" secondItem="3Nv-q3-Nlj" secondAttribute="bottom" id="Q6v-sf-vRP"/>
+                <constraint firstItem="Sro-FG-WnZ" firstAttribute="top" secondItem="F3g-WX-UkQ" secondAttribute="bottom" id="NDC-Rz-0D7"/>
                 <constraint firstAttribute="trailing" secondItem="F3g-WX-UkQ" secondAttribute="trailing" id="Rhi-Ny-bkX"/>
                 <constraint firstItem="z1m-ic-7ld" firstAttribute="top" secondItem="F3g-WX-UkQ" secondAttribute="bottom" id="Wdw-cl-P6r"/>
                 <constraint firstItem="F3g-WX-UkQ" firstAttribute="leading" secondItem="iN0-l3-epB" secondAttribute="leading" id="Yes-Yl-uau"/>
                 <constraint firstAttribute="centerX" secondItem="IvA-VT-Q7c" secondAttribute="centerX" id="Zm3-Ak-Onj"/>
+                <constraint firstItem="F3g-WX-UkQ" firstAttribute="top" secondItem="rjd-9V-9Kt" secondAttribute="bottom" id="Ztp-JH-Mz9"/>
+                <constraint firstItem="z1m-ic-7ld" firstAttribute="leading" secondItem="Sro-FG-WnZ" secondAttribute="trailing" id="dHK-KG-Eor"/>
+                <constraint firstItem="BSU-eG-7ET" firstAttribute="top" secondItem="F3g-WX-UkQ" secondAttribute="bottom" id="dXR-jM-vuN"/>
+                <constraint firstItem="BSU-eG-7ET" firstAttribute="leading" secondItem="3Nv-q3-Nlj" secondAttribute="trailing" id="iOa-oJ-851"/>
+                <constraint firstItem="rjd-9V-9Kt" firstAttribute="leading" secondItem="IvA-VT-Q7c" secondAttribute="trailing" id="mVV-fm-9zK"/>
                 <constraint firstItem="IvA-VT-Q7c" firstAttribute="top" secondItem="iN0-l3-epB" secondAttribute="top" id="yU5-fb-rGq"/>
             </constraints>
             <freeformSimulatedSizeMetrics key="simulatedDestinationMetrics"/>
             <connections>
                 <outlet property="bottomLabel" destination="EyX-wC-OF4" id="Wq7-zk-gcV"/>
                 <outlet property="button" destination="z1m-ic-7ld" id="E7I-tR-Zkj"/>
+                <outlet property="buttonCorner" destination="Sro-FG-WnZ" id="JH9-HK-5Le"/>
                 <outlet property="cancelButton" destination="3Nv-q3-Nlj" id="6D7-8d-cIT"/>
+                <outlet property="cancelCorner" destination="BSU-eG-7ET" id="3JR-h4-NKX"/>
                 <outlet property="contentView" destination="F3g-WX-UkQ" id="LaR-pg-W1h"/>
+                <outlet property="leftTitleCornerView" destination="Ylm-31-9Qz" id="X6D-AS-3Jc"/>
                 <outlet property="promptLabel" destination="7vn-Nk-lXG" id="A3P-R6-FKm"/>
+                <outlet property="rightTitleCornerView" destination="rjd-9V-9Kt" id="l6o-TW-sCy"/>
                 <outlet property="textField" destination="X6I-Or-elF" id="ce0-Or-Ds2"/>
                 <outlet property="titleLabel" destination="IvA-VT-Q7c" id="pdx-vf-b3G"/>
                 <outlet property="topLabel" destination="4i2-9N-nyQ" id="mG2-kr-MX2"/>

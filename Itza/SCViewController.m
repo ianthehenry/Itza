@@ -199,7 +199,7 @@ static const NSTimeInterval menuAnimationDuration = 0.5;
         return [NSString stringWithFormat:@"%@ labor -> %@ wood", input, output];
     }];
     
-    [inputView.button setTitle:@"DO IT" forState:UIControlStateNormal];
+    [inputView.button setTitle:@"Commit" forState:UIControlStateNormal];
     
     __block BOOL dismissed = NO;
     void (^dismiss)() = ^{
@@ -362,6 +362,8 @@ static const NSTimeInterval menuAnimationDuration = 0.5;
     [[self.endTurnButton rac_signalForControlEvents:UIControlEventTouchUpInside] subscribeNext:^(id x) {
         [self iterate];
     }];
+    
+    [self displayLaborModalWithName:@"hmm"];
 }
 
 - (void)scrollToTile:(SCTile *)tile {
