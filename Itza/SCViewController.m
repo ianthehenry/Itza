@@ -143,7 +143,9 @@ static const NSTimeInterval menuAnimationDuration = 0.5;
             [self.city gainFish:output];
         })];
     } else if ([tile.foreground isKindOfClass:SCGrass.class]) {
-        return @[button(@"Farm"), button(@"Build")];
+        return @[button(@"Farm"), [SCButtonDescription buttonWithText:@"Build" handler:^{
+            [self showBuildingModalForTile:tile];
+        }]];
     } else if ([tile.foreground isKindOfClass:SCTemple.class]) {
         return @[button(@"Worship"), button(@"Sacrifice")];
     } else if ([tile.foreground isKindOfClass:SCForest.class]) {
@@ -219,6 +221,39 @@ static const NSTimeInterval menuAnimationDuration = 0.5;
                      }];
 }
 
+- (void)showBuildingModalForTile:(SCTile *)tile {
+    UIView *view = [[UIView alloc] initWithFrame:CGRectMake(0, 0, 100, 100)];
+    view.backgroundColor = UIColor.whiteColor;
+    UIButton *button = [UIButton buttonWithType:UIButtonTypeSystem];
+    button.frame = CGRectMake(0, 0, 100, 44);
+    [button setTitle:@"Done" forState:UIControlStateNormal];
+    [view addSubview:button];
+
+    __block BOOL dismissed = NO;
+    void (^dismiss)() = [self showModal:view dismissed:&dismissed];
+    [[button rac_signalForControlEvents:UIControlEventTouchUpInside] subscribeNext:^(id x) {
+        dismiss();
+    }];
+}
+
+- (void(^)())showModal:(UIView *)view dismissed:(BOOL *)dismissed {
+    NSAssert(*dismissed == NO, @"Must pass a pointer to NO");
+    void (^dismiss)() = ^{
+        *dismissed = YES;
+        [self popClosed:view];
+    };
+
+    RAC(view, center) = [[RACObserve(self, unobscuredFrame) map:^id(NSValue *frame) {
+        return [NSValue valueWithCGPoint:CGRectGetCenter(frame.CGRectValue)];
+    }] takeUntilBlock:^BOOL(id x) {
+        return *dismissed;
+    }];
+    
+    [self popOpen:view inView:self.view];
+
+    return dismiss;
+}
+
 - (void)displayLaborModalWithTitle:(NSString *)title
                          inputRate:(NSUInteger)inputRate
                      outputRateMin:(NSUInteger)outputRateMin
@@ -228,9 +263,13 @@ static const NSTimeInterval menuAnimationDuration = 0.5;
     SCInputView *inputView = [[UINib nibWithNibName:@"SCInputView" bundle:nil] instantiateWithOwner:nil options:nil][0];
     [inputView size:@""];
     
+    __block BOOL dismissed = NO;
+    
     inputView.slider.minimumValue = 0;
     inputView.slider.value = 0;
-    [RACObserve(self, labor) subscribeNext:^(NSNumber *labor) {
+    [[RACObserve(self, labor) takeUntilBlock:^BOOL(id x) {
+        return dismissed;
+    }] subscribeNext:^(NSNumber *labor) {
         inputView.slider.maximumValue = inputRate * (labor.unsignedIntegerValue / inputRate);
         [inputView.slider sendActionsForControlEvents:UIControlEventValueChanged];
     }];
@@ -271,14 +310,14 @@ static const NSTimeInterval menuAnimationDuration = 0.5;
     }];
     
     [inputView.button setTitle:@"Commit" forState:UIControlStateNormal];
-    
-    __block BOOL dismissed = NO;
-    void (^dismiss)() = ^{
-        dismissed = YES;
-        [self popClosed:inputView];
-    };
+    [inputView layoutIfNeeded];
+    inputView.frameHeight = CGRectGetMaxY(inputView.button.frame);
+    RAC(inputView.button, enabled) = [[inputSignal is:@0] not];
+
+    void (^dismiss)() = [self showModal:inputView dismissed:&dismissed];
     
     [[inputView.button rac_signalForControlEvents:UIControlEventTouchUpInside] subscribeNext:^(id x) {
+        dismiss();
         NSUInteger input = [[inputSignal first] unsignedIntegerValue];
         assert(input > 0);
         assert(input % inputRate == 0);
@@ -293,28 +332,12 @@ static const NSTimeInterval menuAnimationDuration = 0.5;
             }
         }
         commitBlock(input, output);
-        dismiss();
     }];
-    
-    RAC(inputView.button, enabled) = [[inputSignal is:@0] not];
     
     [[inputView.cancelButton rac_signalForControlEvents:UIControlEventTouchUpInside] subscribeNext:^(id x) {
-        [self addMenuViewForTile:self.selectedTile];
         dismiss();
+        [self addMenuViewForTile:self.selectedTile];
     }];
-    
-    // This is dumb, but I don't know a better way to do it.
-    [inputView layoutIfNeeded];
-    inputView.frameHeight = CGRectGetMaxY(inputView.button.frame);
-    
-    RAC(inputView, center) = [[RACObserve(self, unobscuredFrame) map:^id(NSValue *frame) {
-        return [NSValue valueWithCGPoint:CGRectGetCenter(frame.CGRectValue)];
-    }] takeUntilBlock:^BOOL(id x) {
-        return dismissed;
-    }];
-    
-    inputView.transform = CGAffineTransformMakeScale(0.01, 0.01);
-    [self popOpen:inputView inView:self.view];
 }
 
 - (void)displayLaborModalWithTitle:(NSString *)title
