@@ -15,6 +15,7 @@
 @property (nonatomic, assign, readwrite) NSUInteger maize;
 @property (nonatomic, assign, readwrite) NSUInteger wood;
 @property (nonatomic, assign, readwrite) NSUInteger stone;
+@property (nonatomic, assign, readwrite) NSUInteger fish;
 @property (nonatomic, strong, readwrite) SCWorld *world;
 
 @end
@@ -27,24 +28,32 @@
     NSUInteger meatToEat = MIN(hunger, self.meat);
     self.meat -= meatToEat;
     hunger -= meatToEat;
-    NSLog(@"ate %u meat", meatToEat);
+    NSLog(@"ate %@ meat", @(meatToEat));
+    
+    NSUInteger fishToEat = MIN(hunger, self.fish);
+    self.fish -= fishToEat;
+    hunger -= fishToEat;
+    NSLog(@"ate %@ fish", @(fishToEat));
     
     NSUInteger maizeToEat = MIN(hunger, self.maize);
     self.maize -= maizeToEat;
     hunger -= maizeToEat;
-    NSLog(@"ate %u maize", maizeToEat);
+    NSLog(@"ate %@ maize", @(maizeToEat));
     
-    NSUInteger starvation = hunger;
-    NSLog(@"%u people starved to death", starvation);
-    self.population -= starvation;
+    NSLog(@"%@ people starved to death", @(hunger));
+    self.population -= hunger;
     
-    NSUInteger meatToRot = self.meat / 2;
+    NSUInteger meatToRot = 3 * self.meat / 4;
     self.meat -= meatToRot;
-    NSLog(@"%u meat rotted", meatToRot);
+    NSLog(@"%@ meat rotted", @(meatToRot));
+    
+    NSUInteger fishToRot = 2 * self.fish / 3;
+    self.fish -= fishToRot;
+    NSLog(@"%@ fish rotted", @(fishToRot));
     
     NSUInteger maizeToRot = self.maize / 10;
     self.maize -= maizeToRot;
-    NSLog(@"%u maize rotted", maizeToRot);
+    NSLog(@"%@ maize rotted", @(maizeToRot));
 }
 
 + (instancetype)cityWithWorld:(SCWorld *)world {
@@ -66,6 +75,10 @@
 
 - (void)gainMeat:(NSUInteger)meat {
     self.meat += meat;
+}
+
+- (void)gainFish:(NSUInteger)fish {
+    self.fish += fish;
 }
 
 @end

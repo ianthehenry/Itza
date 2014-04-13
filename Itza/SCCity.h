@@ -14,6 +14,7 @@
 @property (nonatomic, assign, readonly) NSUInteger population;
 @property (nonatomic, assign, readonly) NSUInteger meat;
 @property (nonatomic, assign, readonly) NSUInteger maize;
+@property (nonatomic, assign, readonly) NSUInteger fish;
 @property (nonatomic, assign, readonly) NSUInteger wood;
 @property (nonatomic, assign, readonly) NSUInteger stone;
 
@@ -26,5 +27,6 @@
 - (void)gainWood:(NSUInteger)wood;
 - (void)gainMaize:(NSUInteger)maize;
 - (void)gainMeat:(NSUInteger)meat;
+- (void)gainFish:(NSUInteger)fish;
 
 @end

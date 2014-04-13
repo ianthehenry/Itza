@@ -124,7 +124,13 @@ static const NSTimeInterval menuAnimationDuration = 0.5;
     };
     
     if ([tile.foreground isKindOfClass:SCRiver.class]) {
-        return @[button(@"Fish")];
+        return @[[SCButtonDescription buttonWithText:@"Fish" handler:^{
+            [self displayLaborModalWithTitle:@"Fish for fishes" inputRate:3 outputRateMin:0 outputRateMax:5 outputName:@"fish" commitBlock:^(NSUInteger input, NSUInteger output) {
+                self.labor -= input;
+                [self.city gainFish:output];
+                [self flashMessage:[NSString stringWithFormat:@"+ %@ fish", @(output)]];
+            }];
+        }]];
     } else if ([tile.foreground isKindOfClass:SCGrass.class]) {
         return @[button(@"Farm"), button(@"Build")];
     } else if ([tile.foreground isKindOfClass:SCTemple.class]) {
@@ -134,19 +140,19 @@ static const NSTimeInterval menuAnimationDuration = 0.5;
             [self displayLaborModalWithTitle:@"Hunt" inputRate:1 outputRateMin:1 outputRateMax:3 outputName:@"meat" commitBlock:^(NSUInteger input, NSUInteger output) {
                 self.labor -= input;
                 [self.city gainMeat:output];
-                [self flashMessage:[NSString stringWithFormat:@"+ %u meat", output]];
+                [self flashMessage:[NSString stringWithFormat:@"+ %@ meat", @(output)]];
             }];
         }], [SCButtonDescription buttonWithText:@"Frg" handler:^{
             [self displayLaborModalWithTitle:@"Forage for Maize" inputRate:2 outputRateMin:0 outputRateMax:2 outputName:@"maize" commitBlock:^(NSUInteger input, NSUInteger output) {
                 self.labor -= input;
                 [self.city gainMaize:output];
-                [self flashMessage:[NSString stringWithFormat:@"+ %u maize", output]];
+                [self flashMessage:[NSString stringWithFormat:@"+ %@ maize", @(output)]];
             }];
         }], [SCButtonDescription buttonWithText:@"Chop" handler:^{
             [self displayLaborModalWithTitle:@"Chop Wood" inputRate:3 outputRate:1 outputName:@"wood" commitBlock:^(NSUInteger input, NSUInteger output) {
                 self.labor -= input;
                 [self.city gainWood:output];
-                [self flashMessage:[NSString stringWithFormat:@"+ %u wood", output]];
+                [self flashMessage:[NSString stringWithFormat:@"+ %@ wood", @(output)]];
             }];
         }]];
     } else {
@@ -239,9 +245,9 @@ static const NSTimeInterval menuAnimationDuration = 0.5;
     
     inputView.promptLabel.text = @"labor> ";
     if (outputRateMin == outputRateMax) {
-        inputView.topLabel.text = [NSString stringWithFormat:@"%u labor -> %u %@", inputRate, outputRateMin, outputName];
+        inputView.topLabel.text = [NSString stringWithFormat:@"%@ labor -> %@ %@", @(inputRate), @(outputRateMin), outputName];
     } else {
-        inputView.topLabel.text = [NSString stringWithFormat:@"%u labor -> %u-%u %@", inputRate, outputRateMin, outputRateMax, outputName];
+        inputView.topLabel.text = [NSString stringWithFormat:@"%@ labor -> %@-%@ %@", @(inputRate), @(outputRateMin), @(outputRateMax), outputName];
     }
     inputView.titleLabel.text = title;
     
@@ -272,7 +278,7 @@ static const NSTimeInterval menuAnimationDuration = 0.5;
             output = outputRateMin * inputEvents;
         } else {
             for (NSUInteger i = 0; i < inputEvents; i++) {
-                output += arc4random_uniform(outputSpread) + outputRateMin;
+                output += arc4random_uniform((u_int32_t)outputSpread + 1) + outputRateMin;
             }
         }
         commitBlock(input, output);
@@ -420,18 +426,27 @@ static const NSTimeInterval menuAnimationDuration = 0.5;
                           @(SCSeasonWinter): @"Winter"};
     }
     
+    RACSignal *foodSignal = [[RACSignal combineLatest:@[RACObserve(self.city, meat),
+                                                        RACObserve(self.city, fish),
+                                                        RACObserve(self.city, maize)]] map:^id(id <NSFastEnumeration> foods) {
+        NSUInteger totalFood = 0;
+        for (NSNumber *food in foods) {
+            totalFood += food.unsignedIntegerValue;
+        }
+        return @(totalFood);
+    }];
+    
     RAC(infoLabel, text) =
     [RACSignal combineLatest:@[RACObserve(self.world, turn),
                                RACObserve(self.city, population),
-                               RACObserve(self.city, meat),
+                               foodSignal,
                                RACObserve(self, labor),
-                               RACObserve(self.city, maize),
                                RACObserve(self.city, wood),
                                RACObserve(self.city, stone)]
-                      reduce:^(NSNumber *turn, NSNumber *population, NSNumber *meat, NSNumber *labor, NSNumber *maize, NSNumber *wood, NSNumber *stone) {
+                      reduce:^(NSNumber *turn, NSNumber *population, NSNumber *food, NSNumber *labor, NSNumber *wood, NSNumber *stone) {
                           NSUInteger year = turn.unsignedIntegerValue / 4;
                           NSString *season = seasonNameMap[@(self.world.season)];
-                          return [NSString stringWithFormat:@"%@ - %u\n%@l %@p %@m %@c %@w %@s", season, year, labor, population, meat, maize, wood, stone];
+                          return [NSString stringWithFormat:@"%@ - %@\n%@l %@p %@f %@w %@s", season, @(year), labor, population, food, wood, stone];
                       }];
     
     [[self.endTurnButton rac_signalForControlEvents:UIControlEventTouchUpInside] subscribeNext:^(id x) {
