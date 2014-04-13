@@ -127,19 +127,16 @@
 		3C12372B18F2679300E83534 /* Views */ = {
 			isa = PBXGroup;
 			children = (
+				3C69DC4718FA497000B6C935 /* Generic */,
 				3CB09EF518F1F93A000AA987 /* SCTileView.h */,
 				3CB09EF618F1F93A000AA987 /* SCTileView.m */,
 				3C262CD118F09F2300F1BBB3 /* SCHexView.h */,
 				3C262CD218F09F2300F1BBB3 /* SCHexView.m */,
-				3C262CD518F09F2300F1BBB3 /* SCScrollView.h */,
-				3C262CD618F09F2300F1BBB3 /* SCScrollView.m */,
-				3C58A33918F41D230025206A /* SCPassthroughView.h */,
-				3C58A33A18F41D230025206A /* SCPassthroughView.m */,
 				3C1F7C1E18F75AC90060E463 /* SCInputView.h */,
 				3C1F7C1F18F75AC90060E463 /* SCInputView.m */,
 				3C1F7C1C18F759F60060E463 /* SCInputView.xib */,
-				3C0B4B9E18F9C43400753EB3 /* SCLabel.h */,
-				3C0B4B9F18F9C43400753EB3 /* SCLabel.m */,
+				3C12373218F366AB00E83534 /* SCRadialMenuView.h */,
+				3C12373318F366AB00E83534 /* SCRadialMenuView.m */,
 			);
 			name = Views;
 			sourceTree = "<group>";
@@ -159,6 +156,19 @@
 				3C4DB4DA18F2231B009A73D1 /* SCCity.m */,
 			);
 			name = Models;
+			sourceTree = "<group>";
+		};
+		3C69DC4718FA497000B6C935 /* Generic */ = {
+			isa = PBXGroup;
+			children = (
+				3C262CD518F09F2300F1BBB3 /* SCScrollView.h */,
+				3C262CD618F09F2300F1BBB3 /* SCScrollView.m */,
+				3C58A33918F41D230025206A /* SCPassthroughView.h */,
+				3C58A33A18F41D230025206A /* SCPassthroughView.m */,
+				3C0B4B9E18F9C43400753EB3 /* SCLabel.h */,
+				3C0B4B9F18F9C43400753EB3 /* SCLabel.m */,
+			);
+			name = Generic;
 			sourceTree = "<group>";
 		};
 		3CD604DB18ECD30A00265338 = {
@@ -207,8 +217,6 @@
 				3CD6051F18ED93EE00265338 /* SCViewController.xib */,
 				3CD6050218ECD30A00265338 /* Images.xcassets */,
 				3CD604EE18ECD30A00265338 /* Supporting Files */,
-				3C12373218F366AB00E83534 /* SCRadialMenuView.h */,
-				3C12373318F366AB00E83534 /* SCRadialMenuView.m */,
 			);
 			path = Itza;
 			sourceTree = "<group>";

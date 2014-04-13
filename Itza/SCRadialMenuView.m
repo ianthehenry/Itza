@@ -26,6 +26,7 @@
     CGFloat centerDistance = apothem * 3;
     CGFloat buttonRadius = apothem;
     CGFloat outerCircleRadius = centerDistance + buttonRadius;
+    self.autoresizesSubviews = NO;
     
     if (self = [super initWithFrame:CGRectMake(0, 0, outerCircleRadius * 2, outerCircleRadius * 2)]) {
         CGFloat angleStep = M_PI / 3.0;
@@ -33,13 +34,11 @@
         NSInteger i = 0;
         
         for (SCButtonDescription *buttonDescription in buttonDescriptions) {
-            UIButton *button = [UIButton buttonWithType:UIButtonTypeCustom];
+            UIButton *button = [UIButton buttonWithType:UIButtonTypeSystem];
             button.backgroundColor = UIColor.whiteColor;
             button.frameWidth =
             button.frameHeight = buttonRadius * 2;
             [button setTitle:buttonDescription.text forState:UIControlStateNormal];
-            button.titleLabel.font = [UIFont fontWithName:@"Menlo" size:13];
-            [button setTitleColor:UIColor.blackColor forState:UIControlStateNormal];
             button.layer.cornerRadius = buttonRadius;
             
             [[button rac_signalForControlEvents:UIControlEventTouchUpInside] subscribeNext:^(id x) {
