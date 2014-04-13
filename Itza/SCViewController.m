@@ -123,38 +123,32 @@ static const NSTimeInterval menuAnimationDuration = 0.5;
         }];
     };
     
-    if ([tile.foreground isKindOfClass:SCRiver.class]) {
-        return @[[SCButtonDescription buttonWithText:@"Fish" handler:^{
-            [self displayLaborModalWithTitle:@"Fish for fishes" inputRate:3 outputRateMin:0 outputRateMax:5 outputName:@"fish" commitBlock:^(NSUInteger input, NSUInteger output) {
+    SCButtonDescription *(^laborInputButton)(NSString *buttonName, NSString *title, NSUInteger inputRate, NSUInteger outputRateMin, NSUInteger outputRateMax, NSString *outputName, void(^)(NSUInteger output)) = ^(NSString *buttonName, NSString *title, NSUInteger inputRate, NSUInteger outputRateMin, NSUInteger outputRateMax, NSString *outputName, void(^outputBlock)(NSUInteger output)) {
+        return [SCButtonDescription buttonWithText:buttonName handler:^{
+            [self displayLaborModalWithTitle:title inputRate:inputRate outputRateMin:outputRateMin outputRateMax:outputRateMax outputName:outputName commitBlock:^(NSUInteger input, NSUInteger output) {
                 self.labor -= input;
-                [self.city gainFish:output];
-                [self flashMessage:[NSString stringWithFormat:@"+ %@ fish", @(output)]];
+                outputBlock(output);
+                [self flashMessage:[NSString stringWithFormat:@"+ %@ %@", @(output), outputName]];
             }];
-        }]];
+        }];
+    };
+    
+    if ([tile.foreground isKindOfClass:SCRiver.class]) {
+        return @[laborInputButton(@"Fish", @"Fish for Fishes", 3, 0, 5, @"fish", ^(NSUInteger output) {
+            [self.city gainFish:output];
+        })];
     } else if ([tile.foreground isKindOfClass:SCGrass.class]) {
         return @[button(@"Farm"), button(@"Build")];
     } else if ([tile.foreground isKindOfClass:SCTemple.class]) {
         return @[button(@"Worship"), button(@"Sacrifice")];
     } else if ([tile.foreground isKindOfClass:SCForest.class]) {
-        return @[[SCButtonDescription buttonWithText:@"Hunt" handler:^{
-            [self displayLaborModalWithTitle:@"Hunt" inputRate:1 outputRateMin:1 outputRateMax:3 outputName:@"meat" commitBlock:^(NSUInteger input, NSUInteger output) {
-                self.labor -= input;
-                [self.city gainMeat:output];
-                [self flashMessage:[NSString stringWithFormat:@"+ %@ meat", @(output)]];
-            }];
-        }], [SCButtonDescription buttonWithText:@"Frg" handler:^{
-            [self displayLaborModalWithTitle:@"Forage for Maize" inputRate:2 outputRateMin:0 outputRateMax:2 outputName:@"maize" commitBlock:^(NSUInteger input, NSUInteger output) {
-                self.labor -= input;
-                [self.city gainMaize:output];
-                [self flashMessage:[NSString stringWithFormat:@"+ %@ maize", @(output)]];
-            }];
-        }], [SCButtonDescription buttonWithText:@"Chop" handler:^{
-            [self displayLaborModalWithTitle:@"Chop Wood" inputRate:3 outputRate:1 outputName:@"wood" commitBlock:^(NSUInteger input, NSUInteger output) {
-                self.labor -= input;
-                [self.city gainWood:output];
-                [self flashMessage:[NSString stringWithFormat:@"+ %@ wood", @(output)]];
-            }];
-        }]];
+        return @[laborInputButton(@"Hunt", @"Hunt for Animals", 1, 1, 2, @"meat", ^(NSUInteger output) {
+            [self.city gainMeat:output];
+        }), laborInputButton(@"Gthr", @"Gather Maize", 2, 0, 2, @"maize", ^(NSUInteger output) {
+            [self.city gainMaize:output];
+        }), laborInputButton(@"Chop", @"Chop Wood", 3, 1, 1, @"wood", ^(NSUInteger output) {
+            [self.city gainWood:output];
+        })];
     } else {
         return nil;
     }
@@ -278,6 +272,10 @@ static const NSTimeInterval menuAnimationDuration = 0.5;
     
     [[inputView.button rac_signalForControlEvents:UIControlEventTouchUpInside] subscribeNext:^(id x) {
         NSUInteger input = [[inputSignal first] unsignedIntegerValue];
+        if (input == 0) {
+            dismiss();
+            return;
+        }
         assert(input % inputRate == 0);
         NSUInteger inputEvents = input / inputRate;
         NSUInteger output = 0;
@@ -453,7 +451,7 @@ static const NSTimeInterval menuAnimationDuration = 0.5;
                       reduce:^(NSNumber *turn, NSNumber *population, NSNumber *food, NSNumber *labor, NSNumber *wood, NSNumber *stone) {
                           NSUInteger year = turn.unsignedIntegerValue / 4;
                           NSString *season = seasonNameMap[@(self.world.season)];
-                          return [NSString stringWithFormat:@"%@ - %@\n%@l %@p %@f %@w %@s", season, @(year), labor, population, food, wood, stone];
+                          return [NSString stringWithFormat:@"%@ - Year %@\n%@l %@p %@f %@w %@s", season, @(year), labor, population, food, wood, stone];
                       }];
     
     [[self.endTurnButton rac_signalForControlEvents:UIControlEventTouchUpInside] subscribeNext:^(id x) {
