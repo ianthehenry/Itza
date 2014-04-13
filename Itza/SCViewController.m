@@ -289,15 +289,15 @@ static const NSTimeInterval menuAnimationDuration = 0.5;
         dismiss();
     }];
     
+    // This is dumb, but I don't know a better way to do it.
+    [inputView layoutIfNeeded];
+    inputView.frameHeight = CGRectGetMaxY(inputView.button.frame);
+    
     RAC(inputView, center) = [[RACObserve(self, unobscuredFrame) map:^id(NSValue *frame) {
         return [NSValue valueWithCGPoint:CGRectGetCenter(frame.CGRectValue)];
     }] takeUntilBlock:^BOOL(id x) {
         return dismissed;
     }];
-    
-    // This is dumb, but I don't know a better way to do it.
-    [inputView layoutIfNeeded];
-    inputView.frameHeight = CGRectGetMaxY(inputView.button.frame);
     
     inputView.transform = CGAffineTransformMakeScale(0.01, 0.01);
     [self popOpen:inputView inView:self.view];
