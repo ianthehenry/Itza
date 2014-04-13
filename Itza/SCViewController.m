@@ -257,7 +257,9 @@ static const NSTimeInterval menuAnimationDuration = 0.5;
     inputView.titleLabel.text = title;
     
     RAC(inputView.bottomLabel, text) = [RACSignal combineLatest:@[inputSignal, outputMinSignal, outputMaxSignal] reduce:^(NSNumber *input, NSNumber *outputMin, NSNumber *outputMax) {
-        if ([outputMax isEqual:@0]) {
+        if (self.labor < inputRate) {
+            return @"Not enough labor!";
+        } else if ([outputMax isEqual:@0]) {
             return @"How much labor?";
         } else if ([outputMin isEqual:outputMax]) {
             return [NSString stringWithFormat:@"%@ labor ➜ %@ %@", input, outputMin, outputName];
