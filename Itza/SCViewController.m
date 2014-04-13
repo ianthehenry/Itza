@@ -112,6 +112,9 @@ static const NSTimeInterval menuAnimationDuration = 0.5;
 }
 
 - (void)removeCurrentMenuView {
+    if (self.currentMenuView == nil) {
+        return;
+    }
     [self popClosed:self.currentMenuView];
     self.currentMenuView = nil;
 }
@@ -125,10 +128,12 @@ static const NSTimeInterval menuAnimationDuration = 0.5;
     
     SCButtonDescription *(^laborInputButton)(NSString *buttonName, NSString *title, NSUInteger inputRate, NSUInteger outputRateMin, NSUInteger outputRateMax, NSString *outputName, void(^)(NSUInteger output)) = ^(NSString *buttonName, NSString *title, NSUInteger inputRate, NSUInteger outputRateMin, NSUInteger outputRateMax, NSString *outputName, void(^outputBlock)(NSUInteger output)) {
         return [SCButtonDescription buttonWithText:buttonName handler:^{
+            [self removeCurrentMenuView];
             [self displayLaborModalWithTitle:title inputRate:inputRate outputRateMin:outputRateMin outputRateMax:outputRateMax outputName:outputName commitBlock:^(NSUInteger input, NSUInteger output) {
                 self.labor -= input;
                 outputBlock(output);
                 [self flashMessage:[NSString stringWithFormat:@"+ %@ %@", @(output), outputName]];
+                self.selectedTile = nil;
             }];
         }];
     };
@@ -272,10 +277,7 @@ static const NSTimeInterval menuAnimationDuration = 0.5;
     
     [[inputView.button rac_signalForControlEvents:UIControlEventTouchUpInside] subscribeNext:^(id x) {
         NSUInteger input = [[inputSignal first] unsignedIntegerValue];
-        if (input == 0) {
-            dismiss();
-            return;
-        }
+        assert(input > 0);
         assert(input % inputRate == 0);
         NSUInteger inputEvents = input / inputRate;
         NSUInteger output = 0;
@@ -291,7 +293,10 @@ static const NSTimeInterval menuAnimationDuration = 0.5;
         dismiss();
     }];
     
+    RAC(inputView.button, enabled) = [[inputSignal is:@0] not];
+    
     [[inputView.cancelButton rac_signalForControlEvents:UIControlEventTouchUpInside] subscribeNext:^(id x) {
+        [self addMenuViewForTile:self.selectedTile];
         dismiss();
     }];
     
