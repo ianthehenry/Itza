@@ -54,6 +54,22 @@
     NSUInteger maizeToRot = self.maize / 10;
     self.maize -= maizeToRot;
     NSLog(@"%@ maize rotted", @(maizeToRot));
+    
+    NSUInteger peopleToBeBorn = 0;
+    for (NSUInteger i = 0; i < self.population / 10; i++) {
+        peopleToBeBorn += arc4random_uniform(4);
+    }
+    
+    NSUInteger peopleToDie = 0;
+    for (NSUInteger i = 0; i < self.population / 10; i++) {
+        peopleToDie += arc4random_uniform(3);
+    }
+    
+    self.population += peopleToBeBorn;
+    self.population -= peopleToDie;
+    
+    NSLog(@"%@ people are born", @(peopleToBeBorn));
+    NSLog(@"%@ people die", @(peopleToDie));
 }
 
 + (instancetype)cityWithWorld:(SCWorld *)world {
