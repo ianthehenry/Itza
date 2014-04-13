@@ -229,8 +229,11 @@ static const NSTimeInterval menuAnimationDuration = 0.5;
     [inputView size:@""];
     
     inputView.slider.minimumValue = 0;
-    inputView.slider.maximumValue = inputRate * (self.labor / inputRate);
     inputView.slider.value = 0;
+    [RACObserve(self, labor) subscribeNext:^(NSNumber *labor) {
+        inputView.slider.maximumValue = inputRate * (labor.unsignedIntegerValue / inputRate);
+        [inputView.slider sendActionsForControlEvents:UIControlEventValueChanged];
+    }];
     
     RACSignal *inputSignal = [[[RACSignal defer:^{
         return [RACSignal return:@(inputView.slider.value)];
