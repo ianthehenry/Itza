@@ -190,7 +190,7 @@ static const NSTimeInterval menuAnimationDuration = 0.5;
                           delay:0
          usingSpringWithDamping:menuAnimationSpringDamping
           initialSpringVelocity:0
-                        options:UIViewAnimationOptionBeginFromCurrentState
+                        options:UIViewAnimationOptionBeginFromCurrentState | UIViewAnimationOptionAllowUserInteraction
                      animations:^{
                          view.alpha = 1;
                          view.transform = CGAffineTransformIdentity;
