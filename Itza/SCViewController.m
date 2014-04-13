@@ -457,6 +457,10 @@ static const NSTimeInterval menuAnimationDuration = 0.5;
     [[self.endTurnButton rac_signalForControlEvents:UIControlEventTouchUpInside] subscribeNext:^(id x) {
         [self iterate];
     }];
+    
+    [[[self rac_signalForSelector:@selector(viewWillAppear:)] take:1] subscribeNext:^(id x) {
+        [self scrollToTile:[self.world tileAt:[SCPosition origin]]];
+    }];
 }
 
 - (void)scrollToTile:(SCTile *)tile {
@@ -467,6 +471,23 @@ static const NSTimeInterval menuAnimationDuration = 0.5;
 
 - (CGPoint)centerForPosition:(SCPosition *)position {
     return hexCenter(position.x, position.y, APOTHEM);
+}
+
+- (void)centerCanvas {
+    UIScrollView *scrollView = self.scrollView;
+    UIEdgeInsets contentInsets = self.scrollView.contentInset;
+    CGFloat logicalWidth = scrollView.bounds.size.width - contentInsets.left - contentInsets.right;
+    CGFloat logicalHeight = scrollView.bounds.size.height - contentInsets.top - contentInsets.bottom;
+    
+    CGFloat offsetX = MAX(0, (logicalWidth - scrollView.contentSize.width) * 0.5);
+    CGFloat offsetY = MAX(0, (logicalHeight - scrollView.contentSize.height) * 0.5);
+    
+    self.scrollView.contentView.center = CGPointMake(scrollView.contentSize.width * 0.5 + offsetX,
+                                                     scrollView.contentSize.height * 0.5 + offsetY);
+}
+
+- (void)scrollViewDidZoom:(UIScrollView *)scrollView {
+    [self centerCanvas];
 }
 
 - (void)scrollViewDidEndZooming:(UIScrollView *)scrollView withView:(UIView *)view atScale:(CGFloat)scale {
