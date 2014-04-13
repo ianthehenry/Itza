@@ -17,8 +17,22 @@
                     <color key="textColor" cocoaTouchSystemColor="darkTextColor"/>
                     <nil key="highlightedColor"/>
                 </label>
+                <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="z1m-ic-7ld">
+                    <rect key="frame" x="254" y="78" width="46" height="30"/>
+                    <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
+                    <state key="normal" title="Button">
+                        <color key="titleShadowColor" white="0.5" alpha="1" colorSpace="calibratedWhite"/>
+                    </state>
+                </button>
+                <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="3Nv-q3-Nlj">
+                    <rect key="frame" x="0.0" y="78" width="48" height="30"/>
+                    <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
+                    <state key="normal" title="Cancel">
+                        <color key="titleShadowColor" white="0.5" alpha="1" colorSpace="calibratedWhite"/>
+                    </state>
+                </button>
                 <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="F3g-WX-UkQ">
-                    <rect key="frame" x="0.0" y="16" width="300" height="49"/>
+                    <rect key="frame" x="0.0" y="16" width="300" height="62"/>
                     <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
                     <subviews>
                         <label opaque="NO" clipsSubviews="YES" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="something something" textAlignment="center" lineBreakMode="tailTruncation" numberOfLines="0" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" preferredMaxLayoutWidth="300" translatesAutoresizingMaskIntoConstraints="NO" id="4i2-9N-nyQ" customClass="SCLabel">
@@ -27,57 +41,31 @@
                             <fontDescription key="fontDescription" name="Menlo-Regular" family="Menlo" pointSize="13"/>
                             <nil key="highlightedColor"/>
                         </label>
-                        <label opaque="NO" clipsSubviews="YES" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="prompt> " lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="7vn-Nk-lXG" customClass="SCLabel">
-                            <rect key="frame" x="0.0" y="16" width="63" height="17"/>
-                            <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
-                            <fontDescription key="fontDescription" name="Menlo-Regular" family="Menlo" pointSize="13"/>
-                            <nil key="highlightedColor"/>
-                        </label>
-                        <textField opaque="NO" clipsSubviews="YES" contentMode="scaleToFill" contentHorizontalAlignment="left" contentVerticalAlignment="center" minimumFontSize="17" translatesAutoresizingMaskIntoConstraints="NO" id="X6I-Or-elF">
-                            <rect key="frame" x="63" y="16" width="237" height="17"/>
-                            <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
-                            <color key="backgroundColor" red="1" green="0.52396804090000004" blue="1" alpha="1" colorSpace="calibratedRGB"/>
-                            <fontDescription key="fontDescription" type="system" pointSize="14"/>
-                            <textInputTraits key="textInputTraits" keyboardType="numberPad"/>
-                        </textField>
                         <label opaque="NO" clipsSubviews="YES" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="something something" textAlignment="center" lineBreakMode="tailTruncation" numberOfLines="0" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" preferredMaxLayoutWidth="300" translatesAutoresizingMaskIntoConstraints="NO" id="EyX-wC-OF4" customClass="SCLabel">
-                            <rect key="frame" x="0.0" y="33" width="300" height="16"/>
+                            <rect key="frame" x="0.0" y="16" width="300" height="16"/>
                             <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
                             <fontDescription key="fontDescription" name="Menlo-Regular" family="Menlo" pointSize="13"/>
                             <nil key="highlightedColor"/>
                         </label>
+                        <slider opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" value="0.5" minValue="0.0" maxValue="1" translatesAutoresizingMaskIntoConstraints="NO" id="JZz-ds-v5G">
+                            <rect key="frame" x="18" y="32" width="264" height="31"/>
+                            <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
+                        </slider>
                     </subviews>
                     <color key="backgroundColor" white="1" alpha="1" colorSpace="custom" customColorSpace="calibratedWhite"/>
                     <constraints>
-                        <constraint firstItem="7vn-Nk-lXG" firstAttribute="top" secondItem="4i2-9N-nyQ" secondAttribute="bottom" id="4be-GI-o6U"/>
-                        <constraint firstItem="X6I-Or-elF" firstAttribute="leading" secondItem="7vn-Nk-lXG" secondAttribute="trailing" id="CLU-bm-cN2"/>
+                        <constraint firstItem="JZz-ds-v5G" firstAttribute="top" secondItem="EyX-wC-OF4" secondAttribute="bottom" id="7r9-On-FEt"/>
+                        <constraint firstAttribute="bottom" secondItem="JZz-ds-v5G" secondAttribute="bottom" id="8Sa-nG-zk4"/>
+                        <constraint firstItem="JZz-ds-v5G" firstAttribute="leading" secondItem="F3g-WX-UkQ" secondAttribute="leading" constant="20" symbolic="YES" id="EJb-B7-pKS"/>
                         <constraint firstItem="4i2-9N-nyQ" firstAttribute="top" secondItem="F3g-WX-UkQ" secondAttribute="top" id="Fmi-vc-gg9"/>
                         <constraint firstItem="EyX-wC-OF4" firstAttribute="leading" secondItem="F3g-WX-UkQ" secondAttribute="leading" id="HHk-oY-nLW"/>
-                        <constraint firstItem="EyX-wC-OF4" firstAttribute="top" secondItem="7vn-Nk-lXG" secondAttribute="bottom" id="HvL-sS-D6N"/>
-                        <constraint firstItem="X6I-Or-elF" firstAttribute="height" secondItem="7vn-Nk-lXG" secondAttribute="height" id="UcN-mq-9R2"/>
+                        <constraint firstItem="EyX-wC-OF4" firstAttribute="top" secondItem="4i2-9N-nyQ" secondAttribute="bottom" id="QwW-Je-tg1"/>
                         <constraint firstItem="4i2-9N-nyQ" firstAttribute="leading" secondItem="F3g-WX-UkQ" secondAttribute="leading" id="YjQ-ft-hng"/>
                         <constraint firstAttribute="trailing" secondItem="4i2-9N-nyQ" secondAttribute="trailing" id="aLf-5X-zgX"/>
-                        <constraint firstAttribute="bottom" secondItem="EyX-wC-OF4" secondAttribute="bottom" id="aZ0-O5-Cu6"/>
-                        <constraint firstItem="X6I-Or-elF" firstAttribute="top" secondItem="7vn-Nk-lXG" secondAttribute="top" id="ian-in-cYt"/>
-                        <constraint firstItem="7vn-Nk-lXG" firstAttribute="leading" secondItem="F3g-WX-UkQ" secondAttribute="leading" id="kIu-3e-LEY"/>
-                        <constraint firstAttribute="trailing" secondItem="X6I-Or-elF" secondAttribute="trailing" id="qMY-d8-ooB"/>
                         <constraint firstAttribute="trailing" secondItem="EyX-wC-OF4" secondAttribute="trailing" id="vSp-pC-oSJ"/>
+                        <constraint firstAttribute="trailing" secondItem="JZz-ds-v5G" secondAttribute="trailing" constant="20" symbolic="YES" id="wZ7-Oh-iGb"/>
                     </constraints>
                 </view>
-                <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="z1m-ic-7ld">
-                    <rect key="frame" x="254" y="65" width="46" height="30"/>
-                    <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
-                    <state key="normal" title="Button">
-                        <color key="titleShadowColor" white="0.5" alpha="1" colorSpace="calibratedWhite"/>
-                    </state>
-                </button>
-                <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="3Nv-q3-Nlj">
-                    <rect key="frame" x="0.0" y="65" width="48" height="30"/>
-                    <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
-                    <state key="normal" title="Cancel">
-                        <color key="titleShadowColor" white="0.5" alpha="1" colorSpace="calibratedWhite"/>
-                    </state>
-                </button>
             </subviews>
             <constraints>
                 <constraint firstItem="3Nv-q3-Nlj" firstAttribute="top" secondItem="F3g-WX-UkQ" secondAttribute="bottom" id="1oV-Ba-ty8"/>
@@ -96,8 +84,7 @@
                 <outlet property="button" destination="z1m-ic-7ld" id="E7I-tR-Zkj"/>
                 <outlet property="cancelButton" destination="3Nv-q3-Nlj" id="6D7-8d-cIT"/>
                 <outlet property="contentView" destination="F3g-WX-UkQ" id="LaR-pg-W1h"/>
-                <outlet property="promptLabel" destination="7vn-Nk-lXG" id="A3P-R6-FKm"/>
-                <outlet property="textField" destination="X6I-Or-elF" id="ce0-Or-Ds2"/>
+                <outlet property="slider" destination="JZz-ds-v5G" id="CpS-bm-5Lb"/>
                 <outlet property="titleLabel" destination="IvA-VT-Q7c" id="pdx-vf-b3G"/>
                 <outlet property="topLabel" destination="4i2-9N-nyQ" id="mG2-kr-MX2"/>
             </connections>

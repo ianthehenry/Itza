@@ -68,7 +68,7 @@ static const NSTimeInterval menuAnimationDuration = 0.5;
 
 - (void)setupGrid {
     self.tileViewForTile = [[NSMutableDictionary alloc] init];
-
+    
     for (SCTile *tile in self.world.tiles) {
         SCTileView *tileView = [[SCTileView alloc] initWithApothem:APOTHEM];
         tileView.tile = tile;
@@ -185,7 +185,7 @@ static const NSTimeInterval menuAnimationDuration = 0.5;
     view.transform = CGAffineTransformMakeScale(0.1, 0.1);
     view.alpha = 0;
     [superview addSubview:view];
-
+    
     [UIView animateWithDuration:menuAnimationDuration
                           delay:0
          usingSpringWithDamping:menuAnimationSpringDamping
@@ -195,7 +195,6 @@ static const NSTimeInterval menuAnimationDuration = 0.5;
                          view.alpha = 1;
                          view.transform = CGAffineTransformIdentity;
                      } completion:completion];
-
 }
 
 - (void)popClosed:(UIView *)view {
@@ -230,8 +229,16 @@ static const NSTimeInterval menuAnimationDuration = 0.5;
     SCInputView *inputView = [[UINib nibWithNibName:@"SCInputView" bundle:nil] instantiateWithOwner:nil options:nil][0];
     [inputView size:@""];
     
-    RACSignal *inputSignal = [inputView.textField.rac_textSignal map:^id(NSString *text) {
-        NSUInteger labor = MAX(0, MIN(text.integerValue, self.labor));
+    inputView.slider.minimumValue = 0;
+    inputView.slider.maximumValue = inputRate * (self.labor / inputRate);
+    inputView.slider.value = 0;
+    
+    RACSignal *inputSignal = [[[RACSignal defer:^{
+        return [RACSignal return:@(inputView.slider.value)];
+    }] concat:[[inputView.slider rac_signalForControlEvents:UIControlEventValueChanged] map:^(UISlider *slider) {
+        return @(slider.value);
+    }]] map:^(NSNumber *sliderValue) {
+        NSUInteger labor = roundf(sliderValue.floatValue);
         NSUInteger rounded = inputRate * (labor / inputRate);
         return @(rounded);
     }];
@@ -243,16 +250,16 @@ static const NSTimeInterval menuAnimationDuration = 0.5;
         return @((inputNumber.unsignedIntegerValue / inputRate) * outputRateMax);
     }];
     
-    inputView.promptLabel.text = @"labor> ";
-    if (outputRateMin == outputRateMax) {
-        inputView.topLabel.text = [NSString stringWithFormat:@"%@ labor ➜ %@ %@", @(inputRate), @(outputRateMin), outputName];
-    } else {
-        inputView.topLabel.text = [NSString stringWithFormat:@"%@ labor ➜ %@-%@ %@", @(inputRate), @(outputRateMin), @(outputRateMax), outputName];
-    }
+    inputView.topLabel.text = (outputRateMin == outputRateMax) ?
+    [NSString stringWithFormat:@"%@ labor ➜ %@ %@", @(inputRate), @(outputRateMin), outputName] :
+    [NSString stringWithFormat:@"%@ labor ➜ %@-%@ %@", @(inputRate), @(outputRateMin), @(outputRateMax), outputName];
+    
     inputView.titleLabel.text = title;
     
     RAC(inputView.bottomLabel, text) = [RACSignal combineLatest:@[inputSignal, outputMinSignal, outputMaxSignal] reduce:^(NSNumber *input, NSNumber *outputMin, NSNumber *outputMax) {
-        if ([outputMin isEqual:outputMax]) {
+        if ([outputMax isEqual:@0]) {
+            return @"How much labor?";
+        } else if ([outputMin isEqual:outputMax]) {
             return [NSString stringWithFormat:@"%@ labor ➜ %@ %@", input, outputMin, outputName];
         } else {
             return [NSString stringWithFormat:@"%@ labor ➜ %@-%@ %@", input, outputMin, outputMax, outputName];
@@ -264,7 +271,6 @@ static const NSTimeInterval menuAnimationDuration = 0.5;
     __block BOOL dismissed = NO;
     void (^dismiss)() = ^{
         dismissed = YES;
-        [inputView.textField resignFirstResponder];
         [self popClosed:inputView];
     };
     
@@ -301,7 +307,6 @@ static const NSTimeInterval menuAnimationDuration = 0.5;
     
     inputView.transform = CGAffineTransformMakeScale(0.01, 0.01);
     [self popOpen:inputView inView:self.view];
-    [inputView.textField becomeFirstResponder];
 }
 
 - (void)displayLaborModalWithTitle:(NSString *)title
@@ -338,7 +343,7 @@ static const NSTimeInterval menuAnimationDuration = 0.5;
         @strongify(self);
         [self scrollToTile:tile];
     }];
-
+    
     UILabel *nameLabel = [[UILabel alloc] initWithFrame:CGRectMake(0, APOTHEM * 2, 100, APOTHEM)];
     nameLabel.autoresizingMask = UIViewAutoresizingFlexibleTopMargin | UIViewAutoresizingFlexibleRightMargin;
     RAC(nameLabel, text) = RACObserve(tile, foreground.name);
@@ -400,7 +405,7 @@ static const NSTimeInterval menuAnimationDuration = 0.5;
     infoLabel.textAlignment = NSTextAlignmentCenter;
     self.navigationItem.titleView = infoLabel;
     infoLabel.frame = self.navigationController.navigationBar.bounds;
-
+    
     RAC(self, detailView) = [RACObserve(self, selectedTile) map:^(SCTile *tile) {
         @strongify(self);
         return tile == nil ? self.commandView : [self tileDetailViewForTile:tile];

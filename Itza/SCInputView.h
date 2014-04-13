@@ -16,11 +16,10 @@
 @property (strong, nonatomic) UIColor *contentForegroundColor;
 
 @property (strong, nonatomic, readonly) IBOutlet SCLabel *titleLabel;
-@property (strong, nonatomic, readonly) IBOutlet SCLabel *promptLabel;
 @property (strong, nonatomic, readonly) IBOutlet UIButton *button;
 @property (strong, nonatomic, readonly) IBOutlet SCLabel *topLabel;
-@property (strong, nonatomic, readonly) IBOutlet UITextField *textField;
 @property (strong, nonatomic, readonly) IBOutlet SCLabel *bottomLabel;
 @property (strong, nonatomic, readonly) IBOutlet UIButton *cancelButton;
+@property (strong, nonatomic, readonly) IBOutlet UISlider *slider;
 
 @end
