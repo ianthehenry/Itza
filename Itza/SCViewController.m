@@ -245,17 +245,17 @@ static const NSTimeInterval menuAnimationDuration = 0.5;
     
     inputView.promptLabel.text = @"labor> ";
     if (outputRateMin == outputRateMax) {
-        inputView.topLabel.text = [NSString stringWithFormat:@"%@ labor -> %@ %@", @(inputRate), @(outputRateMin), outputName];
+        inputView.topLabel.text = [NSString stringWithFormat:@"%@ labor ➜ %@ %@", @(inputRate), @(outputRateMin), outputName];
     } else {
-        inputView.topLabel.text = [NSString stringWithFormat:@"%@ labor -> %@-%@ %@", @(inputRate), @(outputRateMin), @(outputRateMax), outputName];
+        inputView.topLabel.text = [NSString stringWithFormat:@"%@ labor ➜ %@-%@ %@", @(inputRate), @(outputRateMin), @(outputRateMax), outputName];
     }
     inputView.titleLabel.text = title;
     
     RAC(inputView.bottomLabel, text) = [RACSignal combineLatest:@[inputSignal, outputMinSignal, outputMaxSignal] reduce:^(NSNumber *input, NSNumber *outputMin, NSNumber *outputMax) {
         if ([outputMin isEqual:outputMax]) {
-            return [NSString stringWithFormat:@"%@ labor -> %@ %@", input, outputMin, outputName];
+            return [NSString stringWithFormat:@"%@ labor ➜ %@ %@", input, outputMin, outputName];
         } else {
-            return [NSString stringWithFormat:@"%@ labor -> %@-%@ %@", input, outputMin, outputMax, outputName];
+            return [NSString stringWithFormat:@"%@ labor ➜ %@-%@ %@", input, outputMin, outputMax, outputName];
         }
     }];
     
