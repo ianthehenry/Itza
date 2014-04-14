@@ -31,3 +31,12 @@
 
 @implementation SCFarm
 @end
+
+@implementation SCLumberMill
+@end
+
+@implementation SCFishery
+@end
+
+@implementation SCHouse
+@end

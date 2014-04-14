@@ -63,8 +63,11 @@ static NSDictionary *foregroundDisplayInfo;
       SCForest.class.pointerValue: RACTuplePack(@"Forest", @"♣", [UIColor colorWithHue:0.33 saturation:0.9 brightness:0.6 alpha:1]),
       SCRiver.class.pointerValue: RACTuplePack(@"River", @"", [UIColor colorWithHue:0.66 saturation:0.9 brightness:0.6 alpha:1]),
       SCTemple.class.pointerValue: RACTuplePack(@"Temple", @"T", [UIColor colorWithHue:0.15 saturation:1.0 brightness:0.7 alpha:1]),
-      SCFarm.class.pointerValue: RACTuplePack(@"Farm", @"F", buildingColor),
+      SCFarm.class.pointerValue: RACTuplePack(@"Farm", @"=", [UIColor colorWithHue:0.15 saturation:1.0 brightness:0.7 alpha:1]),
       SCGranary.class.pointerValue: RACTuplePack(@"Granary", @"G", buildingColor),
+      SCFishery.class.pointerValue: RACTuplePack(@"Fishery", @"F", buildingColor),
+      SCLumberMill.class.pointerValue: RACTuplePack(@"Lumbery", @"L", buildingColor),
+      SCHouse.class.pointerValue: RACTuplePack(@"House", @"H", buildingColor),
       };
 }
 
@@ -262,7 +265,8 @@ static NSDictionary *foregroundDisplayInfo;
     view.backgroundColor = UIColor.whiteColor;
     
     UILabel *titleLabel = [[UILabel alloc] initWithFrame:CGRectMake(0, 0, 300, 30)];
-    titleLabel.text = @"Buildings";
+    titleLabel.text = @"Build a Building";
+    titleLabel.textAlignment = NSTextAlignmentCenter;
     SCScrollView *scrollView = [[SCScrollView alloc] initWithFrame:CGRectMake(0, 0, 300, 200)];
     scrollView.delaysContentTouches = NO;
     UIButton *cancelButton = [UIButton buttonWithType:UIButtonTypeSystem];
@@ -278,38 +282,54 @@ static NSDictionary *foregroundDisplayInfo;
         [self addMenuViewForTile:tile];
     }];
     
-    NSArray *buildings = @[RACTuplePack(SCGranary.class, @"stores grain", @30, @0),
-                           RACTuplePack(SCFarm.class, @"grows maize", @0, @0),
-                           RACTuplePack(SCTemple.class, @"sight", @0, @30),
-                           RACTuplePack(SCForest.class, @"why can you build this?", @100, @0),
-                           RACTuplePack(SCGranary.class, @"discount??", @29, @0)];
+    NSArray *buildings =
+    @[
+      RACTuplePack(SCHouse.class, @"+100 max pop, +10 more for each adjacent house", @20, @0, @20),
+      RACTuplePack(SCFarm.class, @"Turns maize into more maize", @0, @0, @30),
+      RACTuplePack(SCGranary.class, @"95% preservation of up to 200 maize", @30, @0, @30),
+      RACTuplePack(SCTemple.class, @"Extends visible range", @0, @30, @60),
+      RACTuplePack(SCLumberMill.class, @"+1 wood/labor in adjacent forests", @10, @0, @20),
+      RACTuplePack(SCFishery.class, @"+2 fish/labor in adjacent rivers and lakes", @30, @0, @50),
+      ];
+    CGFloat padding = 10;
     CGFloat top = 0;
     for (RACTuple *tuple in buildings) {
-        RACTupleUnpack(Class class, NSString *description, NSNumber *wood, NSNumber *stone) = tuple;
-        UIControl *control = [[UIControl alloc] initWithFrame:CGRectMake(0, top, 300, 44)];
+        RACTupleUnpack(Class class, NSString *description, NSNumber *wood, NSNumber *stone, NSNumber *labor) = tuple;
+        UIControl *control = [[UIControl alloc] initWithFrame:CGRectMake(0, top, 300, 30)];
         RAC(control, backgroundColor) = [RACObserve(control, highlighted) map:^(NSNumber *highlighted) {
             return highlighted.boolValue ? [UIColor colorWithWhite:0.9 alpha:1] : [UIColor whiteColor];
         }];
         
         SCTileView *tileView = [[SCTileView alloc] initWithApothem:APOTHEM];
-        tileView.center = CGPointMake(RADIUS, CGRectGetMidY(control.bounds));
+        tileView.frameOriginX = padding;
         tileView.fillColor = foregroundDisplayInfo[class.pointerValue][2];
         tileView.label.text = foregroundDisplayInfo[class.pointerValue][1];
         tileView.label.font = [UIFont fontWithName:@"Menlo" size:13];
         tileView.userInteractionEnabled = NO;
-        [tileView size:@"h"];
+        [tileView size:@"hk"];
         [control addSubview:tileView];
+        tileView.backgroundColor = [[UIColor redColor] colorWithAlphaComponent:0.5];
+        
+        UILabel *nameLabel = [[UILabel alloc] initWithFrame:CGRectMake(padding, CGRectGetMaxY(tileView.frame), CGRectGetWidth(tileView.frame), 22)];
+        nameLabel.text = foregroundDisplayInfo[class.pointerValue][0];
+        nameLabel.font = [UIFont fontWithName:@"Menlo" size:11];
+        nameLabel.textAlignment = NSTextAlignmentCenter;
+        [nameLabel size:@"hk"];
+        [control addSubview:nameLabel];
+        nameLabel.backgroundColor = [[UIColor blueColor] colorWithAlphaComponent:0.5];
         
         CGFloat left = CGRectGetMaxX(tileView.frame);
-        UILabel *label = [[UILabel alloc] initWithFrame:CGRectMake(left, 0, control.bounds.size.width - left, control.bounds.size.height)];
-        label.numberOfLines = 0;
-        label.text = [NSString stringWithFormat:@"%@ (%@w %@s)", description, wood, stone];
-        [label size:@"hjkl"];
-        [control addSubview:label];
+        UILabel *descriptionLabel = [[UILabel alloc] initWithFrame:CGRectMake(left, 0, control.bounds.size.width - left - padding, control.bounds.size.height)];
+        descriptionLabel.numberOfLines = 0;
+        descriptionLabel.text = [NSString stringWithFormat:@"%@ (%@w %@s %@l)", description, wood, stone, labor];
+        [descriptionLabel size:@"hjkl"];
+        [control addSubview:descriptionLabel];
+        descriptionLabel.backgroundColor = [[UIColor greenColor] colorWithAlphaComponent:0.5];
         
         [[control rac_signalForControlEvents:UIControlEventTouchUpInside] subscribeNext:^(id x) {
             NSLog(@"okay");
         }];
+        control.frameHeight = CGRectGetMaxY(nameLabel.frame);
         top = CGRectGetMaxY(control.frame);
         [scrollView addSubview:control];
     }
@@ -317,6 +337,8 @@ static NSDictionary *foregroundDisplayInfo;
 }
 
 - (void(^)())showModal:(UIView *)view dismissed:(BOOL *)dismissed {
+    [view size:@""];
+
     NSAssert(*dismissed == NO, @"Must pass a pointer to NO");
     void (^dismiss)() = ^{
         *dismissed = YES;
@@ -341,7 +363,6 @@ static NSDictionary *foregroundDisplayInfo;
                         outputName:(NSString *)outputName
                        commitBlock:(void(^)(NSUInteger input, NSUInteger output))commitBlock {
     SCInputView *inputView = [[UINib nibWithNibName:@"SCInputView" bundle:nil] instantiateWithOwner:nil options:nil][0];
-    [inputView size:@""];
     
     __block BOOL dismissed = NO;
     
