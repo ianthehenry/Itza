@@ -58,6 +58,14 @@
 
 @end
 
+@implementation SCBuilding
+
+- (UIColor *)tileColor {
+    return [UIColor colorWithHue:0.15 saturation:1.0 brightness:0.7 alpha:1];
+}
+
+@end
+
 @implementation SCTemple
 
 - (NSString *)name {
@@ -68,8 +76,28 @@
     return @"T";
 }
 
-- (UIColor *)tileColor {
-    return [UIColor colorWithHue:0.15 saturation:1.0 brightness:0.7 alpha:1];
+@end
+
+@implementation SCGranary
+
+- (NSString *)name {
+    return @"Granary";
+}
+
+- (NSString *)symbol {
+    return @"G";
+}
+
+@end
+
+@implementation SCFarm
+
+- (NSString *)name {
+    return @"Farm";
+}
+
+- (NSString *)symbol {
+    return @"F";
 }
 
 @end

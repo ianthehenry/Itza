@@ -11,7 +11,7 @@
 
 @interface SCTileView ()
 
-@property (nonatomic, strong) UILabel *label;
+@property (nonatomic, strong, readwrite) UILabel *label;
 
 @end
 
@@ -21,12 +21,6 @@
     if (self = [super initWithApothem:apothem]) {
         _label = [[UILabel alloc] initWithFrame:self.bounds];
         _label.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
-        
-        RAC(_label, text) = RACObserve(self, tile.foreground.symbol);
-        RAC(_label, font) = [RACObserve(self, tile.foreground.fontSize) map:^(NSNumber *size) {
-            return [UIFont fontWithName:@"Menlo" size:size.floatValue];
-        }];
-        RAC(self, fillColor) = RACObserve(self, tile.foreground.tileColor);
         _label.textAlignment = NSTextAlignmentCenter;
         [self addSubview:_label];
     }

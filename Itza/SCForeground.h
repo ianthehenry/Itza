@@ -25,10 +25,22 @@
 
 @end
 
-@interface SCTemple : SCForeground
+@interface SCBuilding : SCForeground
+
+@end
+
+@interface SCTemple : SCBuilding
 
 @end
 
 @interface SCRiver : SCForeground
+
+@end
+
+@interface SCGranary : SCBuilding
+
+@end
+
+@interface SCFarm : SCBuilding
 
 @end

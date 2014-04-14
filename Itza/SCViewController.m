@@ -59,7 +59,22 @@ static const NSTimeInterval menuAnimationDuration = 0.5;
     if (tile == nil) {
         return nil;
     }
-    return self.tileViewForTile[tile.pointerValue];
+    SCTileView *tileView = self.tileViewForTile[tile.pointerValue];
+    if (tileView == nil) {
+        tileView =
+        self.tileViewForTile[tile.pointerValue] = [self makeTileViewForTile:tile];
+    }
+    return tileView;
+}
+
+- (SCTileView *)makeTileViewForTile:(SCTile *)tile {
+    SCTileView *tileView = [[SCTileView alloc] initWithApothem:APOTHEM];
+    RAC(tileView.label, text) = RACObserve(tile, foreground.symbol);
+    RAC(tileView.label, font) = [RACObserve(tile, foreground.fontSize) map:^(NSNumber *size) {
+        return [UIFont fontWithName:@"Menlo" size:size.floatValue];
+    }];
+    RAC(tileView, fillColor) = RACObserve(tile, foreground.tileColor);
+    return tileView;
 }
 
 - (SCWorld *)world {
@@ -70,12 +85,10 @@ static const NSTimeInterval menuAnimationDuration = 0.5;
     self.tileViewForTile = [[NSMutableDictionary alloc] init];
     
     for (SCTile *tile in self.world.tiles) {
-        SCTileView *tileView = [[SCTileView alloc] initWithApothem:APOTHEM];
-        tileView.tile = tile;
-        self.tileViewForTile[tile.pointerValue] = tileView;
+        SCTileView *tileView = [self tileViewForTile:tile];
         tileView.center = [self centerForPosition:tile.hex.position];
         [[tileView rac_signalForControlEvents:UIControlEventTouchUpInside] subscribeNext:^(SCTileView *tileView) {
-            self.selectedTile = self.selectedTile == tileView.tile ? nil : tileView.tile;
+            self.selectedTile = self.selectedTile == tile ? nil : tile;
         }];
         [self.tilesView addSubview:tileView];
     }
@@ -144,6 +157,7 @@ static const NSTimeInterval menuAnimationDuration = 0.5;
         })];
     } else if ([tile.foreground isKindOfClass:SCGrass.class]) {
         return @[button(@"Farm"), [SCButtonDescription buttonWithText:@"Build" handler:^{
+            [self removeCurrentMenuView];
             [self showBuildingModalForTile:tile];
         }]];
     } else if ([tile.foreground isKindOfClass:SCTemple.class]) {
@@ -156,6 +170,8 @@ static const NSTimeInterval menuAnimationDuration = 0.5;
         }), laborInputButton(@"Chop", @"Chop Wood", 3, 1, 1, @"wood", ^(NSUInteger output) {
             [self.city gainWood:output];
         })];
+    } else if ([tile.foreground isKindOfClass:SCGranary.class]) {
+        return @[button(@"Grain")];
     } else {
         return nil;
     }
@@ -224,14 +240,24 @@ static const NSTimeInterval menuAnimationDuration = 0.5;
 - (void)showBuildingModalForTile:(SCTile *)tile {
     UIView *view = [[UIView alloc] initWithFrame:CGRectMake(0, 0, 100, 100)];
     view.backgroundColor = UIColor.whiteColor;
-    UIButton *button = [UIButton buttonWithType:UIButtonTypeSystem];
-    button.frame = CGRectMake(0, 0, 100, 44);
-    [button setTitle:@"Done" forState:UIControlStateNormal];
-    [view addSubview:button];
+    UIButton *buildButton = [UIButton buttonWithType:UIButtonTypeSystem];
+    buildButton.frame = CGRectMake(0, 0, 100, 44);
+    [buildButton setTitle:@"Build Granary" forState:UIControlStateNormal];
+    [view addSubview:buildButton];
+
+    UIButton *cancelButton = [UIButton buttonWithType:UIButtonTypeSystem];
+    cancelButton.frame = CGRectMake(0, 44, 100, 44);
+    [cancelButton setTitle:@"Cancel" forState:UIControlStateNormal];
+    [view addSubview:cancelButton];
 
     __block BOOL dismissed = NO;
     void (^dismiss)() = [self showModal:view dismissed:&dismissed];
-    [[button rac_signalForControlEvents:UIControlEventTouchUpInside] subscribeNext:^(id x) {
+    [[buildButton rac_signalForControlEvents:UIControlEventTouchUpInside] subscribeNext:^(id x) {
+        dismiss();
+        tile.foreground = [[SCGranary alloc] init];
+        [self addMenuViewForTile:tile];
+    }];
+    [[cancelButton rac_signalForControlEvents:UIControlEventTouchUpInside] subscribeNext:^(id x) {
         dismiss();
     }];
 }
@@ -364,8 +390,7 @@ static const NSTimeInterval menuAnimationDuration = 0.5;
 - (UIView *)tileDetailViewForTile:(SCTile *)tile {
     UIView *view = [[UIView alloc] initWithFrame:CGRectMake(0, 0, 500, APOTHEM * 3)];
     
-    SCTileView *tileView = [[SCTileView alloc] initWithApothem:APOTHEM];
-    tileView.tile = tile;
+    SCTileView *tileView = [self makeTileViewForTile:tile];
     [view addSubview:tileView];
     tileView.center = CGPointMake(50, APOTHEM);
     tileView.autoresizingMask = UIViewAutoresizingFlexibleBottomMargin | UIViewAutoresizingFlexibleRightMargin;

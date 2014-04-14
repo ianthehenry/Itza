@@ -12,6 +12,6 @@
 
 @interface SCTileView : SCHexView
 
-@property (nonatomic, strong) SCTile *tile;
+@property (nonatomic, strong, readonly) UILabel *label;
 
 @end
