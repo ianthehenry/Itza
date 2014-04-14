@@ -21,6 +21,7 @@ static CGFloat PADDING;
 
 static const CGFloat menuAnimationSpringDamping = 0.75;
 static const NSTimeInterval menuAnimationDuration = 0.5;
+static NSDictionary *foregroundDisplayInfo;
 
 @interface SCViewController () <UIScrollViewDelegate>
 
@@ -53,6 +54,18 @@ static const NSTimeInterval menuAnimationDuration = 0.5;
     APOTHEM = 22;
     RADIUS = APOTHEM / 0.5 / sqrtf(3.0f);
     PADDING = APOTHEM * 3;
+    
+    UIColor *buildingColor = [UIColor brownColor];
+    
+    foregroundDisplayInfo =
+    @{
+      SCGrass.class.pointerValue: RACTuplePack(@"Grass", @"", [UIColor colorWithHue:0.33 saturation:0.9 brightness:0.6 alpha:1]),
+      SCForest.class.pointerValue: RACTuplePack(@"Forest", @"♣", [UIColor colorWithHue:0.33 saturation:0.9 brightness:0.6 alpha:1]),
+      SCRiver.class.pointerValue: RACTuplePack(@"River", @"", [UIColor colorWithHue:0.66 saturation:0.9 brightness:0.6 alpha:1]),
+      SCTemple.class.pointerValue: RACTuplePack(@"Temple", @"T", [UIColor colorWithHue:0.15 saturation:1.0 brightness:0.7 alpha:1]),
+      SCFarm.class.pointerValue: RACTuplePack(@"Farm", @"F", buildingColor),
+      SCGranary.class.pointerValue: RACTuplePack(@"Granary", @"G", buildingColor),
+      };
 }
 
 - (SCTileView *)tileViewForTile:(SCTile *)tile {
@@ -67,13 +80,20 @@ static const NSTimeInterval menuAnimationDuration = 0.5;
     return tileView;
 }
 
+- (RACSignal *)foregroundInfoForTile:(SCTile *)tile {
+    return [RACObserve(tile, foreground) map:^(SCForeground *foreground) {
+        return foregroundDisplayInfo[foreground.class.pointerValue];
+    }];
+}
+
 - (SCTileView *)makeTileViewForTile:(SCTile *)tile {
     SCTileView *tileView = [[SCTileView alloc] initWithApothem:APOTHEM];
-    RAC(tileView.label, text) = RACObserve(tile, foreground.symbol);
-    RAC(tileView.label, font) = [RACObserve(tile, foreground.fontSize) map:^(NSNumber *size) {
-        return [UIFont fontWithName:@"Menlo" size:size.floatValue];
-    }];
-    RAC(tileView, fillColor) = RACObserve(tile, foreground.tileColor);
+    
+    RACSignal *foregroundInfo = [self foregroundInfoForTile:tile];
+    
+    RAC(tileView.label, text, @"?") = [foregroundInfo index:1];
+    tileView.label.font = [UIFont fontWithName:@"Menlo" size:20];
+    RAC(tileView, fillColor) = [foregroundInfo index:2];
     return tileView;
 }
 
@@ -238,28 +258,62 @@ static const NSTimeInterval menuAnimationDuration = 0.5;
 }
 
 - (void)showBuildingModalForTile:(SCTile *)tile {
-    UIView *view = [[UIView alloc] initWithFrame:CGRectMake(0, 0, 100, 100)];
+    UIView *view = [[UIView alloc] initWithFrame:CGRectMake(0, 0, 300, 0)];
     view.backgroundColor = UIColor.whiteColor;
-    UIButton *buildButton = [UIButton buttonWithType:UIButtonTypeSystem];
-    buildButton.frame = CGRectMake(0, 0, 100, 44);
-    [buildButton setTitle:@"Build Granary" forState:UIControlStateNormal];
-    [view addSubview:buildButton];
-
+    
+    UILabel *titleLabel = [[UILabel alloc] initWithFrame:CGRectMake(0, 0, 300, 30)];
+    titleLabel.text = @"Buildings";
+    SCScrollView *scrollView = [[SCScrollView alloc] initWithFrame:CGRectMake(0, 0, 300, 200)];
+    scrollView.delaysContentTouches = NO;
     UIButton *cancelButton = [UIButton buttonWithType:UIButtonTypeSystem];
-    cancelButton.frame = CGRectMake(0, 44, 100, 44);
+    cancelButton.frame = CGRectMake(0, 0, 300, 44);
     [cancelButton setTitle:@"Cancel" forState:UIControlStateNormal];
-    [view addSubview:cancelButton];
-
+    
+    [view stackViewsVerticallyCentered:@[titleLabel, scrollView, cancelButton]];
+    
     __block BOOL dismissed = NO;
     void (^dismiss)() = [self showModal:view dismissed:&dismissed];
-    [[buildButton rac_signalForControlEvents:UIControlEventTouchUpInside] subscribeNext:^(id x) {
-        dismiss();
-        tile.foreground = [[SCGranary alloc] init];
-        [self addMenuViewForTile:tile];
-    }];
     [[cancelButton rac_signalForControlEvents:UIControlEventTouchUpInside] subscribeNext:^(id x) {
         dismiss();
+        [self addMenuViewForTile:tile];
     }];
+    
+    NSArray *buildings = @[RACTuplePack(SCGranary.class, @"stores grain", @30, @0),
+                           RACTuplePack(SCFarm.class, @"grows maize", @0, @0),
+                           RACTuplePack(SCTemple.class, @"sight", @0, @30),
+                           RACTuplePack(SCForest.class, @"why can you build this?", @100, @0),
+                           RACTuplePack(SCGranary.class, @"discount??", @29, @0)];
+    CGFloat top = 0;
+    for (RACTuple *tuple in buildings) {
+        RACTupleUnpack(Class class, NSString *description, NSNumber *wood, NSNumber *stone) = tuple;
+        UIControl *control = [[UIControl alloc] initWithFrame:CGRectMake(0, top, 300, 44)];
+        RAC(control, backgroundColor) = [RACObserve(control, highlighted) map:^(NSNumber *highlighted) {
+            return highlighted.boolValue ? [UIColor colorWithWhite:0.9 alpha:1] : [UIColor whiteColor];
+        }];
+        
+        SCTileView *tileView = [[SCTileView alloc] initWithApothem:APOTHEM];
+        tileView.center = CGPointMake(RADIUS, CGRectGetMidY(control.bounds));
+        tileView.fillColor = foregroundDisplayInfo[class.pointerValue][2];
+        tileView.label.text = foregroundDisplayInfo[class.pointerValue][1];
+        tileView.label.font = [UIFont fontWithName:@"Menlo" size:13];
+        tileView.userInteractionEnabled = NO;
+        [tileView size:@"h"];
+        [control addSubview:tileView];
+        
+        CGFloat left = CGRectGetMaxX(tileView.frame);
+        UILabel *label = [[UILabel alloc] initWithFrame:CGRectMake(left, 0, control.bounds.size.width - left, control.bounds.size.height)];
+        label.numberOfLines = 0;
+        label.text = [NSString stringWithFormat:@"%@ (%@w %@s)", description, wood, stone];
+        [label size:@"hjkl"];
+        [control addSubview:label];
+        
+        [[control rac_signalForControlEvents:UIControlEventTouchUpInside] subscribeNext:^(id x) {
+            NSLog(@"okay");
+        }];
+        top = CGRectGetMaxY(control.frame);
+        [scrollView addSubview:control];
+    }
+    scrollView.contentSize = CGSizeMake(300, top);
 }
 
 - (void(^)())showModal:(UIView *)view dismissed:(BOOL *)dismissed {
@@ -402,7 +456,7 @@ static const NSTimeInterval menuAnimationDuration = 0.5;
     
     UILabel *nameLabel = [[UILabel alloc] initWithFrame:CGRectMake(0, APOTHEM * 2, 100, APOTHEM)];
     nameLabel.autoresizingMask = UIViewAutoresizingFlexibleTopMargin | UIViewAutoresizingFlexibleRightMargin;
-    RAC(nameLabel, text) = RACObserve(tile, foreground.name);
+    RAC(nameLabel, text) = [[self foregroundInfoForTile:tile] index:0];
     nameLabel.font = [UIFont fontWithName:@"Menlo" size:13];
     nameLabel.textAlignment = NSTextAlignmentCenter;
     [view addSubview:nameLabel];

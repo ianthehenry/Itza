@@ -10,11 +10,6 @@
 
 @interface SCForeground : NSObject
 
-- (UIColor *)tileColor;
-- (NSString *)symbol;
-- (NSString *)name;
-- (CGFloat)fontSize;
-
 @end
 
 @interface SCGrass : SCForeground
