@@ -18,10 +18,11 @@
 @property (nonatomic, assign, readonly) NSUInteger wood;
 @property (nonatomic, assign, readonly) NSUInteger stone;
 @property (nonatomic, assign, readonly) NSUInteger labor;
+@property (nonatomic, assign, readonly) NSUInteger food;
 
 @property (nonatomic, strong, readonly) SCWorld *world;
 
-- (void)iterate;
+- (NSArray *)iterate;
 
 + (instancetype)cityWithWorld:(SCWorld *)world;
 

@@ -456,9 +456,9 @@ static NSDictionary *foregroundDisplayInfo;
     [self popOpen:self.currentMenuView inView:self.tilesView];
 }
 
-- (void)iterate {
-    [self.city iterate];
+- (NSArray *)iterate {
     [self.world iterate];
+    return [self.city iterate];
 }
 
 - (UIView *)tileDetailViewForTile:(SCTile *)tile {
@@ -560,20 +560,10 @@ static NSDictionary *foregroundDisplayInfo;
                           @(SCSeasonWinter): @"Winter"};
     }
     
-    RACSignal *foodSignal = [[RACSignal combineLatest:@[RACObserve(self.city, meat),
-                                                        RACObserve(self.city, fish),
-                                                        RACObserve(self.city, maize)]] map:^id(id <NSFastEnumeration> foods) {
-        NSUInteger totalFood = 0;
-        for (NSNumber *food in foods) {
-            totalFood += food.unsignedIntegerValue;
-        }
-        return @(totalFood);
-    }];
-    
     RAC(infoLabel, text) =
     [RACSignal combineLatest:@[RACObserve(self.world, turn),
                                RACObserve(self.city, population),
-                               foodSignal,
+                               RACObserve(self.city, food),
                                RACObserve(self.city, labor),
                                RACObserve(self.city, wood),
                                RACObserve(self.city, stone)]
@@ -584,11 +574,40 @@ static NSDictionary *foregroundDisplayInfo;
                       }];
     
     [[self.endTurnButton rac_signalForControlEvents:UIControlEventTouchUpInside] subscribeNext:^(id x) {
-        [self iterate];
+        NSUInteger year = self.world.turn / 4;
+        NSString *season = seasonNameMap[@(self.world.season)];
+        NSString *title = [NSString stringWithFormat:@"Summary for %@ - Year %@", season, @(year)];
+        NSArray *messages = [self iterate];
+        [self showWallOfTextModalWithTitle:title body:[messages componentsJoinedByString:@"\n"]];
     }];
     
     [[[self rac_signalForSelector:@selector(viewWillAppear:)] take:1] subscribeNext:^(id x) {
         [self scrollToTile:[self.world tileAt:[SCPosition origin]]];
+    }];
+}
+
+- (void)showWallOfTextModalWithTitle:(NSString *)title body:(NSString *)body {
+    UIView *view = [[UIView alloc] initWithFrame:CGRectMake(0, 0, 300, 0)];
+    view.backgroundColor = UIColor.whiteColor;
+    UILabel *titleLabel = [[UILabel alloc] initWithFrame:CGRectMake(0, 0, 300, 44)];
+    titleLabel.font = [UIFont fontWithName:@"Menlo" size:13];
+    titleLabel.text = title;
+    titleLabel.textAlignment = NSTextAlignmentCenter;
+    UITextView *textView = [[UITextView alloc] initWithFrame:CGRectMake(0, 0, 300, 0)];
+    textView.font = [UIFont fontWithName:@"Menlo" size:13];
+    textView.editable = NO;
+    textView.selectable = NO;
+    textView.text = body;
+    textView.frameHeight = MIN([textView sizeThatFits:CGSizeMake(300, CGFLOAT_MAX)].height, 200);
+    textView.backgroundColor = UIColor.redColor;
+    UIButton *closeButton = [UIButton buttonWithType:UIButtonTypeSystem];
+    [closeButton setTitle:@"Done" forState:UIControlStateNormal];
+    closeButton.frame = CGRectMake(0, 0, 300, 44);
+    [view stackViewsVerticallyCentered:@[titleLabel, textView, closeButton]];
+    __block BOOL dismissed = NO;
+    void (^dismiss)() = [self showModal:view dismissed:&dismissed];
+    [[closeButton rac_signalForControlEvents:UIControlEventTouchUpInside] subscribeNext:^(id x) {
+        dismiss();
     }];
 }
 
