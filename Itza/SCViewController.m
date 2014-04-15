@@ -41,8 +41,6 @@ static NSDictionary *foregroundDisplayInfo;
 
 @property (nonatomic, strong) SCTile *selectedTile;
 
-@property (nonatomic, assign) NSUInteger labor;
-
 @property (nonatomic, assign) CGSize contentSize;
 @property (nonatomic, assign) CGRect unobscuredFrame;
 
@@ -166,7 +164,7 @@ static NSDictionary *foregroundDisplayInfo;
         return [SCButtonDescription buttonWithText:buttonName handler:^{
             [self removeCurrentMenuView];
             [self displayLaborModalWithTitle:title inputRate:inputRate outputRateMin:outputRateMin outputRateMax:outputRateMax outputName:outputName commitBlock:^(NSUInteger input, NSUInteger output) {
-                self.labor -= input;
+                [self.city loseLabor:input];
                 outputBlock(output);
                 [self flashMessage:[NSString stringWithFormat:@"+ %@ %@", @(output), outputName]];
                 self.selectedTile = nil;
@@ -288,8 +286,8 @@ static NSDictionary *foregroundDisplayInfo;
       RACTuplePack(SCFarm.class, @"Turns maize into more maize", @0, @0, @30),
       RACTuplePack(SCGranary.class, @"95% preservation of up to 200 maize", @30, @0, @30),
       RACTuplePack(SCTemple.class, @"Extends visible range", @0, @30, @60),
-      RACTuplePack(SCLumberMill.class, @"+1 wood/labor in adjacent forests", @10, @0, @20),
-      RACTuplePack(SCFishery.class, @"+2 fish/labor in adjacent rivers and lakes", @30, @0, @50),
+      RACTuplePack(SCLumberMill.class, @"+1 wood per labor in adjacent forests", @10, @0, @20),
+      RACTuplePack(SCFishery.class, @"+2 fish per labor in adjacent rivers and lakes", @30, @0, @50),
       ];
     CGFloat padding = 10;
     CGFloat top = 0;
@@ -370,7 +368,7 @@ static NSDictionary *foregroundDisplayInfo;
     
     inputView.slider.minimumValue = 0;
     inputView.slider.value = 0;
-    [[RACObserve(self, labor) takeUntilBlock:^BOOL(id x) {
+    [[RACObserve(self.city, labor) takeUntilBlock:^BOOL(id x) {
         return dismissed;
     }] subscribeNext:^(NSNumber *labor) {
         inputView.slider.maximumValue = inputRate * (labor.unsignedIntegerValue / inputRate);
@@ -401,7 +399,7 @@ static NSDictionary *foregroundDisplayInfo;
     inputView.titleLabel.text = title;
     
     RAC(inputView.bottomLabel, text) = [RACSignal combineLatest:@[inputSignal, outputMinSignal, outputMaxSignal] reduce:^(NSNumber *input, NSNumber *outputMin, NSNumber *outputMax) {
-        if (self.labor < inputRate) {
+        if (self.city.labor < inputRate) {
             return @"Not enough labor!";
         } else if ([outputMax isEqual:@0]) {
             return @"How much labor?";
@@ -461,7 +459,6 @@ static NSDictionary *foregroundDisplayInfo;
 - (void)iterate {
     [self.city iterate];
     [self.world iterate];
-    self.labor = self.city.population;
 }
 
 - (UIView *)tileDetailViewForTile:(SCTile *)tile {
@@ -528,7 +525,6 @@ static NSDictionary *foregroundDisplayInfo;
     }];
     
     self.city = [SCCity cityWithWorld:[SCWorld worldWithRadius:6]];
-    self.labor = self.city.population;
     [self setupGrid];
     [self.view layoutIfNeeded];
     
@@ -578,7 +574,7 @@ static NSDictionary *foregroundDisplayInfo;
     [RACSignal combineLatest:@[RACObserve(self.world, turn),
                                RACObserve(self.city, population),
                                foodSignal,
-                               RACObserve(self, labor),
+                               RACObserve(self.city, labor),
                                RACObserve(self.city, wood),
                                RACObserve(self.city, stone)]
                       reduce:^(NSNumber *turn, NSNumber *population, NSNumber *food, NSNumber *labor, NSNumber *wood, NSNumber *stone) {

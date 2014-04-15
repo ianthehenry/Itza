@@ -17,6 +17,7 @@
 @property (nonatomic, assign, readonly) NSUInteger fish;
 @property (nonatomic, assign, readonly) NSUInteger wood;
 @property (nonatomic, assign, readonly) NSUInteger stone;
+@property (nonatomic, assign, readonly) NSUInteger labor;
 
 @property (nonatomic, strong, readonly) SCWorld *world;
 
@@ -28,5 +29,6 @@
 - (void)gainMaize:(NSUInteger)maize;
 - (void)gainMeat:(NSUInteger)meat;
 - (void)gainFish:(NSUInteger)fish;
+- (void)loseLabor:(NSUInteger)labor;
 
 @end

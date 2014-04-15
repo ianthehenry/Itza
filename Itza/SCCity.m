@@ -16,6 +16,7 @@
 @property (nonatomic, assign, readwrite) NSUInteger wood;
 @property (nonatomic, assign, readwrite) NSUInteger stone;
 @property (nonatomic, assign, readwrite) NSUInteger fish;
+@property (nonatomic, assign, readwrite) NSUInteger labor;
 @property (nonatomic, strong, readwrite) SCWorld *world;
 
 @end
@@ -70,6 +71,8 @@
     
     NSLog(@"%@ people are born", @(peopleToBeBorn));
     NSLog(@"%@ people die", @(peopleToDie));
+    
+    self.labor = self.population;
 }
 
 + (instancetype)cityWithWorld:(SCWorld *)world {
@@ -78,6 +81,7 @@
     city.meat = 10;
     city.maize = 0;
     city.world = world;
+    city.labor = city.population;
     return city;
 }
 
@@ -95,6 +99,11 @@
 
 - (void)gainFish:(NSUInteger)fish {
     self.fish += fish;
+}
+
+- (void)loseLabor:(NSUInteger)labor {
+    NSAssert(labor <= self.labor, @"That's more labor than you have!");
+    self.labor -= labor;
 }
 
 @end
