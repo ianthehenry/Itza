@@ -33,7 +33,8 @@ static NSDictionary *foregroundDisplayInfo;
 @property (strong, nonatomic) IBOutlet UIButton *endTurnButton;
 @property (strong, nonatomic) IBOutlet UIView *commandView;
 @property (strong, nonatomic) IBOutlet UIToolbar *toolbar;
-@property (strong, nonatomic) IBOutlet UIButton *buildButton;
+@property (strong, nonatomic) IBOutlet UIButton *scienceButton;
+@property (strong, nonatomic) IBOutlet UIButton *cheatButton;
 
 @property (nonatomic, strong) SCRadialMenuView *currentMenuView;
 
@@ -581,6 +582,16 @@ static NSDictionary *foregroundDisplayInfo;
         [self showWallOfTextModalWithTitle:title body:[messages componentsJoinedByString:@"\n"]];
     }];
     
+    [[self.scienceButton rac_signalForControlEvents:UIControlEventTouchUpInside] subscribeNext:^(id x) {
+        [self flashMessage:@"there's no science...yet"];
+    }];
+
+    [[self.cheatButton rac_signalForControlEvents:UIControlEventTouchUpInside] subscribeNext:^(id x) {
+        [self flashMessage:@"+100 people"];
+        [self.city setValue:@(self.city.population + 100) forKey:@"population"];
+        [self.city setValue:@(self.city.labor + 100) forKey:@"labor"];
+    }];
+    
     [[[self rac_signalForSelector:@selector(viewWillAppear:)] take:1] subscribeNext:^(id x) {
         [self scrollToTile:[self.world tileAt:[SCPosition origin]]];
     }];
@@ -599,7 +610,6 @@ static NSDictionary *foregroundDisplayInfo;
     textView.selectable = NO;
     textView.text = body;
     textView.frameHeight = MIN([textView sizeThatFits:CGSizeMake(300, CGFLOAT_MAX)].height, 200);
-    textView.backgroundColor = UIColor.redColor;
     UIButton *closeButton = [UIButton buttonWithType:UIButtonTypeSystem];
     [closeButton setTitle:@"Done" forState:UIControlStateNormal];
     closeButton.frame = CGRectMake(0, 0, 300, 44);
