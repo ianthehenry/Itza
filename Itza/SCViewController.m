@@ -327,7 +327,9 @@ static NSDictionary *foregroundDisplayInfo;
         descriptionLabel.backgroundColor = [[UIColor greenColor] colorWithAlphaComponent:0.5];
         
         [[control rac_signalForControlEvents:UIControlEventTouchUpInside] subscribeNext:^(id x) {
-            NSLog(@"okay");
+            tile.foreground = [[class alloc] init];
+            dismiss();
+            [self addMenuViewForTile:tile];
         }];
         control.frameHeight = CGRectGetMaxY(nameLabel.frame);
         top = CGRectGetMaxY(control.frame);
