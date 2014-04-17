@@ -55,18 +55,21 @@ static NSDictionary *foregroundDisplayInfo;
     PADDING = APOTHEM * 3;
     
     UIColor *buildingColor = [UIColor brownColor];
-    
+    UIColor *greenColor = [UIColor colorWithHue:0.33 saturation:0.9 brightness:0.6 alpha:1];
+    UIColor *blueColor = [UIColor colorWithHue:0.66 saturation:0.9 brightness:0.6 alpha:1];
+    UIColor *yellowColor = [UIColor colorWithHue:0.15 saturation:1.0 brightness:0.7 alpha:1];
+
     foregroundDisplayInfo =
     @{
-      SCGrass.class.pointerValue: RACTuplePack(@"Grass", @"", [UIColor colorWithHue:0.33 saturation:0.9 brightness:0.6 alpha:1]),
-      SCForest.class.pointerValue: RACTuplePack(@"Forest", @"♣", [UIColor colorWithHue:0.33 saturation:0.9 brightness:0.6 alpha:1]),
-      SCRiver.class.pointerValue: RACTuplePack(@"River", @"", [UIColor colorWithHue:0.66 saturation:0.9 brightness:0.6 alpha:1]),
-      SCTemple.class.pointerValue: RACTuplePack(@"Temple", @"T", [UIColor colorWithHue:0.15 saturation:1.0 brightness:0.7 alpha:1]),
-      SCFarm.class.pointerValue: RACTuplePack(@"Farm", @"=", [UIColor colorWithHue:0.15 saturation:1.0 brightness:0.7 alpha:1]),
-      SCGranary.class.pointerValue: RACTuplePack(@"Granary", @"G", buildingColor),
-      SCFishery.class.pointerValue: RACTuplePack(@"Fishery", @"F", buildingColor),
-      SCLumberMill.class.pointerValue: RACTuplePack(@"Lumbery", @"L", buildingColor),
-      SCHouse.class.pointerValue: RACTuplePack(@"House", @"H", buildingColor),
+      SCGrass.class.pointerValue: RACTuplePack(@"Grass", @"", greenColor, @"You can build here"),
+      SCForest.class.pointerValue: RACTuplePack(@"Forest", @"♣", greenColor, @"Possibly haunted"),
+      SCRiver.class.pointerValue: RACTuplePack(@"River", @"", blueColor, @"You can fish in it"),
+      SCTemple.class.pointerValue: RACTuplePack(@"Temple", @"T", yellowColor, @"A myserious temple"),
+      SCFarm.class.pointerValue: RACTuplePack(@"Farm", @"=", yellowColor, @"Farms don't do anything yet."),
+      SCGranary.class.pointerValue: RACTuplePack(@"Granary", @"G", buildingColor, @"95% preservation of up to 200 maize"),
+      SCFishery.class.pointerValue: RACTuplePack(@"Fishery", @"F", buildingColor, @"+2 fish per labor in adjacent rivers and lakes"),
+      SCLumberMill.class.pointerValue: RACTuplePack(@"Lumbery", @"L", buildingColor, @"+1 wood per labor in adjacent forests"),
+      SCHouse.class.pointerValue: RACTuplePack(@"House", @"H", buildingColor, @"+100 max pop, +10 more for each adjacent house"),
       };
 }
 
@@ -178,12 +181,12 @@ static NSDictionary *foregroundDisplayInfo;
             [self.city gainFish:output];
         })];
     } else if ([tile.foreground isKindOfClass:SCGrass.class]) {
-        return @[button(@"Farm"), [SCButtonDescription buttonWithText:@"Build" handler:^{
+        return @[[SCButtonDescription buttonWithText:@"Build" handler:^{
             [self removeCurrentMenuView];
             [self showBuildingModalForTile:tile];
         }]];
     } else if ([tile.foreground isKindOfClass:SCTemple.class]) {
-        return @[button(@"Worship"), button(@"Sacrifice")];
+        return @[button(@"Pray"), button(@"Kill")];
     } else if ([tile.foreground isKindOfClass:SCForest.class]) {
         return @[laborInputButton(@"Hunt", @"Hunt for Animals", 1, 1, 2, @"meat", ^(NSUInteger output) {
             [self.city gainMeat:output];
@@ -193,10 +196,17 @@ static NSDictionary *foregroundDisplayInfo;
             [self.city gainWood:output];
         })];
     } else if ([tile.foreground isKindOfClass:SCBuilding.class]) {
-        return @[[SCButtonDescription buttonWithText:@"Build" handler:^{
-            [self removeCurrentMenuView];
-            [self showConstructionModalForBuilding:(SCBuilding *)tile.foreground];
-        }]];
+        SCBuilding *building = (SCBuilding *)tile.foreground;
+        if (building.isComplete) {
+            return @[button(@"Raze")];
+        } else {
+            return @[[SCButtonDescription buttonWithText:@"Build" handler:^{
+                [self removeCurrentMenuView];
+                [self showConstructionModalForBuilding:(SCBuilding *)tile.foreground];
+            }], [SCButtonDescription buttonWithText:@"Raze" handler:^{
+                [self flashMessage:@"you can't yet"];
+            }]];
+        }
     } else {
         return nil;
     }
@@ -303,6 +313,7 @@ static NSDictionary *foregroundDisplayInfo;
         [self.city loseLabor:inputSteps * building.laborPerStep];
         [self.city loseWood:inputSteps * building.woodPerStep];
         [self.city loseStone:inputSteps * building.stonePerStep];
+        [self addMenuViewForTile:building.tile];
     }];
     
     NSString *(^nonzeroList)(NSArray *tuples) = ^(NSArray *tuples) {
@@ -312,6 +323,8 @@ static NSDictionary *foregroundDisplayInfo;
             return [NSString stringWithFormat:@"%@ %@", tuple[0], tuple[1]];
         }] array] componentsJoinedByString:@", "];
     };
+    
+    inputView.titleLabel.text = [NSString stringWithFormat:@"Construct a %@", foregroundDisplayInfo[building.class.pointerValue][0]];
 
     inputView.topLabel.text = [NSString stringWithFormat:@"%@ per step", nonzeroList(@[RACTuplePack(@(building.laborPerStep), @"labor"),
                                                                                        RACTuplePack(@(building.woodPerStep), @"wood"),
@@ -353,26 +366,28 @@ static NSDictionary *foregroundDisplayInfo;
     
     NSArray *buildings =
     @[
-      RACTuplePack(SCHouse.class, @"+100 max pop, +10 more for each adjacent house", @20, @20, @0),
-      RACTuplePack(SCFarm.class, @"Turns maize into more maize", @30, @0, @0),
-      RACTuplePack(SCGranary.class, @"95% preservation of up to 200 maize", @30, @30, @0),
-      RACTuplePack(SCTemple.class, @"Extends visible range", @60, @0, @30),
-      RACTuplePack(SCLumberMill.class, @"+1 wood per labor in adjacent forests", @20, @10, @0),
-      RACTuplePack(SCFishery.class, @"+2 fish per labor in adjacent rivers and lakes", @50, @30, @0),
+      RACTuplePack(SCHouse.class, @20, @20, @0),
+      RACTuplePack(SCFarm.class, @10, @0, @0),
+      RACTuplePack(SCGranary.class, @30, @30, @0),
+      RACTuplePack(SCTemple.class, @60, @0, @30),
+      RACTuplePack(SCLumberMill.class, @20, @10, @0),
+      RACTuplePack(SCFishery.class, @50, @30, @0),
       ];
     CGFloat padding = 10;
     CGFloat top = 0;
     for (RACTuple *tuple in buildings) {
-        RACTupleUnpack(Class class, NSString *description, NSNumber *labor, NSNumber *wood, NSNumber *stone) = tuple;
+        RACTupleUnpack(Class class, NSNumber *labor, NSNumber *wood, NSNumber *stone) = tuple;
         UIControl *control = [[UIControl alloc] initWithFrame:CGRectMake(0, top, 300, 30)];
         RAC(control, backgroundColor) = [RACObserve(control, highlighted) map:^(NSNumber *highlighted) {
             return highlighted.boolValue ? [UIColor colorWithWhite:0.9 alpha:1] : [UIColor whiteColor];
         }];
         
+        RACTupleUnpack(NSString *name, NSString *tileIcon, UIColor *tileColor, NSString *description) = foregroundDisplayInfo[class.pointerValue];
+        
         SCTileView *tileView = [[SCTileView alloc] initWithApothem:APOTHEM];
         tileView.frameOriginX = padding;
-        tileView.fillColor = foregroundDisplayInfo[class.pointerValue][2];
-        tileView.label.text = foregroundDisplayInfo[class.pointerValue][1];
+        tileView.fillColor = tileColor;
+        tileView.label.text = tileIcon;
         tileView.label.font = [UIFont fontWithName:@"Menlo" size:13];
         tileView.userInteractionEnabled = NO;
         [tileView size:@"hk"];
@@ -380,7 +395,7 @@ static NSDictionary *foregroundDisplayInfo;
         tileView.backgroundColor = [[UIColor redColor] colorWithAlphaComponent:0.5];
         
         UILabel *nameLabel = [[UILabel alloc] initWithFrame:CGRectMake(padding, CGRectGetMaxY(tileView.frame), CGRectGetWidth(tileView.frame), 22)];
-        nameLabel.text = foregroundDisplayInfo[class.pointerValue][0];
+        nameLabel.text = name;
         nameLabel.font = [UIFont fontWithName:@"Menlo" size:11];
         nameLabel.textAlignment = NSTextAlignmentCenter;
         [nameLabel size:@"hk"];
@@ -555,20 +570,43 @@ static NSDictionary *foregroundDisplayInfo;
     
     SCTileView *tileView = [self makeTileViewForTile:tile];
     [view addSubview:tileView];
-    tileView.center = CGPointMake(50, APOTHEM);
-    tileView.autoresizingMask = UIViewAutoresizingFlexibleBottomMargin | UIViewAutoresizingFlexibleRightMargin;
+    tileView.center = CGPointMake(RADIUS, APOTHEM);
+    [tileView size:@"hk"];
     @weakify(self);
     [[tileView rac_signalForControlEvents:UIControlEventTouchUpInside] subscribeNext:^(id x) {
         @strongify(self);
         [self scrollToTile:tile];
     }];
     
-    UILabel *nameLabel = [[UILabel alloc] initWithFrame:CGRectMake(0, APOTHEM * 2, 100, APOTHEM)];
-    nameLabel.autoresizingMask = UIViewAutoresizingFlexibleTopMargin | UIViewAutoresizingFlexibleRightMargin;
+    UILabel *nameLabel = [[UILabel alloc] initWithFrame:CGRectMake(0, APOTHEM * 2, RADIUS * 2, APOTHEM)];
+    [nameLabel size:@"hj"];
     RAC(nameLabel, text) = [[self foregroundInfoForTile:tile] index:0];
-    nameLabel.font = [UIFont fontWithName:@"Menlo" size:13];
+    nameLabel.font = [UIFont fontWithName:@"Menlo" size:11];
     nameLabel.textAlignment = NSTextAlignmentCenter;
     [view addSubview:nameLabel];
+    
+    UILabel *detailLabel = [[UILabel alloc] initWithFrame:CGRectMake(RADIUS * 2, 0, view.bounds.size.width - RADIUS * 2, view.bounds.size.height)];
+    detailLabel.font = [UIFont fontWithName:@"Menlo" size:13];
+    detailLabel.numberOfLines = 0;
+    [detailLabel size:@"hjkl"];
+    
+    RACSignal *descriptionSignal = [[self foregroundInfoForTile:tile] index:3];
+    RACSignal *prefixSignal = [[RACObserve(tile, foreground) map:^id(id value) {
+        if ([value isKindOfClass:SCBuilding.class]) {
+            SCBuilding *building = (SCBuilding *)value;
+            return [RACSignal combineLatest:@[RACObserve(building, stepsTaken),
+                                              RACObserve(building, stepCount)] reduce:^(NSNumber *taken, NSNumber *total) {
+                                                  return [taken isEqual:total] ? @"" : [NSString stringWithFormat:@"(%@ / %@)", taken, total];
+                                              }];
+        } else {
+            return [RACSignal return:nil];
+        }
+    }] switchToLatest];
+    
+    RAC(detailLabel, text) = [RACSignal combineLatest:@[prefixSignal, descriptionSignal] reduce:^(NSString *prefix, NSString *description){
+        return prefix == nil ? description : [NSString stringWithFormat:@"%@ %@", prefix, description];
+    }];
+    [view addSubview:detailLabel];
     
     return view;
 }

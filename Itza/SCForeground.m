@@ -68,9 +68,18 @@ static NSUInteger gcd3(NSUInteger a, NSUInteger b, NSUInteger c) {
     return self.stepCount - self.stepsTaken;
 }
 
+- (BOOL)isComplete {
+    return self.remainingSteps == 0;
+}
+
 + (NSSet *)keyPathsForValuesAffectingRemainingSteps {
     return [NSSet setWithObjects:@"stepCount", @"stepsTaken", nil];
 }
+
++ (NSSet *)keyPathsForValuesAffectingIsComplete {
+    return [NSSet setWithObject:@"remainingSteps"];
+}
+
 @end
 
 @implementation SCTemple

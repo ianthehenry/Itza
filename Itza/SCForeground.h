@@ -27,6 +27,7 @@
 @property (nonatomic, assign, readonly) NSUInteger woodPerStep;
 @property (nonatomic, assign, readonly) NSUInteger stonePerStep;
 @property (nonatomic, assign, readonly) NSUInteger remainingSteps;
+@property (nonatomic, assign, readonly) BOOL isComplete;
 - (void)build:(NSUInteger)steps;
 - (instancetype)initWithLabor:(NSUInteger)labor wood:(NSUInteger)wood stone:(NSUInteger)stone;
 @end

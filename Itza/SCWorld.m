@@ -34,7 +34,7 @@
     world.tileForLocation = [[NSMutableDictionary alloc] init];
     world.mutableTiles = [[NSMutableSet alloc] init];
     
-    [world addTileForPosition:[SCPosition x:0 y:0] foreground:[[SCTemple alloc] init]];
+    [world addTileForPosition:[SCPosition x:0 y:0] foreground:[[SCTemple alloc] initWithLabor:10000 wood:0 stone:1000]];
     
     for (NSInteger distance = 1; distance <= radius; distance++) {
         SCPosition *position = [SCPosition x:0 y:-distance];
