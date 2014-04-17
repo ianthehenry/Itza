@@ -164,7 +164,7 @@ static NSDictionary *foregroundDisplayInfo;
     SCButtonDescription *(^laborInputButton)(NSString *buttonName, NSString *title, NSUInteger inputRate, NSUInteger outputRateMin, NSUInteger outputRateMax, NSString *outputName, void(^)(NSUInteger output)) = ^(NSString *buttonName, NSString *title, NSUInteger inputRate, NSUInteger outputRateMin, NSUInteger outputRateMax, NSString *outputName, void(^outputBlock)(NSUInteger output)) {
         return [SCButtonDescription buttonWithText:buttonName handler:^{
             [self removeCurrentMenuView];
-            [self displayLaborModalWithTitle:title inputRate:inputRate outputRateMin:outputRateMin outputRateMax:outputRateMax outputName:outputName commitBlock:^(NSUInteger input, NSUInteger output) {
+            [self showLaborModalWithTitle:title inputRate:inputRate outputRateMin:outputRateMin outputRateMax:outputRateMax outputName:outputName commitBlock:^(NSUInteger input, NSUInteger output) {
                 [self.city loseLabor:input];
                 outputBlock(output);
                 [self flashMessage:[NSString stringWithFormat:@"+ %@ %@", @(output), outputName]];
@@ -475,12 +475,12 @@ static NSDictionary *foregroundDisplayInfo;
     return RACTuplePack(inputView, inputSignal);
 }
 
-- (void)displayLaborModalWithTitle:(NSString *)title
-                         inputRate:(NSUInteger)inputRate
-                     outputRateMin:(NSUInteger)outputRateMin
-                     outputRateMax:(NSUInteger)outputRateMax
-                        outputName:(NSString *)outputName
-                       commitBlock:(void(^)(NSUInteger input, NSUInteger output))commitBlock {
+- (void)showLaborModalWithTitle:(NSString *)title
+                      inputRate:(NSUInteger)inputRate
+                  outputRateMin:(NSUInteger)outputRateMin
+                  outputRateMax:(NSUInteger)outputRateMax
+                     outputName:(NSString *)outputName
+                    commitBlock:(void(^)(NSUInteger input, NSUInteger output))commitBlock {
     RACSignal *maxSteps = [RACObserve(self.city, labor) map:^(NSNumber *labor) {
         return @(labor.unsignedIntegerValue / inputRate);
     }];
@@ -530,12 +530,12 @@ static NSDictionary *foregroundDisplayInfo;
     }];
 }
 
-- (void)displayLaborModalWithTitle:(NSString *)title
-                         inputRate:(NSUInteger)inputRate
-                        outputRate:(NSUInteger)outputRate
-                        outputName:(NSString *)outputName
-                       commitBlock:(void(^)(NSUInteger input, NSUInteger output))commitBlock {
-    [self displayLaborModalWithTitle:title inputRate:inputRate outputRateMin:outputRate outputRateMax:outputRate outputName:outputName commitBlock:commitBlock];
+- (void)showLaborModalWithTitle:(NSString *)title
+                      inputRate:(NSUInteger)inputRate
+                     outputRate:(NSUInteger)outputRate
+                     outputName:(NSString *)outputName
+                    commitBlock:(void(^)(NSUInteger input, NSUInteger output))commitBlock {
+    [self showLaborModalWithTitle:title inputRate:inputRate outputRateMin:outputRate outputRateMax:outputRate outputName:outputName commitBlock:commitBlock];
 }
 
 - (void)addMenuViewForTile:(SCTile *)tile {
