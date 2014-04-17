@@ -313,9 +313,9 @@ static NSDictionary *foregroundDisplayInfo;
         }] array] componentsJoinedByString:@", "];
     };
 
-    inputView.topLabel.text = nonzeroList(@[RACTuplePack(@(building.laborPerStep), @"labor"),
-                                            RACTuplePack(@(building.woodPerStep), @"wood"),
-                                            RACTuplePack(@(building.stonePerStep), @"stone")]);
+    inputView.topLabel.text = [NSString stringWithFormat:@"%@ per step", nonzeroList(@[RACTuplePack(@(building.laborPerStep), @"labor"),
+                                                                                       RACTuplePack(@(building.woodPerStep), @"wood"),
+                                                                                       RACTuplePack(@(building.stonePerStep), @"stone")])];
     
     RAC(inputView.bottomLabel, text) = [inputStepsSignal map:^(NSNumber *inputStepsNumber) {
         NSUInteger steps = inputStepsNumber.unsignedIntegerValue;
