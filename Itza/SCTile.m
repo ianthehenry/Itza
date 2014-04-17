@@ -19,6 +19,11 @@
 - (id)initWithHex:(SCHex *)hex {
     if (self = [super init]) {
         _hex = hex;
+        @weakify(self);
+        [RACObserve(self, foreground) subscribeNext:^(SCForeground *foreground) {
+            @strongify(self);
+            foreground.tile = self;
+        }];
     }
     return self;
 }

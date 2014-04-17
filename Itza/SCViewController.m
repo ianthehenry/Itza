@@ -192,8 +192,11 @@ static NSDictionary *foregroundDisplayInfo;
         }), laborInputButton(@"Chop", @"Chop Wood", 3, 1, 1, @"wood", ^(NSUInteger output) {
             [self.city gainWood:output];
         })];
-    } else if ([tile.foreground isKindOfClass:SCGranary.class]) {
-        return @[button(@"Grain")];
+    } else if ([tile.foreground isKindOfClass:SCBuilding.class]) {
+        return @[[SCButtonDescription buttonWithText:@"Build" handler:^{
+            [self removeCurrentMenuView];
+            [self showConstructionModalForBuilding:(SCBuilding *)tile.foreground];
+        }]];
     } else {
         return nil;
     }
@@ -259,6 +262,73 @@ static NSDictionary *foregroundDisplayInfo;
                      }];
 }
 
+- (void)showConstructionModalForBuilding:(SCBuilding *)building {
+    NSMutableArray *relevantSignals = [[NSMutableArray alloc] init];
+    
+    [relevantSignals addObject:RACObserve(building, remainingSteps)];
+    
+    if (building.laborPerStep > 0) {
+        [relevantSignals addObject:[RACObserve(self.city, labor) map:^(NSNumber *labor) {
+            return @(labor.unsignedIntegerValue / building.laborPerStep);
+        }]];
+    }
+    
+    if (building.woodPerStep > 0) {
+        [relevantSignals addObject:[RACObserve(self.city, wood) map:^(NSNumber *wood) {
+            return @(wood.unsignedIntegerValue / building.woodPerStep);
+        }]];
+    }
+    
+    if (building.stonePerStep > 0) {
+        [relevantSignals addObject:[RACObserve(self.city, stone) map:^(NSNumber *stone) {
+            return @(stone.unsignedIntegerValue / building.stonePerStep);
+        }]];
+    }
+    
+    RACSignal *maxSteps = [[RACSignal combineLatest:relevantSignals] map:^id(RACTuple *nums) {
+        RACSequence *seq = nums.rac_sequence;
+        NSNumber *min = seq.head;
+        for (NSNumber *num in seq.tail) {
+            if ([num compare:min] == NSOrderedAscending) {
+                min = num;
+            }
+        }
+        return min;
+    }];
+    
+    RACTupleUnpack(SCInputView *inputView, RACSignal *inputStepsSignal) = [self inputViewWithMaxValue:maxSteps cancel:^{
+        [self addMenuViewForTile:building.tile];
+    } commit:^(NSUInteger inputSteps) {
+        [building build:inputSteps];
+        [self.city loseLabor:inputSteps * building.laborPerStep];
+        [self.city loseWood:inputSteps * building.woodPerStep];
+        [self.city loseStone:inputSteps * building.stonePerStep];
+    }];
+    
+    NSString *(^nonzeroList)(NSArray *tuples) = ^(NSArray *tuples) {
+        return [[[[tuples.rac_sequence filter:^BOOL(RACTuple *tuple) {
+            return [tuple[0] unsignedIntegerValue] != 0;
+        }] map:^(RACTuple *tuple) {
+            return [NSString stringWithFormat:@"%@ %@", tuple[0], tuple[1]];
+        }] array] componentsJoinedByString:@", "];
+    };
+
+    inputView.topLabel.text = nonzeroList(@[RACTuplePack(@(building.laborPerStep), @"labor"),
+                                            RACTuplePack(@(building.woodPerStep), @"wood"),
+                                            RACTuplePack(@(building.stonePerStep), @"stone")]);
+    
+    RAC(inputView.bottomLabel, text) = [inputStepsSignal map:^(NSNumber *inputStepsNumber) {
+        NSUInteger steps = inputStepsNumber.unsignedIntegerValue;
+        if (steps == 0) {
+            return @"How much labor?";
+        } else {
+            return nonzeroList(@[RACTuplePack(@(steps * building.laborPerStep), @"labor"),
+                                 RACTuplePack(@(steps * building.woodPerStep), @"wood"),
+                                 RACTuplePack(@(steps * building.stonePerStep), @"stone")]);
+        }
+    }];
+}
+
 - (void)showBuildingModalForTile:(SCTile *)tile {
     UIView *view = [[UIView alloc] initWithFrame:CGRectMake(0, 0, 300, 0)];
     view.backgroundColor = UIColor.whiteColor;
@@ -283,17 +353,17 @@ static NSDictionary *foregroundDisplayInfo;
     
     NSArray *buildings =
     @[
-      RACTuplePack(SCHouse.class, @"+100 max pop, +10 more for each adjacent house", @20, @0, @20),
-      RACTuplePack(SCFarm.class, @"Turns maize into more maize", @0, @0, @30),
-      RACTuplePack(SCGranary.class, @"95% preservation of up to 200 maize", @30, @0, @30),
-      RACTuplePack(SCTemple.class, @"Extends visible range", @0, @30, @60),
-      RACTuplePack(SCLumberMill.class, @"+1 wood per labor in adjacent forests", @10, @0, @20),
-      RACTuplePack(SCFishery.class, @"+2 fish per labor in adjacent rivers and lakes", @30, @0, @50),
+      RACTuplePack(SCHouse.class, @"+100 max pop, +10 more for each adjacent house", @20, @20, @0),
+      RACTuplePack(SCFarm.class, @"Turns maize into more maize", @30, @0, @0),
+      RACTuplePack(SCGranary.class, @"95% preservation of up to 200 maize", @30, @30, @0),
+      RACTuplePack(SCTemple.class, @"Extends visible range", @60, @0, @30),
+      RACTuplePack(SCLumberMill.class, @"+1 wood per labor in adjacent forests", @20, @10, @0),
+      RACTuplePack(SCFishery.class, @"+2 fish per labor in adjacent rivers and lakes", @50, @30, @0),
       ];
     CGFloat padding = 10;
     CGFloat top = 0;
     for (RACTuple *tuple in buildings) {
-        RACTupleUnpack(Class class, NSString *description, NSNumber *wood, NSNumber *stone, NSNumber *labor) = tuple;
+        RACTupleUnpack(Class class, NSString *description, NSNumber *labor, NSNumber *wood, NSNumber *stone) = tuple;
         UIControl *control = [[UIControl alloc] initWithFrame:CGRectMake(0, top, 300, 30)];
         RAC(control, backgroundColor) = [RACObserve(control, highlighted) map:^(NSNumber *highlighted) {
             return highlighted.boolValue ? [UIColor colorWithWhite:0.9 alpha:1] : [UIColor whiteColor];
@@ -326,9 +396,12 @@ static NSDictionary *foregroundDisplayInfo;
         descriptionLabel.backgroundColor = [[UIColor greenColor] colorWithAlphaComponent:0.5];
         
         [[control rac_signalForControlEvents:UIControlEventTouchUpInside] subscribeNext:^(id x) {
-            tile.foreground = [[class alloc] init];
             dismiss();
-            [self addMenuViewForTile:tile];
+            SCBuilding *building = (SCBuilding *)[[class alloc] initWithLabor:labor.unsignedIntegerValue
+                                                                         wood:wood.unsignedIntegerValue
+                                                                        stone:stone.unsignedIntegerValue];
+            tile.foreground = building;
+            [self showConstructionModalForBuilding:building];
         }];
         control.frameHeight = CGRectGetMaxY(nameLabel.frame);
         top = CGRectGetMaxY(control.frame);
@@ -357,22 +430,18 @@ static NSDictionary *foregroundDisplayInfo;
     return dismiss;
 }
 
-- (void)displayLaborModalWithTitle:(NSString *)title
-                         inputRate:(NSUInteger)inputRate
-                     outputRateMin:(NSUInteger)outputRateMin
-                     outputRateMax:(NSUInteger)outputRateMax
-                        outputName:(NSString *)outputName
-                       commitBlock:(void(^)(NSUInteger input, NSUInteger output))commitBlock {
+- (RACTuple *)inputViewWithMaxValue:(RACSignal *)maxValueSignal
+                             cancel:(void(^)())cancelBlock
+                             commit:(void(^)(NSUInteger steps))commitBlock {
     SCInputView *inputView = [[UINib nibWithNibName:@"SCInputView" bundle:nil] instantiateWithOwner:nil options:nil][0];
-    
     __block BOOL dismissed = NO;
     
     inputView.slider.minimumValue = 0;
     inputView.slider.value = 0;
-    [[RACObserve(self.city, labor) takeUntilBlock:^BOOL(id x) {
+    [[maxValueSignal takeUntilBlock:^BOOL(id x) {
         return dismissed;
-    }] subscribeNext:^(NSNumber *labor) {
-        inputView.slider.maximumValue = inputRate * (labor.unsignedIntegerValue / inputRate);
+    }] subscribeNext:^(NSNumber *maxSteps) {
+        inputView.slider.maximumValue = maxSteps.unsignedIntegerValue;
         [inputView.slider sendActionsForControlEvents:UIControlEventValueChanged];
     }];
     
@@ -381,16 +450,65 @@ static NSDictionary *foregroundDisplayInfo;
     }] concat:[[inputView.slider rac_signalForControlEvents:UIControlEventValueChanged] map:^(UISlider *slider) {
         return @(slider.value);
     }]] map:^(NSNumber *sliderValue) {
-        NSUInteger labor = roundf(sliderValue.floatValue);
-        NSUInteger rounded = inputRate * (labor / inputRate);
-        return @(rounded);
+        return @((NSUInteger)roundf(sliderValue.floatValue));
     }];
     
-    RACSignal *outputMinSignal = [inputSignal map:^(NSNumber *inputNumber) {
-        return @((inputNumber.unsignedIntegerValue / inputRate) * outputRateMin);
+    [inputView.button setTitle:@"Commit" forState:UIControlStateNormal];
+    [inputView layoutIfNeeded];
+    inputView.frameHeight = CGRectGetMaxY(inputView.button.frame);
+    RAC(inputView.button, enabled) = [[inputSignal is:@0] not];
+    
+    void (^dismissModal)() = [self showModal:inputView dismissed:&dismissed];
+    
+    [[inputView.button rac_signalForControlEvents:UIControlEventTouchUpInside] subscribeNext:^(id x) {
+        dismissModal();
+        NSUInteger input = [[inputSignal first] unsignedIntegerValue];
+        assert(input > 0);
+        commitBlock(input);
     }];
-    RACSignal *outputMaxSignal = [inputSignal map:^(NSNumber *inputNumber) {
-        return @((inputNumber.unsignedIntegerValue / inputRate) * outputRateMax);
+    
+    [[inputView.cancelButton rac_signalForControlEvents:UIControlEventTouchUpInside] subscribeNext:^(id x) {
+        dismissModal();
+        cancelBlock();
+    }];
+    
+    return RACTuplePack(inputView, inputSignal);
+}
+
+- (void)displayLaborModalWithTitle:(NSString *)title
+                         inputRate:(NSUInteger)inputRate
+                     outputRateMin:(NSUInteger)outputRateMin
+                     outputRateMax:(NSUInteger)outputRateMax
+                        outputName:(NSString *)outputName
+                       commitBlock:(void(^)(NSUInteger input, NSUInteger output))commitBlock {
+    RACSignal *maxSteps = [RACObserve(self.city, labor) map:^(NSNumber *labor) {
+        return @(labor.unsignedIntegerValue / inputRate);
+    }];
+    
+    RACTupleUnpack(SCInputView *inputView, RACSignal *inputStepsSignal) = [self inputViewWithMaxValue:maxSteps cancel:^{
+        [self addMenuViewForTile:self.selectedTile];
+    } commit:^(NSUInteger inputSteps) {
+        NSUInteger output = 0;
+        NSUInteger outputSpread = outputRateMax - outputRateMin;
+        if (outputSpread == 0) {
+            output = outputRateMin * inputSteps;
+        } else {
+            for (NSUInteger i = 0; i < inputSteps; i++) {
+                output += arc4random_uniform((u_int32_t)outputSpread + 1) + outputRateMin;
+            }
+        }
+        commitBlock(inputSteps * inputRate, output);
+    }];
+    
+    RACSignal *inputSignal = [inputStepsSignal map:^(NSNumber *value) {
+        return @(inputRate * value.unsignedIntegerValue);
+    }];
+    
+    RACSignal *outputMinSignal = [inputStepsSignal map:^(NSNumber *inputSteps) {
+        return @(inputSteps.unsignedIntegerValue * outputRateMin);
+    }];
+    RACSignal *outputMaxSignal = [inputStepsSignal map:^(NSNumber *inputSteps) {
+        return @(inputSteps.unsignedIntegerValue * outputRateMax);
     }];
     
     inputView.topLabel.text = (outputRateMin == outputRateMax) ?
@@ -409,36 +527,6 @@ static NSDictionary *foregroundDisplayInfo;
         } else {
             return [NSString stringWithFormat:@"%@ labor ➜ %@-%@ %@", input, outputMin, outputMax, outputName];
         }
-    }];
-    
-    [inputView.button setTitle:@"Commit" forState:UIControlStateNormal];
-    [inputView layoutIfNeeded];
-    inputView.frameHeight = CGRectGetMaxY(inputView.button.frame);
-    RAC(inputView.button, enabled) = [[inputSignal is:@0] not];
-
-    void (^dismiss)() = [self showModal:inputView dismissed:&dismissed];
-    
-    [[inputView.button rac_signalForControlEvents:UIControlEventTouchUpInside] subscribeNext:^(id x) {
-        dismiss();
-        NSUInteger input = [[inputSignal first] unsignedIntegerValue];
-        assert(input > 0);
-        assert(input % inputRate == 0);
-        NSUInteger inputEvents = input / inputRate;
-        NSUInteger output = 0;
-        NSUInteger outputSpread = outputRateMax - outputRateMin;
-        if (outputSpread == 0) {
-            output = outputRateMin * inputEvents;
-        } else {
-            for (NSUInteger i = 0; i < inputEvents; i++) {
-                output += arc4random_uniform((u_int32_t)outputSpread + 1) + outputRateMin;
-            }
-        }
-        commitBlock(input, output);
-    }];
-    
-    [[inputView.cancelButton rac_signalForControlEvents:UIControlEventTouchUpInside] subscribeNext:^(id x) {
-        dismiss();
-        [self addMenuViewForTile:self.selectedTile];
     }];
 }
 

@@ -102,8 +102,9 @@
 + (instancetype)cityWithWorld:(SCWorld *)world {
     SCCity *city = [[self alloc] init];
     city.population = 100;
-    city.meat = 10;
-    city.maize = 0;
+    city.meat = 100;
+    city.wood = 100;
+    city.stone = 100;
     city.world = world;
     city.labor = city.population;
     return city;
@@ -128,6 +129,16 @@
 - (void)loseLabor:(NSUInteger)labor {
     NSAssert(labor <= self.labor, @"That's more labor than you have!");
     self.labor -= labor;
+}
+
+- (void)loseWood:(NSUInteger)wood {
+    NSAssert(wood <= self.wood, @"That's more wood than you have!");
+    self.wood -= wood;
+}
+
+- (void)loseStone:(NSUInteger)stone {
+    NSAssert(stone <= self.stone, @"That's more stone than you have!");
+    self.stone -= stone;
 }
 
 + (NSSet *)keyPathsForValuesAffectingFood {

@@ -31,5 +31,7 @@
 - (void)gainMeat:(NSUInteger)meat;
 - (void)gainFish:(NSUInteger)fish;
 - (void)loseLabor:(NSUInteger)labor;
+- (void)loseWood:(NSUInteger)wood;
+- (void)loseStone:(NSUInteger)stone;
 
 @end
