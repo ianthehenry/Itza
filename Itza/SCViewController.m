@@ -343,7 +343,6 @@ static NSDictionary *foregroundDisplayInfo;
 
 - (void)showBuildingModalForTile:(SCTile *)tile {
     UIView *view = [[UIView alloc] initWithFrame:CGRectMake(0, 0, 300, 0)];
-    view.backgroundColor = UIColor.whiteColor;
     
     UILabel *titleLabel = [[UILabel alloc] initWithFrame:CGRectMake(0, 0, 300, 30)];
     titleLabel.text = @"Build a Building";
@@ -376,7 +375,7 @@ static NSDictionary *foregroundDisplayInfo;
         RACTupleUnpack(Class class, NSNumber *labor, NSNumber *wood, NSNumber *stone) = tuple;
         UIControl *control = [[UIControl alloc] initWithFrame:CGRectMake(0, top, 300, 30)];
         RAC(control, backgroundColor) = [RACObserve(control, highlighted) map:^(NSNumber *highlighted) {
-            return highlighted.boolValue ? [UIColor colorWithWhite:0.9 alpha:1] : [UIColor whiteColor];
+            return highlighted.boolValue ? [UIColor colorWithWhite:0 alpha:0.1] : UIColor.clearColor;
         }];
         
         RACTupleUnpack(NSString *name, NSString *tileIcon, UIColor *tileColor, NSString *description) = foregroundDisplayInfo[class.pointerValue];
@@ -389,7 +388,6 @@ static NSDictionary *foregroundDisplayInfo;
         tileView.userInteractionEnabled = NO;
         [tileView size:@"hk"];
         [control addSubview:tileView];
-        tileView.backgroundColor = [[UIColor redColor] colorWithAlphaComponent:0.5];
         
         UILabel *nameLabel = [[UILabel alloc] initWithFrame:CGRectMake(padding, CGRectGetMaxY(tileView.frame), CGRectGetWidth(tileView.frame), 22)];
         nameLabel.text = name;
@@ -397,7 +395,6 @@ static NSDictionary *foregroundDisplayInfo;
         nameLabel.textAlignment = NSTextAlignmentCenter;
         [nameLabel size:@"hk"];
         [control addSubview:nameLabel];
-        nameLabel.backgroundColor = [[UIColor blueColor] colorWithAlphaComponent:0.5];
         
         CGFloat left = CGRectGetMaxX(tileView.frame);
         UILabel *descriptionLabel = [[UILabel alloc] initWithFrame:CGRectMake(left, 0, control.bounds.size.width - left - padding, control.bounds.size.height)];
@@ -405,7 +402,6 @@ static NSDictionary *foregroundDisplayInfo;
         descriptionLabel.text = [NSString stringWithFormat:@"%@ (%@w %@s %@l)", description, wood, stone, labor];
         [descriptionLabel size:@"hjkl"];
         [control addSubview:descriptionLabel];
-        descriptionLabel.backgroundColor = [[UIColor greenColor] colorWithAlphaComponent:0.5];
         
         [[control rac_signalForControlEvents:UIControlEventTouchUpInside] subscribeNext:^(id x) {
             dismiss();
@@ -761,6 +757,7 @@ static NSDictionary *foregroundDisplayInfo;
     titleLabel.text = title;
     titleLabel.textAlignment = NSTextAlignmentCenter;
     UITextView *textView = [[UITextView alloc] initWithFrame:CGRectMake(0, 0, 300, 0)];
+    textView.backgroundColor = UIColor.clearColor;
     textView.font = [UIFont fontWithName:@"Menlo" size:13];
     textView.editable = NO;
     textView.selectable = NO;
