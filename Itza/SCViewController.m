@@ -431,19 +431,32 @@ static NSDictionary *foregroundDisplayInfo;
     view.backgroundColor = [UIColor colorWithWhite:1 alpha:0.9];
     view.layer.cornerRadius = 10;
     [view size:@""];
-    UIControl *backdropView = [[UIControl alloc] initWithFrame:self.view.bounds];
+    CGFloat top = CGRectGetMaxY([self.view convertRect:self.navigationController.navigationBar.frame fromView:self.navigationController.navigationBar.superview]);
+    UIView *backdropView = [[UIView alloc] initWithFrame:CGRectMake(0, top, self.view.bounds.size.width, CGRectGetMinY(self.toolbar.frame) - top)];
     [backdropView size:@"hjkl"];
-    backdropView.backgroundColor = [UIColor colorWithWhite:0 alpha:0.1];
+    backdropView.userInteractionEnabled = YES;
+    backdropView.backgroundColor = UIColor.blackColor;
+    backdropView.alpha = 0;
 
     NSAssert(*dismissed == NO, @"Must pass a pointer to NO");
     void (^dismiss)() = ^{
         *dismissed = YES;
-        [backdropView removeFromSuperview];
         self.showingModal = NO;
         [self popClosed:view];
+        backdropView.userInteractionEnabled = NO;
+        [UIView animateWithDuration:0.25 animations:^{
+            backdropView.alpha = 0;
+        } completion:^(BOOL finished) {
+            [backdropView removeFromSuperview];
+        }];
     };
-    [[backdropView rac_signalForControlEvents:UIControlEventTouchUpInside] subscribeNext:^(id x) {
-        dismiss();
+    
+    UITapGestureRecognizer *backgroundTapRecognizer = [[UITapGestureRecognizer alloc] init];
+    [backdropView addGestureRecognizer:backgroundTapRecognizer];
+    [backgroundTapRecognizer.rac_gestureSignal subscribeNext:^(UITapGestureRecognizer *recognizer) {
+        if (recognizer.state == UIGestureRecognizerStateRecognized) {
+            dismiss();
+        }
     }];
 
     RAC(view, center) = [[RACObserve(self, unobscuredFrame) map:^id(NSValue *frame) {
@@ -453,6 +466,9 @@ static NSDictionary *foregroundDisplayInfo;
     }];
     
     [self.view insertSubview:backdropView belowSubview:self.toolbar];
+    [UIView animateWithDuration:0.25 animations:^{
+        backdropView.alpha = 0.5;
+    }];
     [self popOpen:view inView:self.view];
     self.showingModal = YES;
 
