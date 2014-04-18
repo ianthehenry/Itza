@@ -44,6 +44,7 @@ static NSDictionary *foregroundDisplayInfo;
 
 @property (nonatomic, assign) CGSize contentSize;
 @property (nonatomic, assign) CGRect unobscuredFrame;
+@property (nonatomic, assign) BOOL showingModal;
 
 @end
 
@@ -126,13 +127,17 @@ static NSDictionary *foregroundDisplayInfo;
     RAC(self.scrollView, contentSize) = [self paddedContentSize];
     
     @weakify(self);
+    [[RACSignal combineLatest:@[RACObserve(self, selectedTile), RACObserve(self, showingModal)]] subscribeNext:^(RACTuple *tuple) {
+        RACTupleUnpack(SCTile *selectedTile, NSNumber *showingModal) = tuple;
+        BOOL shouldShowMenu = selectedTile != nil && !showingModal.boolValue;
+        [self removeCurrentMenuView];
+        if (shouldShowMenu) {
+            [self addMenuViewForTile:selectedTile];
+        }
+    }];
+    
     [RACObserve(self, selectedTile) subscribeChanges:^(SCTile *previous, SCTile *current) {
         @strongify(self);
-        [self removeCurrentMenuView];
-        if (current != nil) {
-            [self addMenuViewForTile:current];
-        }
-        
         [self tileViewForTile:previous].selected = NO;
         SCTileView *selectedTileView = [self tileViewForTile:current];
         selectedTileView.selected = YES;
@@ -166,7 +171,6 @@ static NSDictionary *foregroundDisplayInfo;
     
     SCButtonDescription *(^laborInputButton)(NSString *buttonName, NSString *title, NSUInteger inputRate, NSUInteger outputRateMin, NSUInteger outputRateMax, NSString *outputName, void(^)(NSUInteger output)) = ^(NSString *buttonName, NSString *title, NSUInteger inputRate, NSUInteger outputRateMin, NSUInteger outputRateMax, NSString *outputName, void(^outputBlock)(NSUInteger output)) {
         return [SCButtonDescription buttonWithText:buttonName handler:^{
-            [self removeCurrentMenuView];
             [self showLaborModalWithTitle:title inputRate:inputRate outputRateMin:outputRateMin outputRateMax:outputRateMax outputName:outputName commitBlock:^(NSUInteger input, NSUInteger output) {
                 [self.city loseLabor:input];
                 outputBlock(output);
@@ -182,7 +186,6 @@ static NSDictionary *foregroundDisplayInfo;
         })];
     } else if ([tile.foreground isKindOfClass:SCGrass.class]) {
         return @[[SCButtonDescription buttonWithText:@"Build" handler:^{
-            [self removeCurrentMenuView];
             [self showBuildingModalForTile:tile];
         }]];
     } else if ([tile.foreground isKindOfClass:SCTemple.class]) {
@@ -201,7 +204,6 @@ static NSDictionary *foregroundDisplayInfo;
             return @[button(@"Raze")];
         } else {
             return @[[SCButtonDescription buttonWithText:@"Build" handler:^{
-                [self removeCurrentMenuView];
                 [self showConstructionModalForBuilding:(SCBuilding *)tile.foreground];
             }], [SCButtonDescription buttonWithText:@"Raze" handler:^{
                 [self flashMessage:@"you can't yet"];
@@ -306,14 +308,11 @@ static NSDictionary *foregroundDisplayInfo;
         return min;
     }];
     
-    RACTupleUnpack(SCInputView *inputView, RACSignal *inputStepsSignal) = [self inputViewWithMaxValue:maxSteps cancel:^{
-        [self addMenuViewForTile:building.tile];
-    } commit:^(NSUInteger inputSteps) {
+    RACTupleUnpack(SCInputView *inputView, RACSignal *inputStepsSignal) = [self inputViewWithMaxValue:maxSteps commit:^(NSUInteger inputSteps) {
         [building build:inputSteps];
         [self.city loseLabor:inputSteps * building.laborPerStep];
         [self.city loseWood:inputSteps * building.woodPerStep];
         [self.city loseStone:inputSteps * building.stonePerStep];
-        [self addMenuViewForTile:building.tile];
     }];
     
     NSString *(^nonzeroList)(NSArray *tuples) = ^(NSArray *tuples) {
@@ -357,11 +356,9 @@ static NSDictionary *foregroundDisplayInfo;
     
     [view stackViewsVerticallyCentered:@[titleLabel, scrollView, cancelButton]];
     
-    __block BOOL dismissed = NO;
-    void (^dismiss)() = [self showModal:view dismissed:&dismissed];
+    void (^dismiss)() = [self showModal:view];
     [[cancelButton rac_signalForControlEvents:UIControlEventTouchUpInside] subscribeNext:^(id x) {
         dismiss();
-        [self addMenuViewForTile:tile];
     }];
     
     NSArray *buildings =
@@ -425,14 +422,29 @@ static NSDictionary *foregroundDisplayInfo;
     scrollView.contentSize = CGSizeMake(300, top);
 }
 
+- (void(^)())showModal:(UIView *)view {
+    __block BOOL dismissed = NO;
+    return [self showModal:view dismissed:&dismissed];
+}
+
 - (void(^)())showModal:(UIView *)view dismissed:(BOOL *)dismissed {
+    view.backgroundColor = [UIColor colorWithWhite:1 alpha:0.9];
+    view.layer.cornerRadius = 10;
     [view size:@""];
+    UIControl *backdropView = [[UIControl alloc] initWithFrame:self.view.bounds];
+    [backdropView size:@"hjkl"];
+    backdropView.backgroundColor = [UIColor colorWithWhite:0 alpha:0.1];
 
     NSAssert(*dismissed == NO, @"Must pass a pointer to NO");
     void (^dismiss)() = ^{
         *dismissed = YES;
+        [backdropView removeFromSuperview];
+        self.showingModal = NO;
         [self popClosed:view];
     };
+    [[backdropView rac_signalForControlEvents:UIControlEventTouchUpInside] subscribeNext:^(id x) {
+        dismiss();
+    }];
 
     RAC(view, center) = [[RACObserve(self, unobscuredFrame) map:^id(NSValue *frame) {
         return [NSValue valueWithCGPoint:CGRectGetCenter(frame.CGRectValue)];
@@ -440,13 +452,14 @@ static NSDictionary *foregroundDisplayInfo;
         return *dismissed;
     }];
     
+    [self.view insertSubview:backdropView belowSubview:self.toolbar];
     [self popOpen:view inView:self.view];
+    self.showingModal = YES;
 
     return dismiss;
 }
 
 - (RACTuple *)inputViewWithMaxValue:(RACSignal *)maxValueSignal
-                             cancel:(void(^)())cancelBlock
                              commit:(void(^)(NSUInteger steps))commitBlock {
     SCInputView *inputView = [[UINib nibWithNibName:@"SCInputView" bundle:nil] instantiateWithOwner:nil options:nil][0];
     __block BOOL dismissed = NO;
@@ -476,15 +489,15 @@ static NSDictionary *foregroundDisplayInfo;
     void (^dismissModal)() = [self showModal:inputView dismissed:&dismissed];
     
     [[inputView.button rac_signalForControlEvents:UIControlEventTouchUpInside] subscribeNext:^(id x) {
-        dismissModal();
+        dismissed = YES;
         NSUInteger input = [[inputSignal first] unsignedIntegerValue];
         assert(input > 0);
         commitBlock(input);
+        dismissModal();
     }];
     
     [[inputView.cancelButton rac_signalForControlEvents:UIControlEventTouchUpInside] subscribeNext:^(id x) {
         dismissModal();
-        cancelBlock();
     }];
     
     return RACTuplePack(inputView, inputSignal);
@@ -500,9 +513,7 @@ static NSDictionary *foregroundDisplayInfo;
         return @(labor.unsignedIntegerValue / inputRate);
     }];
     
-    RACTupleUnpack(SCInputView *inputView, RACSignal *inputStepsSignal) = [self inputViewWithMaxValue:maxSteps cancel:^{
-        [self addMenuViewForTile:self.selectedTile];
-    } commit:^(NSUInteger inputSteps) {
+    RACTupleUnpack(SCInputView *inputView, RACSignal *inputStepsSignal) = [self inputViewWithMaxValue:maxSteps commit:^(NSUInteger inputSteps) {
         NSUInteger output = 0;
         NSUInteger outputSpread = outputRateMax - outputRateMin;
         if (outputSpread == 0) {
@@ -554,6 +565,9 @@ static NSDictionary *foregroundDisplayInfo;
 }
 
 - (void)addMenuViewForTile:(SCTile *)tile {
+    if (tile == nil) {
+        return;
+    }
     self.currentMenuView = [[SCRadialMenuView alloc] initWithApothem:APOTHEM buttons:[self buttonsForTile:tile]];
     self.currentMenuView.center = [self centerForPosition:tile.hex.position];
     
@@ -740,8 +754,7 @@ static NSDictionary *foregroundDisplayInfo;
     [closeButton setTitle:@"Done" forState:UIControlStateNormal];
     closeButton.frame = CGRectMake(0, 0, 300, 44);
     [view stackViewsVerticallyCentered:@[titleLabel, textView, closeButton]];
-    __block BOOL dismissed = NO;
-    void (^dismiss)() = [self showModal:view dismissed:&dismissed];
+    void (^dismiss)() = [self showModal:view];
     [[closeButton rac_signalForControlEvents:UIControlEventTouchUpInside] subscribeNext:^(id x) {
         dismiss();
     }];
