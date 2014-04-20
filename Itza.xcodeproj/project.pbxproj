@@ -8,6 +8,8 @@
 
 /* Begin PBXBuildFile section */
 		22A6D89BE8FB4F0FA5F29016 /* libPods-Itza.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 2516362588AC43F68997AE5D /* libPods-Itza.a */; };
+		3C034F0919033F7B0048D383 /* SCBuilding.m in Sources */ = {isa = PBXBuildFile; fileRef = 3C034F0819033F7B0048D383 /* SCBuilding.m */; };
+		3C034F0C1903405C0048D383 /* SCBuildings.m in Sources */ = {isa = PBXBuildFile; fileRef = 3C034F0B1903405C0048D383 /* SCBuildings.m */; };
 		3C0B4BA018F9C43400753EB3 /* SCLabel.m in Sources */ = {isa = PBXBuildFile; fileRef = 3C0B4B9F18F9C43400753EB3 /* SCLabel.m */; };
 		3C116E0718F21BE000A2F3BC /* SCWorld.m in Sources */ = {isa = PBXBuildFile; fileRef = 3C116E0618F21BE000A2F3BC /* SCWorld.m */; };
 		3C12372A18F2676D00E83534 /* SCForeground.m in Sources */ = {isa = PBXBuildFile; fileRef = 3C12372918F2676D00E83534 /* SCForeground.m */; };
@@ -50,6 +52,10 @@
 
 /* Begin PBXFileReference section */
 		2516362588AC43F68997AE5D /* libPods-Itza.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-Itza.a"; sourceTree = BUILT_PRODUCTS_DIR; };
+		3C034F0719033F7B0048D383 /* SCBuilding.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SCBuilding.h; sourceTree = "<group>"; };
+		3C034F0819033F7B0048D383 /* SCBuilding.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SCBuilding.m; sourceTree = "<group>"; };
+		3C034F0A1903405C0048D383 /* SCBuildings.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SCBuildings.h; sourceTree = "<group>"; };
+		3C034F0B1903405C0048D383 /* SCBuildings.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SCBuildings.m; sourceTree = "<group>"; };
 		3C0B4B9E18F9C43400753EB3 /* SCLabel.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SCLabel.h; sourceTree = "<group>"; };
 		3C0B4B9F18F9C43400753EB3 /* SCLabel.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SCLabel.m; sourceTree = "<group>"; };
 		3C116E0518F21BE000A2F3BC /* SCWorld.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SCWorld.h; sourceTree = "<group>"; };
@@ -154,6 +160,10 @@
 				3C116E0618F21BE000A2F3BC /* SCWorld.m */,
 				3C4DB4D918F2231B009A73D1 /* SCCity.h */,
 				3C4DB4DA18F2231B009A73D1 /* SCCity.m */,
+				3C034F0719033F7B0048D383 /* SCBuilding.h */,
+				3C034F0819033F7B0048D383 /* SCBuilding.m */,
+				3C034F0A1903405C0048D383 /* SCBuildings.h */,
+				3C034F0B1903405C0048D383 /* SCBuildings.m */,
 			);
 			name = Models;
 			sourceTree = "<group>";
@@ -392,6 +402,8 @@
 				3CD604F418ECD30A00265338 /* main.m in Sources */,
 				3C12372A18F2676D00E83534 /* SCForeground.m in Sources */,
 				3C4DB4DB18F2231B009A73D1 /* SCCity.m in Sources */,
+				3C034F0919033F7B0048D383 /* SCBuilding.m in Sources */,
+				3C034F0C1903405C0048D383 /* SCBuildings.m in Sources */,
 				3C1F7C2018F75AC90060E463 /* SCInputView.m in Sources */,
 				3C262CDC18F09F2300F1BBB3 /* SCScrollView.m in Sources */,
 				3C0B4BA018F9C43400753EB3 /* SCLabel.m in Sources */,

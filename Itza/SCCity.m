@@ -28,12 +28,12 @@
     
     void (^log)(NSUInteger number, NSString *format) = ^(NSUInteger number, NSString *format) {
         if (number > 0) {
-            NSString *numberString = [NSString stringWithFormat:@"%u", number];
+            NSString *numberString = [NSString stringWithFormat:@"%u", (unsigned int)number];
             [messages addObject:[format stringByReplacingOccurrencesOfString:@"%" withString:numberString]];
         }
     };
     void (^logDelta)(NSInteger number, NSString *format) = ^(NSInteger number, NSString *name) {
-        NSString *numberString = [NSString stringWithFormat:@"%i", ABS(number)];
+        NSString *numberString = [NSString stringWithFormat:@"%u", (unsigned int)ABS(number)];
         NSString *signString = number < 0 ? @"-" : @"+";
         [messages addObject:[NSString stringWithFormat:@"%@%@ %@", signString, numberString, name]];
     };

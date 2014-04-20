@@ -14,6 +14,7 @@
 #import "SCPassthroughView.h"
 #import "SCInputView.h"
 #import "SCLabel.h"
+#import "SCBuildings.h"
 
 static CGFloat RADIUS;
 static CGFloat APOTHEM;
@@ -677,7 +678,9 @@ static NSDictionary *foregroundDisplayInfo;
         return [NSValue valueWithCGRect:CGRectMakeSize(0, 0, contentSizeValue.CGSizeValue)];
     }];
     
-    self.city = [SCCity cityWithWorld:[SCWorld worldWithRadius:6]];
+    SCWorld *world = [SCWorld worldWithRadius:6];
+    [world tileAt:SCPosition.origin].foreground = [[SCTemple alloc] initWithLabor:1 wood:0 stone:0];
+    self.city = [SCCity cityWithWorld:world];
     [self setupGrid];
     [self.view layoutIfNeeded];
     

@@ -18,37 +18,8 @@
 @end
 
 @interface SCForest : SCForeground
-@end
-
-@interface SCBuilding : SCForeground
-@property (nonatomic, assign, readonly) NSUInteger stepCount;
-@property (nonatomic, assign, readonly) NSUInteger stepsTaken;
-@property (nonatomic, assign, readonly) NSUInteger laborPerStep;
-@property (nonatomic, assign, readonly) NSUInteger woodPerStep;
-@property (nonatomic, assign, readonly) NSUInteger stonePerStep;
-@property (nonatomic, assign, readonly) NSUInteger remainingSteps;
-@property (nonatomic, assign, readonly) BOOL isComplete;
-- (void)build:(NSUInteger)steps;
-- (instancetype)initWithLabor:(NSUInteger)labor wood:(NSUInteger)wood stone:(NSUInteger)stone;
-@end
-
-@interface SCTemple : SCBuilding
+@property (nonatomic, assign, readonly) NSUInteger trees;
 @end
 
 @interface SCRiver : SCForeground
-@end
-
-@interface SCGranary : SCBuilding
-@end
-
-@interface SCFarm : SCBuilding
-@end
-
-@interface SCLumberMill : SCBuilding
-@end
-
-@interface SCFishery : SCBuilding
-@end
-
-@interface SCHouse : SCBuilding
 @end
