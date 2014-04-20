@@ -18,7 +18,11 @@
 @end
 
 @interface SCForest : SCForeground
-@property (nonatomic, assign, readonly) NSUInteger trees;
+
+@property (nonatomic, assign, readonly) NSUInteger wood;
+- (void)loseWood:(NSUInteger)wood;
+- (instancetype)initWithWood:(NSUInteger)wood;
+
 @end
 
 @interface SCRiver : SCForeground

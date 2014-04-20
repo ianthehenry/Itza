@@ -58,7 +58,7 @@
 + (SCForeground *)randomForeground {
     switch (arc4random_uniform(10)) {
         case 0: case 1: case 2:
-            return [[SCForest alloc] init];
+            return [[SCForest alloc] initWithWood:75 + arc4random_uniform(51)];
         case 3: case 4:
             return [[SCRiver alloc] init];
         default:

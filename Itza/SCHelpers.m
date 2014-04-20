@@ -257,6 +257,19 @@ double usefulrand() {
     }];
 }
 
+- (RACSignal *)min {
+    return [self map:^id(RACTuple *tuple) {
+        NSAssert(tuple.count > 0, @"min has no identity; you need to pass in signals");
+        NSNumber *min = tuple.first;
+        for (NSUInteger i = 1; i < tuple.count; i++) {
+            if ([tuple[i] compare:min] == NSOrderedAscending) {
+                min = tuple[i];
+            }
+        }
+        return min;
+    }];
+}
+
 @end
 
 @implementation NSObject (Helpers)

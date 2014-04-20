@@ -60,7 +60,7 @@ static NSDictionary *foregroundDisplayInfo;
     UIColor *greenColor = [UIColor colorWithHue:0.33 saturation:0.9 brightness:0.6 alpha:1];
     UIColor *blueColor = [UIColor colorWithHue:0.66 saturation:0.9 brightness:0.6 alpha:1];
     UIColor *yellowColor = [UIColor colorWithHue:0.15 saturation:1.0 brightness:0.7 alpha:1];
-
+    
     foregroundDisplayInfo =
     @{
       SCGrass.class.pointerValue: RACTuplePack(@"Grass", @"", greenColor, @"You can build here"),
@@ -147,7 +147,7 @@ static NSDictionary *foregroundDisplayInfo;
 }
 
 - (RACSignal *)paddedContentSize {
-    return [RACObserve(self, contentSize) map:^id(NSValue *sizeValue) {
+    return [RACObserve(self, contentSize) map:^(NSValue *sizeValue) {
         CGSize size = sizeValue.CGSizeValue;
         size.width += PADDING * 2;
         size.height += PADDING * 2;
@@ -170,9 +170,46 @@ static NSDictionary *foregroundDisplayInfo;
         }];
     };
     
-    SCButtonDescription *(^laborInputButton)(NSString *buttonName, NSString *title, NSUInteger inputRate, NSUInteger outputRateMin, NSUInteger outputRateMax, NSString *outputName, void(^)(NSUInteger output)) = ^(NSString *buttonName, NSString *title, NSUInteger inputRate, NSUInteger outputRateMin, NSUInteger outputRateMax, NSString *outputName, void(^outputBlock)(NSUInteger output)) {
+    SCButtonDescription *(^laborInputRange)(NSString *buttonName,
+                                            NSString *title,
+                                            NSUInteger inputRate,
+                                            NSUInteger outputRateMin,
+                                            NSUInteger outputRateMax,
+                                            NSString *outputName,
+                                            void(^)(NSUInteger output)
+                                            ) = ^(NSString *buttonName,
+                                                  NSString *title,
+                                                  NSUInteger inputRate,
+                                                  NSUInteger outputRateMin,
+                                                  NSUInteger outputRateMax,
+                                                  NSString *outputName,
+                                                  void(^outputBlock)(NSUInteger output)) {
         return [SCButtonDescription buttonWithText:buttonName handler:^{
-            [self showLaborModalWithTitle:title inputRate:inputRate outputRateMin:outputRateMin outputRateMax:outputRateMax outputName:outputName commitBlock:^(NSUInteger input, NSUInteger output) {
+            [self showLaborModalWithTitle:title inputRate:inputRate maxOutputSignals:@[] outputRateMin:outputRateMin outputRateMax:outputRateMax outputName:outputName commitBlock:^(NSUInteger input, NSUInteger output) {
+                [self.city loseLabor:input];
+                outputBlock(output);
+                [self flashMessage:[NSString stringWithFormat:@"+ %@ %@", @(output), outputName]];
+                self.selectedTile = nil;
+            }];
+        }];
+    };
+    
+    SCButtonDescription *(^laborInputMax)(NSString *buttonName,
+                                          NSString *title,
+                                          NSUInteger inputRate,
+                                          RACSignal *maxOutputSignal,
+                                          NSUInteger outputRate,
+                                          NSString *outputName,
+                                          void(^)(NSUInteger output)
+                                          ) = ^(NSString *buttonName,
+                                                NSString *title,
+                                                NSUInteger inputRate,
+                                                RACSignal *maxOutputSignal,
+                                                NSUInteger outputRate,
+                                                NSString *outputName,
+                                                void(^outputBlock)(NSUInteger output)) {
+        return [SCButtonDescription buttonWithText:buttonName handler:^{
+            [self showLaborModalWithTitle:title inputRate:inputRate maxOutputSignals:@[maxOutputSignal] outputRateMin:outputRate outputRateMax:outputRate outputName:outputName commitBlock:^(NSUInteger input, NSUInteger output) {
                 [self.city loseLabor:input];
                 outputBlock(output);
                 [self flashMessage:[NSString stringWithFormat:@"+ %@ %@", @(output), outputName]];
@@ -182,7 +219,7 @@ static NSDictionary *foregroundDisplayInfo;
     };
     
     if ([tile.foreground isKindOfClass:SCRiver.class]) {
-        return @[laborInputButton(@"Fish", @"Fish for Fishes", 3, 0, 5, @"fish", ^(NSUInteger output) {
+        return @[laborInputRange(@"Fish", @"Fish for Fishes", 3, 0, 5, @"fish", ^(NSUInteger output) {
             [self.city gainFish:output];
         })];
     } else if ([tile.foreground isKindOfClass:SCGrass.class]) {
@@ -192,11 +229,13 @@ static NSDictionary *foregroundDisplayInfo;
     } else if ([tile.foreground isKindOfClass:SCTemple.class]) {
         return @[button(@"Pray"), button(@"Kill")];
     } else if ([tile.foreground isKindOfClass:SCForest.class]) {
-        return @[laborInputButton(@"Hunt", @"Hunt for Animals", 1, 1, 2, @"meat", ^(NSUInteger output) {
+        SCForest *forest = (SCForest *)tile.foreground;
+        return @[laborInputRange(@"Hunt", @"Hunt for Animals", 1, 1, 2, @"meat", ^(NSUInteger output) {
             [self.city gainMeat:output];
-        }), laborInputButton(@"Gthr", @"Gather Maize", 2, 0, 2, @"maize", ^(NSUInteger output) {
+        }), laborInputRange(@"Gthr", @"Gather Maize", 2, 0, 2, @"maize", ^(NSUInteger output) {
             [self.city gainMaize:output];
-        }), laborInputButton(@"Chop", @"Chop Wood", 3, 1, 1, @"wood", ^(NSUInteger output) {
+        }), laborInputMax(@"Chop", @"Chop Wood", 3, RACObserve(forest, wood), 1, @"wood", ^(NSUInteger output) {
+            [forest loseWood:output];
             [self.city gainWood:output];
         })];
     } else if ([tile.foreground isKindOfClass:SCBuilding.class]) {
@@ -298,16 +337,7 @@ static NSDictionary *foregroundDisplayInfo;
         }]];
     }
     
-    RACSignal *maxSteps = [[RACSignal combineLatest:relevantSignals] map:^id(RACTuple *nums) {
-        RACSequence *seq = nums.rac_sequence;
-        NSNumber *min = seq.head;
-        for (NSNumber *num in seq.tail) {
-            if ([num compare:min] == NSOrderedAscending) {
-                min = num;
-            }
-        }
-        return min;
-    }];
+    RACSignal *maxSteps = [[RACSignal combineLatest:relevantSignals] min];
     
     RACTupleUnpack(SCInputView *inputView, RACSignal *inputStepsSignal) = [self inputViewWithMaxValue:maxSteps commit:^(NSUInteger inputSteps) {
         [building build:inputSteps];
@@ -325,7 +355,7 @@ static NSDictionary *foregroundDisplayInfo;
     };
     
     inputView.titleLabel.text = [NSString stringWithFormat:@"Construct a %@", foregroundDisplayInfo[building.class.pointerValue][0]];
-
+    
     inputView.topLabel.text = [NSString stringWithFormat:@"%@ per step", nonzeroList(@[RACTuplePack(@(building.laborPerStep), @"labor"),
                                                                                        RACTuplePack(@(building.woodPerStep), @"wood"),
                                                                                        RACTuplePack(@(building.stonePerStep), @"stone")])];
@@ -434,7 +464,7 @@ static NSDictionary *foregroundDisplayInfo;
     backdropView.userInteractionEnabled = YES;
     backdropView.backgroundColor = UIColor.blackColor;
     backdropView.alpha = 0;
-
+    
     NSAssert(*dismissed == NO, @"Must pass a pointer to NO");
     void (^dismiss)() = ^{
         *dismissed = YES;
@@ -455,8 +485,8 @@ static NSDictionary *foregroundDisplayInfo;
             dismiss();
         }
     }];
-
-    RAC(view, center) = [[RACObserve(self, unobscuredFrame) map:^id(NSValue *frame) {
+    
+    RAC(view, center) = [[RACObserve(self, unobscuredFrame) map:^(NSValue *frame) {
         return [NSValue valueWithCGPoint:CGRectGetCenter(frame.CGRectValue)];
     }] takeUntilBlock:^BOOL(id x) {
         return *dismissed;
@@ -468,7 +498,7 @@ static NSDictionary *foregroundDisplayInfo;
     }];
     [self popOpen:view inView:self.view];
     self.showingModal = YES;
-
+    
     return dismiss;
 }
 
@@ -518,13 +548,16 @@ static NSDictionary *foregroundDisplayInfo;
 
 - (void)showLaborModalWithTitle:(NSString *)title
                       inputRate:(NSUInteger)inputRate
+               maxOutputSignals:(NSArray *)maxOutputSignals
                   outputRateMin:(NSUInteger)outputRateMin
                   outputRateMax:(NSUInteger)outputRateMax
                      outputName:(NSString *)outputName
                     commitBlock:(void(^)(NSUInteger input, NSUInteger output))commitBlock {
-    RACSignal *maxSteps = [RACObserve(self.city, labor) map:^(NSNumber *labor) {
+    RACSignal *maxLaborSteps = [RACObserve(self.city, labor) map:^(NSNumber *labor) {
         return @(labor.unsignedIntegerValue / inputRate);
     }];
+    
+    RACSignal *maxSteps = [[RACSignal combineLatest:[maxOutputSignals.rac_sequence concat:[RACSequence return:maxLaborSteps]]] min];
     
     RACTupleUnpack(SCInputView *inputView, RACSignal *inputStepsSignal) = [self inputViewWithMaxValue:maxSteps commit:^(NSUInteger inputSteps) {
         NSUInteger output = 0;
@@ -569,14 +602,6 @@ static NSDictionary *foregroundDisplayInfo;
     }];
 }
 
-- (void)showLaborModalWithTitle:(NSString *)title
-                      inputRate:(NSUInteger)inputRate
-                     outputRate:(NSUInteger)outputRate
-                     outputName:(NSString *)outputName
-                    commitBlock:(void(^)(NSUInteger input, NSUInteger output))commitBlock {
-    [self showLaborModalWithTitle:title inputRate:inputRate outputRateMin:outputRate outputRateMax:outputRate outputName:outputName commitBlock:commitBlock];
-}
-
 - (void)addMenuViewForTile:(SCTile *)tile {
     if (tile == nil) {
         return;
@@ -618,9 +643,14 @@ static NSDictionary *foregroundDisplayInfo;
     [detailLabel size:@"hjkl"];
     
     RACSignal *descriptionSignal = [[self foregroundInfoForTile:tile] index:3];
-    RACSignal *prefixSignal = [[RACObserve(tile, foreground) map:^id(id value) {
-        if ([value isKindOfClass:SCBuilding.class]) {
-            SCBuilding *building = (SCBuilding *)value;
+    RACSignal *prefixSignal = [[RACObserve(tile, foreground) map:^(SCForeground *foreground) {
+        if ([foreground isKindOfClass:SCForest.class]) {
+            SCForest *forest = (SCForest *)foreground;
+            return [RACObserve(forest, wood) map:^(NSNumber *wood) {
+                return [NSString stringWithFormat:@"%@ trees", wood];
+            }];
+        } else if ([foreground isKindOfClass:SCBuilding.class]) {
+            SCBuilding *building = (SCBuilding *)foreground;
             return [RACSignal combineLatest:@[RACObserve(building, stepsTaken),
                                               RACObserve(building, stepCount)] reduce:^(NSNumber *taken, NSNumber *total) {
                                                   return [taken isEqual:total] ? @"" : [NSString stringWithFormat:@"(%@ / %@)", taken, total];
@@ -631,7 +661,7 @@ static NSDictionary *foregroundDisplayInfo;
     }] switchToLatest];
     
     RAC(detailLabel, text) = [RACSignal combineLatest:@[prefixSignal, descriptionSignal] reduce:^(NSString *prefix, NSString *description){
-        return prefix == nil ? description : [NSString stringWithFormat:@"%@ %@", prefix, description];
+        return prefix == nil ? description : [NSString stringWithFormat:@"%@\n%@", prefix, description];
     }];
     [view addSubview:detailLabel];
     
@@ -704,7 +734,7 @@ static NSDictionary *foregroundDisplayInfo;
         [self.toolbar addSubview:current];
     } start:nil];
     
-    RAC(self, title) = [RACObserve(self.world, turn) map:^id(NSNumber *turn) {
+    RAC(self, title) = [RACObserve(self.world, turn) map:^(NSNumber *turn) {
         return [NSString stringWithFormat:@"turn %@", turn];
     }];
     
@@ -740,7 +770,7 @@ static NSDictionary *foregroundDisplayInfo;
     [[self.scienceButton rac_signalForControlEvents:UIControlEventTouchUpInside] subscribeNext:^(id x) {
         [self flashMessage:@"there's no science...yet"];
     }];
-
+    
     [[self.cheatButton rac_signalForControlEvents:UIControlEventTouchUpInside] subscribeNext:^(id x) {
         [self flashMessage:@"+100 people"];
         [self.city setValue:@(self.city.population + 100) forKey:@"population"];
