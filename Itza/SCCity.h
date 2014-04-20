@@ -34,4 +34,6 @@
 - (void)loseWood:(NSUInteger)wood;
 - (void)loseStone:(NSUInteger)stone;
 
+- (void)loseQuantity:(NSUInteger)quantity ofResource:(NSString *)resource;
+
 @end

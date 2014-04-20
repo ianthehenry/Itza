@@ -18,6 +18,7 @@
 @property (nonatomic, assign, readonly) NSUInteger remainingSteps;
 @property (nonatomic, assign, readonly) BOOL isComplete;
 - (void)build:(NSUInteger)steps;
-- (instancetype)initWithLabor:(NSUInteger)labor wood:(NSUInteger)wood stone:(NSUInteger)stone;
+- (instancetype)initWithLabor:(NSUInteger)labor wood:(NSUInteger)wood stone:(NSUInteger)stone args:(NSDictionary *)args;
+- (void)initalize:(NSDictionary *)args;
 
 @end

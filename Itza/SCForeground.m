@@ -10,6 +10,9 @@
 #import "SCTile.h"
 
 @implementation SCForeground
+
+- (void)iterate {}
+
 @end
 
 @implementation SCGrass

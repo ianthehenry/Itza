@@ -22,6 +22,9 @@
 
 - (void)iterate {
     self.turn += 1;
+    for (SCTile *tile in self.tiles) {
+        [tile.foreground iterate];
+    }
 }
 
 - (SCSeason)season {

@@ -16,6 +16,8 @@
 @property (nonatomic, assign, readwrite) NSUInteger woodPerStep;
 @property (nonatomic, assign, readwrite) NSUInteger stonePerStep;
 
+@property (nonatomic, assign) BOOL initialized;
+
 @end
 
 static NSUInteger gcd(NSUInteger a, NSUInteger b) {
@@ -39,16 +41,24 @@ static NSUInteger gcd3(NSUInteger a, NSUInteger b, NSUInteger c) {
 }
 
 @implementation SCBuilding
-- (instancetype)initWithLabor:(NSUInteger)labor wood:(NSUInteger)wood stone:(NSUInteger)stone {
+
+- (instancetype)initWithLabor:(NSUInteger)labor wood:(NSUInteger)wood stone:(NSUInteger)stone args:(NSDictionary *)args {
     if (self = [super init]) {
         _stepCount = gcd3(labor, wood, stone);
         NSAssert(_stepCount > 0, @"Building can't be free!");
         _laborPerStep = labor / _stepCount;
         _woodPerStep = wood / _stepCount;
         _stonePerStep = stone / _stepCount;
+        [self initalize:args];
     }
     return self;
 }
+
+- (void)initalize:(NSDictionary *)args {
+    NSAssert(!self.initialized, @"initialize invoked twice!");
+    self.initialized = YES;
+}
+
 - (void)build:(NSUInteger)steps {
     NSAssert(steps <= self.remainingSteps, @"You can't overbuild!");
     self.stepsTaken += steps;

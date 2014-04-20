@@ -103,6 +103,7 @@
     SCCity *city = [[self alloc] init];
     city.population = 100;
     city.meat = 100;
+    city.maize = 100;
     city.wood = 100;
     city.stone = 100;
     city.world = world;
@@ -139,6 +140,17 @@
 - (void)loseStone:(NSUInteger)stone {
     NSAssert(stone <= self.stone, @"That's more stone than you have!");
     self.stone -= stone;
+}
+
+- (void)gainQuantity:(NSUInteger)quantity ofResource:(NSString *)resource {
+    NSUInteger current = [[self valueForKeyPath:resource] unsignedIntegerValue];
+    [self setValue:@(current + quantity) forKeyPath:resource];
+}
+
+- (void)loseQuantity:(NSUInteger)quantity ofResource:(NSString *)resource {
+    NSUInteger current = [[self valueForKeyPath:resource] unsignedIntegerValue];
+    NSAssert1(quantity <= current, @"That's more %@ than you have!", resource);
+    [self setValue:@(current - quantity) forKeyPath:resource];
 }
 
 + (NSSet *)keyPathsForValuesAffectingFood {

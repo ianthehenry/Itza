@@ -15,6 +15,13 @@
 @end
 
 @interface SCFarm : SCBuilding
+
+@property (nonatomic, assign, readonly) NSUInteger maize;
+@property (nonatomic, assign, readonly) NSUInteger maizeCapacity;
+@property (nonatomic, assign, readonly) NSUInteger remainingMaize;
+- (void)plantMaize:(NSUInteger)maize;
+- (void)harvestMaize:(NSUInteger)maize;
+
 @end
 
 @interface SCLumberMill : SCBuilding

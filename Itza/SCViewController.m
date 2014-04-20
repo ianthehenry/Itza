@@ -164,9 +164,9 @@ static NSDictionary *foregroundDisplayInfo;
 }
 
 - (NSArray *)buttonsForTile:(SCTile *)tile {
-    SCButtonDescription *(^button)(NSString *name) = ^(NSString *name) {
+    SCButtonDescription *(^button)(NSString *name, NSString *text) = ^(NSString *name, NSString *text) {
         return [SCButtonDescription buttonWithText:name handler:^{
-            [self flashMessage:name];
+            [self flashMessage:text];
         }];
     };
     
@@ -194,6 +194,7 @@ static NSDictionary *foregroundDisplayInfo;
         }];
     };
     
+    // TODO: replace this with compoundModal
     SCButtonDescription *(^laborInputMax)(NSString *buttonName,
                                           NSString *title,
                                           NSUInteger inputRate,
@@ -222,13 +223,19 @@ static NSDictionary *foregroundDisplayInfo;
         return @[laborInputRange(@"Fish", @"Fish for Fishes", 3, 0, 5, @"fish", ^(NSUInteger output) {
             [self.city gainFish:output];
         })];
-    } else if ([tile.foreground isKindOfClass:SCGrass.class]) {
+    }
+    
+    if ([tile.foreground isKindOfClass:SCGrass.class]) {
         return @[[SCButtonDescription buttonWithText:@"Build" handler:^{
             [self showBuildingModalForTile:tile];
         }]];
-    } else if ([tile.foreground isKindOfClass:SCTemple.class]) {
-        return @[button(@"Pray"), button(@"Kill")];
-    } else if ([tile.foreground isKindOfClass:SCForest.class]) {
+    }
+    
+    if ([tile.foreground isKindOfClass:SCTemple.class]) {
+        return @[button(@"Pray", @"Praying..."), button(@"Kill", @"Sacrificing...")];
+    }
+    
+    if ([tile.foreground isKindOfClass:SCForest.class]) {
         SCForest *forest = (SCForest *)tile.foreground;
         return @[laborInputRange(@"Hunt", @"Hunt for Animals", 1, 1, 2, @"meat", ^(NSUInteger output) {
             [self.city gainMeat:output];
@@ -238,20 +245,42 @@ static NSDictionary *foregroundDisplayInfo;
             [forest loseWood:output];
             [self.city gainWood:output];
         })];
-    } else if ([tile.foreground isKindOfClass:SCBuilding.class]) {
-        SCBuilding *building = (SCBuilding *)tile.foreground;
-        if (building.isComplete) {
-            return @[button(@"Raze")];
-        } else {
-            return @[[SCButtonDescription buttonWithText:@"Build" handler:^{
-                [self showConstructionModalForBuilding:(SCBuilding *)tile.foreground];
-            }], [SCButtonDescription buttonWithText:@"Raze" handler:^{
-                [self flashMessage:@"you can't yet"];
-            }]];
-        }
-    } else {
-        return nil;
     }
+    
+    if ([tile.foreground isKindOfClass:SCBuilding.class] && ![(SCBuilding *)tile.foreground isComplete]) {
+        return @[[SCButtonDescription buttonWithText:@"Build" handler:^{
+            [self showConstructionModalForBuilding:(SCBuilding *)tile.foreground];
+        }], [SCButtonDescription buttonWithText:@"Raze" handler:^{
+            [self flashMessage:@"you can't yet"];
+        }]];
+    }
+    
+    if ([tile.foreground isKindOfClass:SCFarm.class]) {
+        SCFarm *farm = (SCFarm *)tile.foreground;
+        switch (self.world.season) {
+            case SCSeasonSpring:
+                return @[[SCButtonDescription buttonWithText:@"Sow" handler:^{
+                    [self showCompoundModalForWithRates:@[RACTuplePack(@"labor", @1, self.city),
+                                                          RACTuplePack(@"maize", @2, self.city)].rac_sequence
+                                               maxSteps:RACObserve(farm, remainingMaize)
+                                                  title:@"Plant Maize"
+                                                 output:^(NSUInteger inputSteps) {
+                                                     [farm plantMaize:inputSteps];
+                                                 }];
+                }]];
+            case SCSeasonSummer:
+                return @[button(@"Wait", @"You can't do anything in the summer.")];
+            case SCSeasonAutumn:
+                return @[laborInputMax(@"Reap", @"Harvest Maize", 3, RACObserve(farm, maize), 1, @"maize", ^(NSUInteger output) {
+                    [farm harvestMaize:output];
+                    [self.city gainMaize:output];
+                })];
+            case SCSeasonWinter:
+                return @[button(@"Wait", @"You can't do anything in the winter.")];
+        }
+    }
+    
+    return nil;
 }
 
 - (void)flashMessage:(NSString *)message {
@@ -314,62 +343,57 @@ static NSDictionary *foregroundDisplayInfo;
                      }];
 }
 
-- (void)showConstructionModalForBuilding:(SCBuilding *)building {
-    NSMutableArray *relevantSignals = [[NSMutableArray alloc] init];
-    
-    [relevantSignals addObject:RACObserve(building, remainingSteps)];
-    
-    if (building.laborPerStep > 0) {
-        [relevantSignals addObject:[RACObserve(self.city, labor) map:^(NSNumber *labor) {
-            return @(labor.unsignedIntegerValue / building.laborPerStep);
-        }]];
-    }
-    
-    if (building.woodPerStep > 0) {
-        [relevantSignals addObject:[RACObserve(self.city, wood) map:^(NSNumber *wood) {
-            return @(wood.unsignedIntegerValue / building.woodPerStep);
-        }]];
-    }
-    
-    if (building.stonePerStep > 0) {
-        [relevantSignals addObject:[RACObserve(self.city, stone) map:^(NSNumber *stone) {
-            return @(stone.unsignedIntegerValue / building.stonePerStep);
-        }]];
-    }
-    
-    RACSignal *maxSteps = [[RACSignal combineLatest:relevantSignals] min];
-    
-    RACTupleUnpack(SCInputView *inputView, RACSignal *inputStepsSignal) = [self inputViewWithMaxValue:maxSteps commit:^(NSUInteger inputSteps) {
-        [building build:inputSteps];
-        [self.city loseLabor:inputSteps * building.laborPerStep];
-        [self.city loseWood:inputSteps * building.woodPerStep];
-        [self.city loseStone:inputSteps * building.stonePerStep];
+- (void)showCompoundModalForWithRates:(RACSequence *)resourceRates
+                             maxSteps:(RACSignal *)maxSteps
+                                title:(NSString *)title
+                               output:(void(^)(NSUInteger inputSteps))output {
+    RACTupleUnpack(SCInputView *inputView, RACSignal *inputStepsSignal) = [self inputViewWithMaxValue:[[RACSignal combineLatest:[[RACSequence return:maxSteps] concat:[[resourceRates filter:^BOOL(RACTuple *tuple) {
+        return ![tuple[1] isEqual:@0];
+    }] reduceEach:^(NSString *resource, NSNumber *rate, id source) {
+        return [[source rac_valuesForKeyPath:resource observer:self] map:^(NSNumber *quantity) {
+            return @(quantity.unsignedIntegerValue / rate.unsignedIntegerValue);
+        }];
+    }]]] min] commit:^(NSUInteger inputSteps) {
+        output(inputSteps);
+        for (RACTuple *tuple in resourceRates) {
+            RACTupleUnpack(NSString *resource, NSNumber *rate, id source) = tuple;
+            [source loseQuantity:(inputSteps * rate.unsignedIntegerValue) ofResource:resource];
+        }
     }];
     
-    NSString *(^nonzeroList)(NSArray *tuples) = ^(NSArray *tuples) {
-        return [[[[tuples.rac_sequence filter:^BOOL(RACTuple *tuple) {
-            return [tuple[0] unsignedIntegerValue] != 0;
+    NSString *(^nonzeroList)(RACSequence *tuples) = ^(RACSequence *tuples) {
+        return [[[[tuples filter:^BOOL(RACTuple *tuple) {
+            return [tuple[1] unsignedIntegerValue] != 0;
         }] map:^(RACTuple *tuple) {
-            return [NSString stringWithFormat:@"%@ %@", tuple[0], tuple[1]];
+            return [NSString stringWithFormat:@"%@ %@", tuple[1], tuple[0]];
         }] array] componentsJoinedByString:@", "];
     };
     
-    inputView.titleLabel.text = [NSString stringWithFormat:@"Construct a %@", foregroundDisplayInfo[building.class.pointerValue][0]];
-    
-    inputView.topLabel.text = [NSString stringWithFormat:@"%@ per step", nonzeroList(@[RACTuplePack(@(building.laborPerStep), @"labor"),
-                                                                                       RACTuplePack(@(building.woodPerStep), @"wood"),
-                                                                                       RACTuplePack(@(building.stonePerStep), @"stone")])];
+    inputView.topLabel.text = [NSString stringWithFormat:@"%@ per step", nonzeroList(resourceRates)];
+    inputView.titleLabel.text = title;
     
     RAC(inputView.bottomLabel, text) = [inputStepsSignal map:^(NSNumber *inputStepsNumber) {
         NSUInteger steps = inputStepsNumber.unsignedIntegerValue;
         if (steps == 0) {
             return @"How much labor?";
         } else {
-            return nonzeroList(@[RACTuplePack(@(steps * building.laborPerStep), @"labor"),
-                                 RACTuplePack(@(steps * building.woodPerStep), @"wood"),
-                                 RACTuplePack(@(steps * building.stonePerStep), @"stone")]);
+            return nonzeroList([resourceRates reduceEach:^(NSString *resource, NSNumber *rate) {
+                return RACTuplePack(resource, @(steps * rate.unsignedIntegerValue));
+            }]);
         }
     }];
+}
+
+- (void)showConstructionModalForBuilding:(SCBuilding *)building {
+    [self showCompoundModalForWithRates:@[RACTuplePack(@"labor", @(building.laborPerStep), self.city),
+                                          RACTuplePack(@"wood", @(building.woodPerStep), self.city),
+                                          RACTuplePack(@"stone", @(building.stonePerStep), self.city)].rac_sequence
+                               maxSteps:RACObserve(building, remainingSteps)
+                                  title:[NSString stringWithFormat:@"Construct a %@", foregroundDisplayInfo[building.class.pointerValue][0]]
+                                 output:^(NSUInteger inputSteps) {
+                                     [building build:inputSteps];
+                                     
+                                 }];
 }
 
 - (void)showBuildingModalForTile:(SCTile *)tile {
@@ -393,17 +417,17 @@ static NSDictionary *foregroundDisplayInfo;
     
     NSArray *buildings =
     @[
-      RACTuplePack(SCHouse.class, @20, @20, @0),
-      RACTuplePack(SCFarm.class, @10, @0, @0),
-      RACTuplePack(SCGranary.class, @30, @30, @0),
-      RACTuplePack(SCTemple.class, @60, @0, @30),
-      RACTuplePack(SCLumberMill.class, @20, @10, @0),
-      RACTuplePack(SCFishery.class, @50, @30, @0),
+      RACTuplePack(SCHouse.class, @20, @20, @0, nil),
+      RACTuplePack(SCFarm.class, @10, @0, @0, @{@"capacity": @20}),
+      RACTuplePack(SCGranary.class, @30, @30, @0, nil),
+      RACTuplePack(SCTemple.class, @60, @0, @30, nil),
+      RACTuplePack(SCLumberMill.class, @20, @10, @0, nil),
+      RACTuplePack(SCFishery.class, @50, @30, @0, nil),
       ];
     CGFloat padding = 10;
     CGFloat top = 0;
     for (RACTuple *tuple in buildings) {
-        RACTupleUnpack(Class class, NSNumber *labor, NSNumber *wood, NSNumber *stone) = tuple;
+        RACTupleUnpack(Class class, NSNumber *labor, NSNumber *wood, NSNumber *stone, NSDictionary *args) = tuple;
         UIControl *control = [[UIControl alloc] initWithFrame:CGRectMake(0, top, 300, 30)];
         RAC(control, backgroundColor) = [RACObserve(control, highlighted) map:^(NSNumber *highlighted) {
             return highlighted.boolValue ? [UIColor colorWithWhite:0 alpha:0.1] : UIColor.clearColor;
@@ -438,7 +462,8 @@ static NSDictionary *foregroundDisplayInfo;
             dismiss();
             SCBuilding *building = (SCBuilding *)[[class alloc] initWithLabor:labor.unsignedIntegerValue
                                                                          wood:wood.unsignedIntegerValue
-                                                                        stone:stone.unsignedIntegerValue];
+                                                                        stone:stone.unsignedIntegerValue
+                                                                         args:args];
             tile.foreground = building;
             [self showConstructionModalForBuilding:building];
         }];
@@ -709,7 +734,7 @@ static NSDictionary *foregroundDisplayInfo;
     }];
     
     SCWorld *world = [SCWorld worldWithRadius:6];
-    [world tileAt:SCPosition.origin].foreground = [[SCTemple alloc] initWithLabor:1 wood:0 stone:0];
+    [world tileAt:SCPosition.origin].foreground = [[SCTemple alloc] initWithLabor:1 wood:0 stone:0 args:nil];
     self.city = [SCCity cityWithWorld:world];
     [self setupGrid];
     [self.view layoutIfNeeded];

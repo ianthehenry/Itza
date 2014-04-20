@@ -11,7 +11,10 @@
 @class SCTile;
 
 @interface SCForeground : NSObject
+
 @property (nonatomic, weak) SCTile *tile;
+- (void)iterate;
+
 @end
 
 @interface SCGrass : SCForeground
