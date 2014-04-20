@@ -347,9 +347,8 @@ static NSDictionary *foregroundDisplayInfo;
                              maxSteps:(RACSignal *)maxSteps
                                 title:(NSString *)title
                                output:(void(^)(NSUInteger inputSteps))output {
-    RACTupleUnpack(SCInputView *inputView, RACSignal *inputStepsSignal) = [self inputViewWithMaxValue:[[RACSignal combineLatest:[[RACSequence return:maxSteps] concat:[[resourceRates filter:^BOOL(RACTuple *tuple) {
-        return ![tuple[1] isEqual:@0];
-    }] reduceEach:^(NSString *resource, NSNumber *rate, id source) {
+    RACTupleUnpack(SCInputView *inputView, RACSignal *inputStepsSignal) = [self inputViewWithMaxValue:[[RACSignal combineLatest:[[RACSequence return:maxSteps] concat:[resourceRates reduceEach:^(NSString *resource, NSNumber *rate, id source) {
+        NSAssert(rate.unsignedIntegerValue > 0, @"compound modal with rate zero!");
         return [[source rac_valuesForKeyPath:resource observer:self] map:^(NSNumber *quantity) {
             return @(quantity.unsignedIntegerValue / rate.unsignedIntegerValue);
         }];
@@ -362,9 +361,7 @@ static NSDictionary *foregroundDisplayInfo;
     }];
     
     NSString *(^nonzeroList)(RACSequence *tuples) = ^(RACSequence *tuples) {
-        return [[[[tuples filter:^BOOL(RACTuple *tuple) {
-            return [tuple[1] unsignedIntegerValue] != 0;
-        }] map:^(RACTuple *tuple) {
+        return [[[tuples map:^(RACTuple *tuple) {
             return [NSString stringWithFormat:@"%@ %@", tuple[1], tuple[0]];
         }] array] componentsJoinedByString:@", "];
     };
@@ -385,9 +382,11 @@ static NSDictionary *foregroundDisplayInfo;
 }
 
 - (void)showConstructionModalForBuilding:(SCBuilding *)building {
-    [self showCompoundModalForWithRates:@[RACTuplePack(@"labor", @(building.laborPerStep), self.city),
-                                          RACTuplePack(@"wood", @(building.woodPerStep), self.city),
-                                          RACTuplePack(@"stone", @(building.stonePerStep), self.city)].rac_sequence
+    [self showCompoundModalForWithRates:[@[RACTuplePack(@"labor", @(building.laborPerStep), self.city),
+                                           RACTuplePack(@"wood", @(building.woodPerStep), self.city),
+                                           RACTuplePack(@"stone", @(building.stonePerStep), self.city)].rac_sequence filter:^BOOL(RACTuple *tuple) {
+                                               return ![tuple[1] isEqual:@0];
+                                           }]
                                maxSteps:RACObserve(building, remainingSteps)
                                   title:[NSString stringWithFormat:@"Construct a %@", foregroundDisplayInfo[building.class.pointerValue][0]]
                                  output:^(NSUInteger inputSteps) {
