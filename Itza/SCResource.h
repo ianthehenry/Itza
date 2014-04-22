@@ -14,4 +14,5 @@ typedef NS_ENUM(NSUInteger, SCResource) {
     SCResourceFish,
     SCResourceStone,
     SCResourceWood,
+    SCResourceConstruction,
 };

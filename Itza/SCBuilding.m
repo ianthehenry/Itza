@@ -36,19 +36,24 @@ static NSUInteger gcd(NSUInteger a, NSUInteger b) {
     }
 }
 
-static NSUInteger gcd3(NSUInteger a, NSUInteger b, NSUInteger c) {
-    return gcd(a, gcd(b, c));
-}
+@interface SCBuilding ()
+
+@property (nonatomic, assign, readwrite) RACSequence *inputRates;
+
+@end
 
 @implementation SCBuilding
 
-- (instancetype)initWithLabor:(NSUInteger)labor wood:(NSUInteger)wood stone:(NSUInteger)stone args:(NSDictionary *)args {
+- (instancetype)initWithRequiredResources:(RACSequence *)requiredResources args:(NSDictionary *)args {
     if (self = [super init]) {
-        _stepCount = gcd3(labor, wood, stone);
-        NSAssert(_stepCount > 0, @"Building can't be free!");
-        _laborPerStep = labor / _stepCount;
-        _woodPerStep = wood / _stepCount;
-        _stonePerStep = stone / _stepCount;
+        NSUInteger stepCount = 0;
+        for (RACTuple *tuple in requiredResources) {
+            stepCount = gcd(stepCount, [tuple[1] unsignedIntegerValue]);
+        }
+        self.inputRates = [requiredResources reduceEach:^(NSNumber *resource, NSNumber *quantity) {
+            return RACTuplePack(resource, @(quantity.unsignedIntegerValue / stepCount));
+        }];
+        [self setCapacity:stepCount forResource:SCResourceConstruction];
         [self initalize:args];
     }
     return self;
@@ -59,25 +64,7 @@ static NSUInteger gcd3(NSUInteger a, NSUInteger b, NSUInteger c) {
     self.initialized = YES;
 }
 
-- (void)build:(NSUInteger)steps {
-    NSAssert(steps <= self.remainingSteps, @"You can't overbuild!");
-    self.stepsTaken += steps;
-}
-
-- (NSUInteger)remainingSteps  {
-    return self.stepCount - self.stepsTaken;
-}
-
 - (BOOL)isComplete {
-    return self.remainingSteps == 0;
+    return [self currentUnusedCapacityForResource:SCResourceConstruction] == 0;
 }
-
-+ (NSSet *)keyPathsForValuesAffectingRemainingSteps {
-    return [NSSet setWithObjects:@"stepCount", @"stepsTaken", nil];
-}
-
-+ (NSSet *)keyPathsForValuesAffectingIsComplete {
-    return [NSSet setWithObject:@"remainingSteps"];
-}
-
 @end

@@ -7,18 +7,13 @@
 //
 
 #import "SCForeground.h"
+#import "SCResourceOwner.h"
 
-@interface SCBuilding : SCForeground
+@interface SCBuilding : SCForeground <SCResourceOwner>
 
-@property (nonatomic, assign, readonly) NSUInteger stepCount;
-@property (nonatomic, assign, readonly) NSUInteger stepsTaken;
-@property (nonatomic, assign, readonly) NSUInteger laborPerStep;
-@property (nonatomic, assign, readonly) NSUInteger woodPerStep;
-@property (nonatomic, assign, readonly) NSUInteger stonePerStep;
-@property (nonatomic, assign, readonly) NSUInteger remainingSteps;
 @property (nonatomic, assign, readonly) BOOL isComplete;
-- (void)build:(NSUInteger)steps;
-- (instancetype)initWithLabor:(NSUInteger)labor wood:(NSUInteger)wood stone:(NSUInteger)stone args:(NSDictionary *)args;
+@property (nonatomic, assign, readonly) RACSequence *inputRates;
+- (instancetype)initWithRequiredResources:(RACSequence *)requiredResources args:(NSDictionary *)args;
 - (void)initalize:(NSDictionary *)args;
 
 @end
