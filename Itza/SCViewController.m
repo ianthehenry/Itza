@@ -279,17 +279,17 @@ static NSDictionary *foregroundDisplayInfo;
                 return @[[SCButtonDescription buttonWithText:@"Sow" handler:^{
                     [self showCompoundModalForWithRates:@[RACTuplePack(@(SCResourceLabor), @1, self.city),
                                                           RACTuplePack(@(SCResourceMaize), @2, self.city)].rac_sequence
-                                               maxSteps:RACObserve(farm, remainingMaize)
+                                               maxSteps:[farm unusedCapacityForResource:SCResourceMaize]
                                                   title:@"Plant Maize"
                                                  output:^(NSUInteger inputSteps) {
-                                                     [farm plantMaize:inputSteps];
+                                                     [farm gainQuantity:inputSteps ofResource:SCResourceMaize];
                                                  }];
                 }]];
             case SCSeasonSummer:
                 return @[button(@"Wait", @"You can't do anything in the summer.")];
             case SCSeasonAutumn:
-                return @[laborInputMax(@"Reap", @"Harvest Maize", 3, RACObserve(farm, maize), 1, @"maize", ^(NSUInteger output) {
-                    [farm harvestMaize:output];
+                return @[laborInputMax(@"Reap", @"Harvest Maize", 3, [farm quantityOfResource:SCResourceMaize], 1, @"maize", ^(NSUInteger output) {
+                    [farm loseQuantity:output ofResource:SCResourceMaize];
                     [self.city gainQuantity:output ofResource:SCResourceMaize];
                 })];
             case SCSeasonWinter:

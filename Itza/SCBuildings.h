@@ -7,6 +7,7 @@
 //
 
 #import "SCBuilding.h"
+#import "SCResourceOwner.h"
 
 @interface SCTemple : SCBuilding
 @end
@@ -14,14 +15,7 @@
 @interface SCGranary : SCBuilding
 @end
 
-@interface SCFarm : SCBuilding
-
-@property (nonatomic, assign, readonly) NSUInteger maize;
-@property (nonatomic, assign, readonly) NSUInteger maizeCapacity;
-@property (nonatomic, assign, readonly) NSUInteger remainingMaize;
-- (void)plantMaize:(NSUInteger)maize;
-- (void)harvestMaize:(NSUInteger)maize;
-
+@interface SCFarm : SCBuilding <SCResourceOwner>
 @end
 
 @interface SCLumberMill : SCBuilding
