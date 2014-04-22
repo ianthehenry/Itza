@@ -10,13 +10,6 @@
 
 @interface SCCity ()
 
-@property (nonatomic, assign, readwrite) NSUInteger population;
-@property (nonatomic, assign, readwrite) NSUInteger meat;
-@property (nonatomic, assign, readwrite) NSUInteger maize;
-@property (nonatomic, assign, readwrite) NSUInteger wood;
-@property (nonatomic, assign, readwrite) NSUInteger stone;
-@property (nonatomic, assign, readwrite) NSUInteger fish;
-@property (nonatomic, assign, readwrite) NSUInteger labor;
 @property (nonatomic, strong, readwrite) SCWorld *world;
 
 @end
@@ -38,127 +31,83 @@
         [messages addObject:[NSString stringWithFormat:@"%@%@ %@", signString, numberString, name]];
     };
     
-    NSUInteger foodBefore = self.food;
-    NSUInteger populationBefore = self.population;
+    NSUInteger populationBefore = [self currentQuantityOfResource:SCResourcePeople];
     
-    NSUInteger hunger = self.population;
+    NSUInteger hunger = populationBefore;
     
-    NSUInteger meatToEat = MIN(hunger, self.meat);
-    self.meat -= meatToEat;
+    NSUInteger meatToEat = MIN(hunger, [self currentQuantityOfResource:SCResourceMeat]);
+    [self loseQuantity:meatToEat ofResource:SCResourceMeat];
     hunger -= meatToEat;
     log(meatToEat, @"% meat eaten");
     
-    NSUInteger fishToEat = MIN(hunger, self.fish);
-    self.fish -= fishToEat;
+    NSUInteger fishToEat = MIN(hunger, [self currentQuantityOfResource:SCResourceFish]);
+    [self loseQuantity:fishToEat ofResource:SCResourceFish];
     hunger -= fishToEat;
     log(fishToEat, @"% fish eaten");
     
-    NSUInteger maizeToEat = MIN(hunger, self.maize);
-    self.maize -= maizeToEat;
+    NSUInteger maizeToEat = MIN(hunger, [self currentQuantityOfResource:SCResourceMaize]);
+    [self loseQuantity:maizeToEat ofResource:SCResourceMaize];
     hunger -= maizeToEat;
     log(maizeToEat, @"% maize eaten");
     
     log(hunger, @"% people starved");
-    self.population -= hunger;
+    [self loseQuantity:hunger ofResource:SCResourcePeople];
     
-    NSUInteger meatToRot = 3 * self.meat / 4;
-    self.meat -= meatToRot;
+    NSUInteger meatToRot = 3 * [self currentQuantityOfResource:SCResourceMeat] / 4;
+    [self loseQuantity:meatToRot ofResource:SCResourceMeat];
     log(meatToRot, @"% meat went bad");
     
-    NSUInteger fishToRot = 2 * self.fish / 3;
-    self.fish -= fishToRot;
+    NSUInteger fishToRot = 2 * [self currentQuantityOfResource:SCResourceFish] / 3;
+    [self loseQuantity:fishToRot ofResource:SCResourceFish];
     log(fishToRot, @"% fish went bad");
     
-    NSUInteger maizeToRot = self.maize / 10;
-    self.maize -= maizeToRot;
+    NSUInteger maizeToRot = [self currentQuantityOfResource:SCResourceMaize] / 10;
+    [self loseQuantity:maizeToRot ofResource:SCResourceMaize];
     log(fishToRot, @"% maize went bad");
     
+    NSUInteger populationBeforeTheNaturalCourseOfLifeAndDeath = [self currentQuantityOfResource:SCResourcePeople];
     NSUInteger peopleToBeBorn = 0;
-    for (NSUInteger i = 0; i < self.population / 10; i++) {
+    for (NSUInteger i = 0; i < populationBeforeTheNaturalCourseOfLifeAndDeath / 10; i++) {
         peopleToBeBorn += arc4random_uniform(4);
     }
     
     NSUInteger peopleToDie = 0;
-    for (NSUInteger i = 0; i < self.population / 10; i++) {
+    for (NSUInteger i = 0; i < populationBeforeTheNaturalCourseOfLifeAndDeath / 10; i++) {
         peopleToDie += arc4random_uniform(3);
     }
     
-    self.population += peopleToBeBorn;
-    self.population -= peopleToDie;
+    [self gainQuantity:peopleToBeBorn ofResource:SCResourcePeople];
+    [self loseQuantity:peopleToDie ofResource:SCResourcePeople];
     
     log(peopleToBeBorn, @"% people were born");
     log(peopleToDie, @"% people died");
     
-    self.labor = self.population;
+    [self setQuantity:[self currentQuantityOfResource:SCResourcePeople] ofResource:SCResourceLabor];
     
     [messages addObject:@""];
 
-    logDelta((NSInteger)self.food - (NSInteger)foodBefore, @"food");
-    logDelta((NSInteger)self.population - (NSInteger)populationBefore, @"people");
+    logDelta((NSInteger)[self currentQuantityOfResource:SCResourcePeople] - (NSInteger)populationBefore, @"people");
     
     return messages;
 }
 
 + (instancetype)cityWithWorld:(SCWorld *)world {
     SCCity *city = [[self alloc] init];
-    city.population = 100;
-    city.meat = 100;
-    city.maize = 100;
-    city.wood = 100;
-    city.stone = 100;
     city.world = world;
-    city.labor = city.population;
+    [city gainQuantity:100 ofResource:SCResourceLabor];
+    [city gainQuantity:100 ofResource:SCResourceMeat];
+    [city gainQuantity:100 ofResource:SCResourceMaize];
+    [city gainQuantity:100 ofResource:SCResourceWood];
+    [city gainQuantity:100 ofResource:SCResourceFish];
+    [city gainQuantity:100 ofResource:SCResourceStone];
+    [city gainQuantity:100 ofResource:SCResourcePeople];
     return city;
 }
 
-- (void)gainWood:(NSUInteger)wood {
-    self.wood += wood;
-}
-
-- (void)gainMaize:(NSUInteger)maize {
-    self.maize += maize;
-}
-
-- (void)gainMeat:(NSUInteger)meat {
-    self.meat += meat;
-}
-
-- (void)gainFish:(NSUInteger)fish {
-    self.fish += fish;
-}
-
-- (void)loseLabor:(NSUInteger)labor {
-    NSAssert(labor <= self.labor, @"That's more labor than you have!");
-    self.labor -= labor;
-}
-
-- (void)loseWood:(NSUInteger)wood {
-    NSAssert(wood <= self.wood, @"That's more wood than you have!");
-    self.wood -= wood;
-}
-
-- (void)loseStone:(NSUInteger)stone {
-    NSAssert(stone <= self.stone, @"That's more stone than you have!");
-    self.stone -= stone;
-}
-
-- (void)gainQuantity:(NSUInteger)quantity ofResource:(NSString *)resource {
-    NSUInteger current = [[self valueForKeyPath:resource] unsignedIntegerValue];
-    [self setValue:@(current + quantity) forKeyPath:resource];
-}
-
-- (void)loseQuantity:(NSUInteger)quantity ofResource:(NSString *)resource {
-    NSUInteger current = [[self valueForKeyPath:resource] unsignedIntegerValue];
-    NSAssert1(quantity <= current, @"That's more %@ than you have!", resource);
-    [self setValue:@(current - quantity) forKeyPath:resource];
-}
-
-+ (NSSet *)keyPathsForValuesAffectingFood {
-    return [NSSet setWithObjects:@"meat", @"maize", @"fish", nil];
-}
-
-- (NSUInteger)food {
-    return self.meat + self.fish + self.maize;
+- (RACSignal *)quantityOfFood {
+    return [[RACSignal combineLatest:@[[self quantityOfResource:SCResourceMaize],
+                                       [self quantityOfResource:SCResourceMeat],
+                                       [self quantityOfResource:SCResourceFish]]] sum];
 }
 
 @end

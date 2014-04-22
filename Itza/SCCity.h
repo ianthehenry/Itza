@@ -8,17 +8,9 @@
 
 #import <Foundation/Foundation.h>
 #import "SCWorld.h"
+#import "SCResourceOwner.h"
 
-@interface SCCity : NSObject
-
-@property (nonatomic, assign, readonly) NSUInteger population;
-@property (nonatomic, assign, readonly) NSUInteger meat;
-@property (nonatomic, assign, readonly) NSUInteger maize;
-@property (nonatomic, assign, readonly) NSUInteger fish;
-@property (nonatomic, assign, readonly) NSUInteger wood;
-@property (nonatomic, assign, readonly) NSUInteger stone;
-@property (nonatomic, assign, readonly) NSUInteger labor;
-@property (nonatomic, assign, readonly) NSUInteger food;
+@interface SCCity : NSObject <SCResourceOwner>
 
 @property (nonatomic, strong, readonly) SCWorld *world;
 
@@ -26,14 +18,6 @@
 
 + (instancetype)cityWithWorld:(SCWorld *)world;
 
-- (void)gainWood:(NSUInteger)wood;
-- (void)gainMaize:(NSUInteger)maize;
-- (void)gainMeat:(NSUInteger)meat;
-- (void)gainFish:(NSUInteger)fish;
-- (void)loseLabor:(NSUInteger)labor;
-- (void)loseWood:(NSUInteger)wood;
-- (void)loseStone:(NSUInteger)stone;
-
-- (void)loseQuantity:(NSUInteger)quantity ofResource:(NSString *)resource;
+- (RACSignal *)quantityOfFood;
 
 @end

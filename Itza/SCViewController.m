@@ -14,7 +14,7 @@
 #import "SCPassthroughView.h"
 #import "SCInputView.h"
 #import "SCLabel.h"
-#import "SCBuildings.h"
+#import "SCForegrounds.h"
 
 static CGFloat RADIUS;
 static CGFloat APOTHEM;
@@ -73,6 +73,18 @@ static NSDictionary *foregroundDisplayInfo;
       SCLumberMill.class.pointerValue: RACTuplePack(@"Lumbery", @"L", buildingColor, @"+1 wood per labor in adjacent forests"),
       SCHouse.class.pointerValue: RACTuplePack(@"House", @"H", buildingColor, @"+100 max pop, +10 more for each adjacent house"),
       };
+}
+
+- (NSString *)nameForResource:(SCResource)resource {
+    switch (resource) {
+        case SCResourceLabor: return @"labor";
+        case SCResourcePeople: return @"people";
+        case SCResourceWood: return @"wood";
+        case SCResourceFish: return @"fish";
+        case SCResourceMaize: return @"maize";
+        case SCResourceMeat: return @"meat";
+        case SCResourceStone: return @"stone";
+    }
 }
 
 - (SCTileView *)tileViewForTile:(SCTile *)tile {
@@ -186,7 +198,7 @@ static NSDictionary *foregroundDisplayInfo;
                                                   void(^outputBlock)(NSUInteger output)) {
         return [SCButtonDescription buttonWithText:buttonName handler:^{
             [self showLaborModalWithTitle:title inputRate:inputRate maxOutputSignals:@[] outputRateMin:outputRateMin outputRateMax:outputRateMax outputName:outputName commitBlock:^(NSUInteger input, NSUInteger output) {
-                [self.city loseLabor:input];
+                [self.city loseQuantity:input ofResource:SCResourceLabor];
                 outputBlock(output);
                 [self flashMessage:[NSString stringWithFormat:@"+ %@ %@", @(output), outputName]];
                 self.selectedTile = nil;
@@ -211,7 +223,7 @@ static NSDictionary *foregroundDisplayInfo;
                                                 void(^outputBlock)(NSUInteger output)) {
         return [SCButtonDescription buttonWithText:buttonName handler:^{
             [self showLaborModalWithTitle:title inputRate:inputRate maxOutputSignals:@[maxOutputSignal] outputRateMin:outputRate outputRateMax:outputRate outputName:outputName commitBlock:^(NSUInteger input, NSUInteger output) {
-                [self.city loseLabor:input];
+                [self.city loseQuantity:input ofResource:SCResourceLabor];
                 outputBlock(output);
                 [self flashMessage:[NSString stringWithFormat:@"+ %@ %@", @(output), outputName]];
                 self.selectedTile = nil;
@@ -221,7 +233,7 @@ static NSDictionary *foregroundDisplayInfo;
     
     if ([tile.foreground isKindOfClass:SCRiver.class]) {
         return @[laborInputRange(@"Fish", @"Fish for Fishes", 3, 0, 5, @"fish", ^(NSUInteger output) {
-            [self.city gainFish:output];
+            [self.city gainQuantity:output ofResource:SCResourceFish];
         })];
     }
     
@@ -238,13 +250,18 @@ static NSDictionary *foregroundDisplayInfo;
     if ([tile.foreground isKindOfClass:SCForest.class]) {
         SCForest *forest = (SCForest *)tile.foreground;
         return @[laborInputRange(@"Hunt", @"Hunt for Animals", 1, 1, 2, @"meat", ^(NSUInteger output) {
-            [self.city gainMeat:output];
+            [self.city gainQuantity:output ofResource:SCResourceMeat];
         }), laborInputRange(@"Gthr", @"Gather Maize", 2, 0, 2, @"maize", ^(NSUInteger output) {
-            [self.city gainMaize:output];
-        }), laborInputMax(@"Chop", @"Chop Wood", 3, RACObserve(forest, wood), 1, @"wood", ^(NSUInteger output) {
-            [forest loseWood:output];
-            [self.city gainWood:output];
-        })];
+            [self.city gainQuantity:output ofResource:SCResourceMaize];
+        }), [SCButtonDescription buttonWithText:@"Chop" handler:^{
+            [self showCompoundModalForWithRates:@[RACTuplePack(@(SCResourceLabor), @3, self.city),
+                                                  RACTuplePack(@(SCResourceWood), @1, forest)].rac_sequence
+                                       maxSteps:[RACSignal return:@(NSUIntegerMax)]
+                                          title:@"Chop Wood"
+                                         output:^(NSUInteger inputSteps) {
+                                             [self.city gainQuantity:inputSteps ofResource:SCResourceWood];
+                                         }];
+        }]];
     }
     
     if ([tile.foreground isKindOfClass:SCBuilding.class] && ![(SCBuilding *)tile.foreground isComplete]) {
@@ -260,8 +277,8 @@ static NSDictionary *foregroundDisplayInfo;
         switch (self.world.season) {
             case SCSeasonSpring:
                 return @[[SCButtonDescription buttonWithText:@"Sow" handler:^{
-                    [self showCompoundModalForWithRates:@[RACTuplePack(@"labor", @1, self.city),
-                                                          RACTuplePack(@"maize", @2, self.city)].rac_sequence
+                    [self showCompoundModalForWithRates:@[RACTuplePack(@(SCResourceLabor), @1, self.city),
+                                                          RACTuplePack(@(SCResourceMaize), @2, self.city)].rac_sequence
                                                maxSteps:RACObserve(farm, remainingMaize)
                                                   title:@"Plant Maize"
                                                  output:^(NSUInteger inputSteps) {
@@ -273,7 +290,7 @@ static NSDictionary *foregroundDisplayInfo;
             case SCSeasonAutumn:
                 return @[laborInputMax(@"Reap", @"Harvest Maize", 3, RACObserve(farm, maize), 1, @"maize", ^(NSUInteger output) {
                     [farm harvestMaize:output];
-                    [self.city gainMaize:output];
+                    [self.city gainQuantity:output ofResource:SCResourceMaize];
                 })];
             case SCSeasonWinter:
                 return @[button(@"Wait", @"You can't do anything in the winter.")];
@@ -347,22 +364,23 @@ static NSDictionary *foregroundDisplayInfo;
                              maxSteps:(RACSignal *)maxSteps
                                 title:(NSString *)title
                                output:(void(^)(NSUInteger inputSteps))output {
-    RACTupleUnpack(SCInputView *inputView, RACSignal *inputStepsSignal) = [self inputViewWithMaxValue:[[RACSignal combineLatest:[[RACSequence return:maxSteps] concat:[resourceRates reduceEach:^(NSString *resource, NSNumber *rate, id source) {
+    RACTupleUnpack(SCInputView *inputView, RACSignal *inputStepsSignal) = [self inputViewWithMaxValue:[[RACSignal combineLatest:[[RACSequence return:maxSteps] concat:[resourceRates reduceEach:^(NSNumber *resource, NSNumber *rate, NSObject<SCResourceOwner> *source) {
         NSAssert(rate.unsignedIntegerValue > 0, @"compound modal with rate zero!");
-        return [[source rac_valuesForKeyPath:resource observer:self] map:^(NSNumber *quantity) {
+        return [[source quantityOfResource:resource.unsignedIntegerValue] map:^(NSNumber *quantity) {
             return @(quantity.unsignedIntegerValue / rate.unsignedIntegerValue);
         }];
     }]]] min] commit:^(NSUInteger inputSteps) {
         output(inputSteps);
         for (RACTuple *tuple in resourceRates) {
-            RACTupleUnpack(NSString *resource, NSNumber *rate, id source) = tuple;
-            [source loseQuantity:(inputSteps * rate.unsignedIntegerValue) ofResource:resource];
+            RACTupleUnpack(NSNumber *resource, NSNumber *rate, NSObject<SCResourceOwner> *source) = tuple;
+            [source loseQuantity:(inputSteps * rate.unsignedIntegerValue) ofResource:resource.unsignedIntegerValue];
         }
     }];
     
     NSString *(^nonzeroList)(RACSequence *tuples) = ^(RACSequence *tuples) {
         return [[[tuples map:^(RACTuple *tuple) {
-            return [NSString stringWithFormat:@"%@ %@", tuple[1], tuple[0]];
+            SCResource resource = [tuple[0] unsignedIntegerValue];
+            return [NSString stringWithFormat:@"%@ %@", tuple[1], [self nameForResource:resource]];
         }] array] componentsJoinedByString:@", "];
     };
     
@@ -374,7 +392,7 @@ static NSDictionary *foregroundDisplayInfo;
         if (steps == 0) {
             return @"How much labor?";
         } else {
-            return nonzeroList([resourceRates reduceEach:^(NSString *resource, NSNumber *rate) {
+            return nonzeroList([resourceRates reduceEach:^(NSNumber *resource, NSNumber *rate) {
                 return RACTuplePack(resource, @(steps * rate.unsignedIntegerValue));
             }]);
         }
@@ -382,9 +400,9 @@ static NSDictionary *foregroundDisplayInfo;
 }
 
 - (void)showConstructionModalForBuilding:(SCBuilding *)building {
-    [self showCompoundModalForWithRates:[@[RACTuplePack(@"labor", @(building.laborPerStep), self.city),
-                                           RACTuplePack(@"wood", @(building.woodPerStep), self.city),
-                                           RACTuplePack(@"stone", @(building.stonePerStep), self.city)].rac_sequence filter:^BOOL(RACTuple *tuple) {
+    [self showCompoundModalForWithRates:[@[RACTuplePack(@(SCResourceLabor), @(building.laborPerStep), self.city),
+                                           RACTuplePack(@(SCResourceWood), @(building.woodPerStep), self.city),
+                                           RACTuplePack(@(SCResourceStone), @(building.stonePerStep), self.city)].rac_sequence filter:^BOOL(RACTuple *tuple) {
                                                return ![tuple[1] isEqual:@0];
                                            }]
                                maxSteps:RACObserve(building, remainingSteps)
@@ -577,7 +595,7 @@ static NSDictionary *foregroundDisplayInfo;
                   outputRateMax:(NSUInteger)outputRateMax
                      outputName:(NSString *)outputName
                     commitBlock:(void(^)(NSUInteger input, NSUInteger output))commitBlock {
-    RACSignal *maxLaborSteps = [RACObserve(self.city, labor) map:^(NSNumber *labor) {
+    RACSignal *maxLaborSteps = [[self.city quantityOfResource:SCResourceLabor] map:^(NSNumber *labor) {
         return @(labor.unsignedIntegerValue / inputRate);
     }];
     
@@ -614,9 +632,7 @@ static NSDictionary *foregroundDisplayInfo;
     inputView.titleLabel.text = title;
     
     RAC(inputView.bottomLabel, text) = [RACSignal combineLatest:@[inputSignal, outputMinSignal, outputMaxSignal] reduce:^(NSNumber *input, NSNumber *outputMin, NSNumber *outputMax) {
-        if (self.city.labor < inputRate) {
-            return @"Not enough labor!";
-        } else if ([outputMax isEqual:@0]) {
+        if ([outputMax isEqual:@0]) {
             return @"How much labor?";
         } else if ([outputMin isEqual:outputMax]) {
             return [NSString stringWithFormat:@"%@ labor ➜ %@ %@", input, outputMin, outputName];
@@ -670,7 +686,7 @@ static NSDictionary *foregroundDisplayInfo;
     RACSignal *prefixSignal = [[RACObserve(tile, foreground) map:^(SCForeground *foreground) {
         if ([foreground isKindOfClass:SCForest.class]) {
             SCForest *forest = (SCForest *)foreground;
-            return [RACObserve(forest, wood) map:^(NSNumber *wood) {
+            return [[forest quantityOfResource:SCResourceWood] map:^(NSNumber *wood) {
                 return [NSString stringWithFormat:@"%@ trees", wood];
             }];
         } else if ([foreground isKindOfClass:SCBuilding.class]) {
@@ -732,9 +748,7 @@ static NSDictionary *foregroundDisplayInfo;
         return [NSValue valueWithCGRect:CGRectMakeSize(0, 0, contentSizeValue.CGSizeValue)];
     }];
     
-    SCWorld *world = [SCWorld worldWithRadius:6];
-    [world tileAt:SCPosition.origin].foreground = [[SCTemple alloc] initWithLabor:1 wood:0 stone:0 args:nil];
-    self.city = [SCCity cityWithWorld:world];
+    self.city = [SCCity cityWithWorld:[SCWorld worldWithRadius:6]];
     [self setupGrid];
     [self.view layoutIfNeeded];
     
@@ -772,11 +786,12 @@ static NSDictionary *foregroundDisplayInfo;
     
     RAC(infoLabel, text) =
     [RACSignal combineLatest:@[RACObserve(self.world, turn),
-                               RACObserve(self.city, population),
-                               RACObserve(self.city, food),
-                               RACObserve(self.city, labor),
-                               RACObserve(self.city, wood),
-                               RACObserve(self.city, stone)]
+                               [self.city quantityOfResource:SCResourcePeople],
+                               [self.city quantityOfFood],
+                               [self.city quantityOfResource:SCResourceLabor],
+                               [self.city quantityOfResource:SCResourceWood],
+                               [self.city quantityOfResource:SCResourceStone],
+                               ]
                       reduce:^(NSNumber *turn, NSNumber *population, NSNumber *food, NSNumber *labor, NSNumber *wood, NSNumber *stone) {
                           NSUInteger year = turn.unsignedIntegerValue / 4;
                           NSString *season = seasonNameMap[@(self.world.season)];
@@ -797,8 +812,8 @@ static NSDictionary *foregroundDisplayInfo;
     
     [[self.cheatButton rac_signalForControlEvents:UIControlEventTouchUpInside] subscribeNext:^(id x) {
         [self flashMessage:@"+100 people"];
-        [self.city setValue:@(self.city.population + 100) forKey:@"population"];
-        [self.city setValue:@(self.city.labor + 100) forKey:@"labor"];
+        [self.city gainQuantity:100 ofResource:SCResourcePeople];
+        [self.city gainQuantity:100 ofResource:SCResourceLabor];
     }];
     
     [[[self rac_signalForSelector:@selector(viewWillAppear:)] take:1] subscribeNext:^(id x) {

@@ -22,6 +22,8 @@
 		3C262CDC18F09F2300F1BBB3 /* SCScrollView.m in Sources */ = {isa = PBXBuildFile; fileRef = 3C262CD618F09F2300F1BBB3 /* SCScrollView.m */; };
 		3C4DB4DB18F2231B009A73D1 /* SCCity.m in Sources */ = {isa = PBXBuildFile; fileRef = 3C4DB4DA18F2231B009A73D1 /* SCCity.m */; };
 		3C58A33B18F41D230025206A /* SCPassthroughView.m in Sources */ = {isa = PBXBuildFile; fileRef = 3C58A33A18F41D230025206A /* SCPassthroughView.m */; };
+		3C5F2D701904612000673DF0 /* SCForest.m in Sources */ = {isa = PBXBuildFile; fileRef = 3C5F2D6F1904612000673DF0 /* SCForest.m */; };
+		3C5F2D721904645700673DF0 /* SCResourceOwner.m in Sources */ = {isa = PBXBuildFile; fileRef = 3C5F2D6C1904607B00673DF0 /* SCResourceOwner.m */; };
 		3CB09EF418F1F8A9000AA987 /* SCTile.m in Sources */ = {isa = PBXBuildFile; fileRef = 3CB09EF318F1F8A9000AA987 /* SCTile.m */; };
 		3CB09EF718F1F93A000AA987 /* SCTileView.m in Sources */ = {isa = PBXBuildFile; fileRef = 3CB09EF618F1F93A000AA987 /* SCTileView.m */; };
 		3CD604E818ECD30A00265338 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 3CD604E718ECD30A00265338 /* Foundation.framework */; };
@@ -64,6 +66,7 @@
 		3C12372918F2676D00E83534 /* SCForeground.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SCForeground.m; sourceTree = "<group>"; };
 		3C12373218F366AB00E83534 /* SCRadialMenuView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SCRadialMenuView.h; sourceTree = "<group>"; };
 		3C12373318F366AB00E83534 /* SCRadialMenuView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SCRadialMenuView.m; sourceTree = "<group>"; };
+		3C1BDB381905DD9800CDFEE5 /* SCResource.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = SCResource.h; sourceTree = "<group>"; };
 		3C1F7C1C18F759F60060E463 /* SCInputView.xib */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.xib; path = SCInputView.xib; sourceTree = "<group>"; };
 		3C1F7C1E18F75AC90060E463 /* SCInputView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SCInputView.h; sourceTree = "<group>"; };
 		3C1F7C1F18F75AC90060E463 /* SCInputView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SCInputView.m; sourceTree = "<group>"; };
@@ -79,6 +82,11 @@
 		3C4DB4DA18F2231B009A73D1 /* SCCity.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SCCity.m; sourceTree = "<group>"; };
 		3C58A33918F41D230025206A /* SCPassthroughView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SCPassthroughView.h; sourceTree = "<group>"; };
 		3C58A33A18F41D230025206A /* SCPassthroughView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SCPassthroughView.m; sourceTree = "<group>"; };
+		3C5F2D6B1904601700673DF0 /* SCResourceOwner.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = SCResourceOwner.h; sourceTree = "<group>"; };
+		3C5F2D6C1904607B00673DF0 /* SCResourceOwner.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = SCResourceOwner.m; sourceTree = "<group>"; };
+		3C5F2D6E1904612000673DF0 /* SCForest.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SCForest.h; sourceTree = "<group>"; };
+		3C5F2D6F1904612000673DF0 /* SCForest.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SCForest.m; sourceTree = "<group>"; };
+		3C5F2D711904613D00673DF0 /* SCForegrounds.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = SCForegrounds.h; sourceTree = "<group>"; };
 		3CB09EF218F1F8A9000AA987 /* SCTile.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SCTile.h; sourceTree = "<group>"; };
 		3CB09EF318F1F8A9000AA987 /* SCTile.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SCTile.m; sourceTree = "<group>"; };
 		3CB09EF518F1F93A000AA987 /* SCTileView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SCTileView.h; sourceTree = "<group>"; };
@@ -150,22 +158,36 @@
 		3C4DB4D818F2230E009A73D1 /* Models */ = {
 			isa = PBXGroup;
 			children = (
+				3C5F2D6D1904610B00673DF0 /* Foregrounds */,
 				3C262CD318F09F2300F1BBB3 /* SCPosition.h */,
 				3C262CD418F09F2300F1BBB3 /* SCPosition.m */,
-				3C12372818F2676D00E83534 /* SCForeground.h */,
-				3C12372918F2676D00E83534 /* SCForeground.m */,
 				3CB09EF218F1F8A9000AA987 /* SCTile.h */,
 				3CB09EF318F1F8A9000AA987 /* SCTile.m */,
 				3C116E0518F21BE000A2F3BC /* SCWorld.h */,
 				3C116E0618F21BE000A2F3BC /* SCWorld.m */,
 				3C4DB4D918F2231B009A73D1 /* SCCity.h */,
 				3C4DB4DA18F2231B009A73D1 /* SCCity.m */,
+				3C5F2D6B1904601700673DF0 /* SCResourceOwner.h */,
+				3C5F2D6C1904607B00673DF0 /* SCResourceOwner.m */,
+				3C1BDB381905DD9800CDFEE5 /* SCResource.h */,
+			);
+			name = Models;
+			sourceTree = "<group>";
+		};
+		3C5F2D6D1904610B00673DF0 /* Foregrounds */ = {
+			isa = PBXGroup;
+			children = (
+				3C12372818F2676D00E83534 /* SCForeground.h */,
+				3C12372918F2676D00E83534 /* SCForeground.m */,
 				3C034F0719033F7B0048D383 /* SCBuilding.h */,
 				3C034F0819033F7B0048D383 /* SCBuilding.m */,
 				3C034F0A1903405C0048D383 /* SCBuildings.h */,
 				3C034F0B1903405C0048D383 /* SCBuildings.m */,
+				3C5F2D6E1904612000673DF0 /* SCForest.h */,
+				3C5F2D6F1904612000673DF0 /* SCForest.m */,
+				3C5F2D711904613D00673DF0 /* SCForegrounds.h */,
 			);
-			name = Models;
+			name = Foregrounds;
 			sourceTree = "<group>";
 		};
 		3C69DC4718FA497000B6C935 /* Generic */ = {
@@ -411,6 +433,8 @@
 				3C262CDB18F09F2300F1BBB3 /* SCPosition.m in Sources */,
 				3C116E0718F21BE000A2F3BC /* SCWorld.m in Sources */,
 				3CB09EF418F1F8A9000AA987 /* SCTile.m in Sources */,
+				3C5F2D721904645700673DF0 /* SCResourceOwner.m in Sources */,
+				3C5F2D701904612000673DF0 /* SCForest.m in Sources */,
 				3C12373418F366AB00E83534 /* SCRadialMenuView.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

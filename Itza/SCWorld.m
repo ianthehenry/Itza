@@ -7,6 +7,7 @@
 //
 
 #import "SCWorld.h"
+#import "SCForegrounds.h"
 
 @interface SCWorld ()
 
@@ -37,7 +38,7 @@
     world.tileForLocation = [[NSMutableDictionary alloc] init];
     world.mutableTiles = [[NSMutableSet alloc] init];
     
-    [world addTileForPosition:[SCPosition x:0 y:0] foreground:[self randomForeground]];
+    [world addTileForPosition:[SCPosition x:0 y:0] foreground:[[SCTemple alloc] initWithLabor:1 wood:0 stone:0 args:nil]];
     
     for (NSInteger distance = 1; distance <= radius; distance++) {
         SCPosition *position = [SCPosition x:0 y:-distance];
@@ -60,8 +61,11 @@
 
 + (SCForeground *)randomForeground {
     switch (arc4random_uniform(10)) {
-        case 0: case 1: case 2:
-            return [[SCForest alloc] initWithWood:75 + arc4random_uniform(51)];
+        case 0: case 1: case 2: {
+            SCForest *forest = [[SCForest alloc] init];
+            [forest gainQuantity:(75 + arc4random_uniform(51)) ofResource:SCResourceWood];
+            return forest;
+        }
         case 3: case 4:
             return [[SCRiver alloc] init];
         default:
