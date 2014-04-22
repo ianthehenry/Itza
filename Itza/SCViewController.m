@@ -207,30 +207,7 @@ static NSDictionary *foregroundDisplayInfo;
         }];
     };
     
-    // TODO: replace this with compoundModal
-    SCButtonDescription *(^laborInputMax)(NSString *buttonName,
-                                          NSString *title,
-                                          NSUInteger inputRate,
-                                          RACSignal *maxOutputSignal,
-                                          NSUInteger outputRate,
-                                          NSString *outputName,
-                                          void(^)(NSUInteger output)
-                                          ) = ^(NSString *buttonName,
-                                                NSString *title,
-                                                NSUInteger inputRate,
-                                                RACSignal *maxOutputSignal,
-                                                NSUInteger outputRate,
-                                                NSString *outputName,
-                                                void(^outputBlock)(NSUInteger output)) {
-        return [SCButtonDescription buttonWithText:buttonName handler:^{
-            [self showLaborModalWithTitle:title inputRate:inputRate maxOutputSignals:@[maxOutputSignal] outputRateMin:outputRate outputRateMax:outputRate outputName:outputName commitBlock:^(NSUInteger input, NSUInteger output) {
-                [self.city loseQuantity:input ofResource:SCResourceLabor];
-                outputBlock(output);
-                [self flashMessage:[NSString stringWithFormat:@"+ %@ %@", @(output), outputName]];
-                self.selectedTile = nil;
-            }];
-        }];
-    };
+    // TODO: make a proper flashMessage for changes to your city
     
     if ([tile.foreground isKindOfClass:SCRiver.class]) {
         return @[laborInputRange(@"Fish", @"Fish for Fishes", 3, 0, 5, @"fish", ^(NSUInteger output) {
