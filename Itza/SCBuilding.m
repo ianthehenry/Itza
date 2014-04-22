@@ -38,7 +38,7 @@ static NSUInteger gcd(NSUInteger a, NSUInteger b) {
 
 @interface SCBuilding ()
 
-@property (nonatomic, assign, readwrite) RACSequence *inputRates;
+@property (nonatomic, strong, readwrite) RACSequence *inputRates;
 
 @end
 

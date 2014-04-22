@@ -12,7 +12,7 @@
 @interface SCBuilding : SCForeground <SCResourceOwner>
 
 @property (nonatomic, assign, readonly) BOOL isComplete;
-@property (nonatomic, assign, readonly) RACSequence *inputRates;
+@property (nonatomic, strong, readonly) RACSequence *inputRates;
 - (instancetype)initWithRequiredResources:(RACSequence *)requiredResources args:(NSDictionary *)args;
 - (void)initalize:(NSDictionary *)args;
 
