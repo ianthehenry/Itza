@@ -398,7 +398,7 @@ static NSDictionary *foregroundDisplayInfo;
     [self showCompoundModalWithInputs:[building.inputRates reduceEach:^(NSNumber *resource, NSNumber *rate) {
         return RACTuplePack(resource, rate, self.city);
     }]
-                              outputs:@[RACTuplePack(@(SCResourceConstruction), @1, building)].rac_sequence
+                              outputs:@[RACTuplePack(@(SCResourceConstruction), @1, @1, building)].rac_sequence
                                 title:[NSString stringWithFormat:@"Construct a %@", foregroundDisplayInfo[building.class.pointerValue][0]]];
 }
 
