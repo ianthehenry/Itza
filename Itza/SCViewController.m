@@ -225,7 +225,7 @@ static NSDictionary *foregroundDisplayInfo;
                  [SCButtonDescription buttonWithText:@"Chop" handler:^{
                      [self showCompoundModalWithInputs:@[RACTuplePack(@(SCResourceLabor), @3, self.city),
                                                          RACTuplePack(@(SCResourceWood), @1, forest)].rac_sequence
-                                               outputs:@[RACTuplePack(@(SCResourceWood), @1, self.city)].rac_sequence
+                                               outputs:@[RACTuplePack(@(SCResourceWood), @1, @1, self.city)].rac_sequence
                                                  title:@"Chop Wood"];
                  }]];
     }
@@ -243,18 +243,18 @@ static NSDictionary *foregroundDisplayInfo;
         switch (self.world.season) {
             case SCSeasonSpring:
                 return @[[SCButtonDescription buttonWithText:@"Sow" handler:^{
-                    [self showCompoundModalWithInputs:@[RACTuplePack(@(SCResourceLabor), @1, self.city),
-                                                        RACTuplePack(@(SCResourceMaize), @2, self.city)].rac_sequence
-                                              outputs:@[RACTuplePack(@(SCResourceMaize), @2, farm)].rac_sequence
+                    [self showCompoundModalWithInputs:@[RACTuplePack(@(SCResourceLabor), @2, self.city),
+                                                        RACTuplePack(@(SCResourceMaize), @1, self.city)].rac_sequence
+                                              outputs:@[RACTuplePack(@(SCResourceMaize), @1, @1, farm)].rac_sequence
                                                 title:@"Plant Maize"];
                 }]];
             case SCSeasonSummer:
                 return @[button(@"Wait", @"You can't do anything in the summer.")];
             case SCSeasonAutumn:
                 return @[[SCButtonDescription buttonWithText:@"Reap" handler:^{
-                    [self showCompoundModalWithInputs:@[RACTuplePack(@(SCResourceLabor), @1, self.city),
+                    [self showCompoundModalWithInputs:@[RACTuplePack(@(SCResourceLabor), @2, self.city),
                                                         RACTuplePack(@(SCResourceMaize), @1, farm)].rac_sequence
-                                              outputs:@[RACTuplePack(@(SCResourceMaize), @5, self.city)].rac_sequence
+                                              outputs:@[RACTuplePack(@(SCResourceMaize), @3, @6, self.city)].rac_sequence
                                                 title:@"Harvest Maize"];
                 }]];
             case SCSeasonWinter:
