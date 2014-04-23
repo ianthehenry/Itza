@@ -188,31 +188,24 @@ static NSDictionary *foregroundDisplayInfo;
                                             NSUInteger inputRate,
                                             NSUInteger outputRateMin,
                                             NSUInteger outputRateMax,
-                                            NSString *outputName,
-                                            void(^)(NSUInteger output)
+                                            SCResource resource
                                             ) = ^(NSString *buttonName,
                                                   NSString *title,
                                                   NSUInteger inputRate,
                                                   NSUInteger outputRateMin,
                                                   NSUInteger outputRateMax,
-                                                  NSString *outputName,
-                                                  void(^outputBlock)(NSUInteger output)) {
+                                                  SCResource resource) {
         return [SCButtonDescription buttonWithText:buttonName handler:^{
-            [self showLaborModalWithTitle:title inputRate:inputRate maxOutputSignals:@[] outputRateMin:outputRateMin outputRateMax:outputRateMax outputName:outputName commitBlock:^(NSUInteger input, NSUInteger output) {
-                [self.city loseQuantity:input ofResource:SCResourceLabor];
-                outputBlock(output);
-                [self flashMessage:[NSString stringWithFormat:@"+ %@ %@", @(output), outputName]];
-                self.selectedTile = nil;
-            }];
+            [self showCompoundModalWithInputs:[RACSequence return:RACTuplePack(@(SCResourceLabor), @(inputRate), self.city)]
+                                      outputs:[RACSequence return:RACTuplePack(@(resource), @(outputRateMin), @(outputRateMax), self.city)]
+                                        title:title];
         }];
     };
     
     // TODO: make a proper flashMessage for changes to your city
     
     if ([tile.foreground isKindOfClass:SCRiver.class]) {
-        return @[laborInputRange(@"Fish", @"Fish for Fishes", 3, 0, 5, @"fish", ^(NSUInteger output) {
-            [self.city gainQuantity:output ofResource:SCResourceFish];
-        })];
+        return @[laborInputRange(@"Fish", @"Fish for Fishes", 3, 0, 5, SCResourceFish)];
     }
     
     if ([tile.foreground isKindOfClass:SCGrass.class]) {
@@ -227,16 +220,14 @@ static NSDictionary *foregroundDisplayInfo;
     
     if ([tile.foreground isKindOfClass:SCForest.class]) {
         SCForest *forest = (SCForest *)tile.foreground;
-        return @[laborInputRange(@"Hunt", @"Hunt for Animals", 1, 1, 2, @"meat", ^(NSUInteger output) {
-            [self.city gainQuantity:output ofResource:SCResourceMeat];
-        }), laborInputRange(@"Gthr", @"Gather Maize", 2, 0, 2, @"maize", ^(NSUInteger output) {
-            [self.city gainQuantity:output ofResource:SCResourceMaize];
-        }), [SCButtonDescription buttonWithText:@"Chop" handler:^{
-            [self showCompoundModalWithInputs:@[RACTuplePack(@(SCResourceLabor), @3, self.city),
-                                                RACTuplePack(@(SCResourceWood), @1, forest)].rac_sequence
-                                      outputs:@[RACTuplePack(@(SCResourceWood), @1, self.city)].rac_sequence
-                                        title:@"Chop Wood"];
-        }]];
+        return @[laborInputRange(@"Hunt", @"Hunt for Animals", 1, 1, 2, SCResourceMeat),
+                 laborInputRange(@"Gthr", @"Gather Maize", 2, 0, 2, SCResourceMaize),
+                 [SCButtonDescription buttonWithText:@"Chop" handler:^{
+                     [self showCompoundModalWithInputs:@[RACTuplePack(@(SCResourceLabor), @3, self.city),
+                                                         RACTuplePack(@(SCResourceWood), @1, forest)].rac_sequence
+                                               outputs:@[RACTuplePack(@(SCResourceWood), @1, self.city)].rac_sequence
+                                                 title:@"Chop Wood"];
+                 }]];
     }
     
     if ([tile.foreground isKindOfClass:SCBuilding.class] && ![(SCBuilding *)tile.foreground isComplete]) {
@@ -341,9 +332,11 @@ static NSDictionary *foregroundDisplayInfo;
         return [[source quantityOfResource:resource.unsignedIntegerValue] map:^(NSNumber *quantity) {
             return @(quantity.unsignedIntegerValue / rate.unsignedIntegerValue);
         }];
-    }] concat:[outputRates reduceEach:^(NSNumber *resource, NSNumber *rate, NSObject<SCResourceOwner> *source) {
+    }] concat:[outputRates reduceEach:^(NSNumber *resource, NSNumber *minRate, NSNumber *maxRate, NSObject<SCResourceOwner> *source) {
         return [[source unusedCapacityForResource:resource.unsignedIntegerValue] map:^(NSNumber *unusedCapacity) {
-            return @(unusedCapacity.unsignedIntegerValue / rate.unsignedIntegerValue);
+            NSAssert([source currentCapacityForResource:resource.unsignedIntegerValue] == NSUIntegerMax ||
+                     [minRate isEqualToNumber:maxRate], @"We can't ensure a capacity invariant with randomized output (right now)");
+            return @(unusedCapacity.unsignedIntegerValue / maxRate.unsignedIntegerValue);
         }];
     }]]] min];
     
@@ -353,19 +346,38 @@ static NSDictionary *foregroundDisplayInfo;
             [source loseQuantity:(inputSteps * rate.unsignedIntegerValue) ofResource:resource.unsignedIntegerValue];
         }
         for (RACTuple *tuple in outputRates) {
-            RACTupleUnpack(NSNumber *resource, NSNumber *rate, NSObject<SCResourceOwner> *source) = tuple;
-            [source gainQuantity:(inputSteps * rate.unsignedIntegerValue) ofResource:resource.unsignedIntegerValue];
+            RACTupleUnpack(NSNumber *resource, NSNumber *minRate, NSNumber *maxRate, NSObject<SCResourceOwner> *source) = tuple;
+            NSUInteger outputSpread = maxRate.unsignedIntegerValue - minRate.unsignedIntegerValue;
+            NSUInteger output = 0;
+            if (outputSpread == 0) {
+                output = (inputSteps * minRate.unsignedIntegerValue);
+            } else {
+                for (NSUInteger i = 0; i < inputSteps; i++) {
+                    output += arc4random_uniform((u_int32_t)outputSpread + 1) + minRate.unsignedIntegerValue;
+                }
+            }
+            [source gainQuantity:output ofResource:resource.unsignedIntegerValue];
         }
     }];
     
-    NSString *(^nonzeroList)(RACSequence *tuples) = ^(RACSequence *tuples) {
-        return [[[tuples map:^(RACTuple *tuple) {
-            SCResource resource = [tuple[0] unsignedIntegerValue];
-            return [NSString stringWithFormat:@"%@ %@", tuple[1], [self nameForResource:resource]];
+    NSString *(^resourceRangeString)(RACSequence *tuples) = ^(RACSequence *tuples) {
+        return [[[tuples reduceEach:^(NSNumber *resource, NSNumber *min, NSNumber *max) {
+            NSString *resourceName = [self nameForResource:resource.unsignedIntegerValue];
+            if ([min isEqualToNumber:max]) {
+                return [NSString stringWithFormat:@"%@ %@", min, resourceName];
+            } else {
+                return [NSString stringWithFormat:@"%@-%@ %@", min, max, resourceName];
+            }
         }] array] componentsJoinedByString:@", "];
     };
     
-    inputView.topLabel.text = [NSString stringWithFormat:@"%@ ➜ %@", nonzeroList(inputRates), nonzeroList(outputRates)];
+    NSString *(^resourceString)(RACSequence *tuples) = ^(RACSequence *tuples) {
+        return resourceRangeString([tuples reduceEach:^(NSNumber *resource, NSNumber *x) {
+            return RACTuplePack(resource, x, x);
+        }]);
+    };
+    
+    inputView.topLabel.text = [NSString stringWithFormat:@"%@ ➜ %@", resourceString(inputRates), resourceRangeString(outputRates)];
     inputView.titleLabel.text = title;
     
     RAC(inputView.bottomLabel, text) = [inputStepsSignal map:^(NSNumber *inputStepsNumber) {
@@ -373,10 +385,10 @@ static NSDictionary *foregroundDisplayInfo;
         if (steps == 0) {
             return @"How much labor?";
         } else {
-            return [NSString stringWithFormat:@"%@ ➜ %@", nonzeroList([inputRates reduceEach:^(NSNumber *resource, NSNumber *rate) {
+            return [NSString stringWithFormat:@"%@ ➜ %@", resourceString([inputRates reduceEach:^(NSNumber *resource, NSNumber *rate) {
                 return RACTuplePack(resource, @(steps * rate.unsignedIntegerValue));
-            }]), nonzeroList([outputRates reduceEach:^(NSNumber *resource, NSNumber *rate) {
-                return RACTuplePack(resource, @(steps * rate.unsignedIntegerValue));
+            }]), resourceRangeString([outputRates reduceEach:^(NSNumber *resource, NSNumber *minRate, NSNumber *maxRate) {
+                return RACTuplePack(resource, @(steps * minRate.unsignedIntegerValue), @(steps * maxRate.unsignedIntegerValue));
             }])];
         }
     }];
@@ -565,60 +577,6 @@ static NSDictionary *foregroundDisplayInfo;
     }];
     
     return RACTuplePack(inputView, inputSignal);
-}
-
-- (void)showLaborModalWithTitle:(NSString *)title
-                      inputRate:(NSUInteger)inputRate
-               maxOutputSignals:(NSArray *)maxOutputSignals
-                  outputRateMin:(NSUInteger)outputRateMin
-                  outputRateMax:(NSUInteger)outputRateMax
-                     outputName:(NSString *)outputName
-                    commitBlock:(void(^)(NSUInteger input, NSUInteger output))commitBlock {
-    RACSignal *maxLaborSteps = [[self.city quantityOfResource:SCResourceLabor] map:^(NSNumber *labor) {
-        return @(labor.unsignedIntegerValue / inputRate);
-    }];
-    
-    RACSignal *maxSteps = [[RACSignal combineLatest:[maxOutputSignals.rac_sequence concat:[RACSequence return:maxLaborSteps]]] min];
-    
-    RACTupleUnpack(SCInputView *inputView, RACSignal *inputStepsSignal) = [self inputViewWithMaxValue:maxSteps commit:^(NSUInteger inputSteps) {
-        NSUInteger output = 0;
-        NSUInteger outputSpread = outputRateMax - outputRateMin;
-        if (outputSpread == 0) {
-            output = outputRateMin * inputSteps;
-        } else {
-            for (NSUInteger i = 0; i < inputSteps; i++) {
-                output += arc4random_uniform((u_int32_t)outputSpread + 1) + outputRateMin;
-            }
-        }
-        commitBlock(inputSteps * inputRate, output);
-    }];
-    
-    RACSignal *inputSignal = [inputStepsSignal map:^(NSNumber *value) {
-        return @(inputRate * value.unsignedIntegerValue);
-    }];
-    
-    RACSignal *outputMinSignal = [inputStepsSignal map:^(NSNumber *inputSteps) {
-        return @(inputSteps.unsignedIntegerValue * outputRateMin);
-    }];
-    RACSignal *outputMaxSignal = [inputStepsSignal map:^(NSNumber *inputSteps) {
-        return @(inputSteps.unsignedIntegerValue * outputRateMax);
-    }];
-    
-    inputView.topLabel.text = (outputRateMin == outputRateMax) ?
-    [NSString stringWithFormat:@"%@ labor ➜ %@ %@", @(inputRate), @(outputRateMin), outputName] :
-    [NSString stringWithFormat:@"%@ labor ➜ %@-%@ %@", @(inputRate), @(outputRateMin), @(outputRateMax), outputName];
-    
-    inputView.titleLabel.text = title;
-    
-    RAC(inputView.bottomLabel, text) = [RACSignal combineLatest:@[inputSignal, outputMinSignal, outputMaxSignal] reduce:^(NSNumber *input, NSNumber *outputMin, NSNumber *outputMax) {
-        if ([outputMax isEqual:@0]) {
-            return @"How much labor?";
-        } else if ([outputMin isEqual:outputMax]) {
-            return [NSString stringWithFormat:@"%@ labor ➜ %@ %@", input, outputMin, outputName];
-        } else {
-            return [NSString stringWithFormat:@"%@ labor ➜ %@-%@ %@", input, outputMin, outputMax, outputName];
-        }
-    }];
 }
 
 - (void)addMenuViewForTile:(SCTile *)tile {
