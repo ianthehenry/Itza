@@ -34,7 +34,7 @@ static NSDictionary *foregroundDisplayInfo;
 @property (strong, nonatomic) IBOutlet UIButton *endTurnButton;
 @property (strong, nonatomic) IBOutlet UIView *commandView;
 @property (strong, nonatomic) IBOutlet UIToolbar *toolbar;
-@property (strong, nonatomic) IBOutlet UIButton *scienceButton;
+@property (strong, nonatomic) IBOutlet UIButton *helpButton;
 @property (strong, nonatomic) IBOutlet UIButton *cheatButton;
 
 @property (nonatomic, strong) SCRadialMenuView *currentMenuView;
@@ -659,6 +659,14 @@ static NSDictionary *foregroundDisplayInfo;
     self.unobscuredFrame = self.view.bounds;
 }
 
+- (void)viewDidAppear:(BOOL)animated {
+    [super viewDidAppear:animated];
+//    [self showWallOfTextModalWithTitle:@"WELCOME TO ITZA"
+//                                 pages:@[@"A BAND OF NOMADS STUMBLE UPON A FORGOTTEN TEMPLE",
+//                                         @"AND AWAKEN A TIRED GOD",
+//                                         ]];
+}
+
 - (void)viewDidLoad {
     @weakify(self);
     [NSNotificationCenter.defaultCenter addObserverForName:UIKeyboardWillShowNotification object:nil queue:nil usingBlock:^(NSNotification *note) {
@@ -741,11 +749,26 @@ static NSDictionary *foregroundDisplayInfo;
         NSString *season = seasonNameMap[@(self.world.season)];
         NSString *title = [NSString stringWithFormat:@"Summary for %@ - Year %@", season, @(year)];
         NSArray *messages = [self iterate];
-        [self showWallOfTextModalWithTitle:title body:[messages componentsJoinedByString:@"\n"]];
+        [self showWallOfTextModalWithTitle:title pages:@[[messages componentsJoinedByString:@"\n"]]];
     }];
     
-    [[self.scienceButton rac_signalForControlEvents:UIControlEventTouchUpInside] subscribeNext:^(id x) {
-        [self flashMessage:@"there's no science...yet"];
+    [[self.helpButton rac_signalForControlEvents:UIControlEventTouchUpInside] subscribeNext:^(id x) {
+        [self showWallOfTextModalWithTitle:@"How to Play Itza"
+                                     pages:@[@"Just ask Ian; he's sitting right next to you if you're seeing this.",
+                                             @"Okay, okay. Every season you get a certain amount of labor (l) from your people (p).",
+                                             @"People without shelter will eat food, but they won't provide any labor.",
+                                             @"Your temple provides some shelter, but as your city grows you will need to build houses.",
+                                             @"Everything you do requires the labor of your people. Don't squander it.",
+                                             @"There are three types of food: meat, fish, and maize.",
+                                             @"1 person needs 1 food to survive a season. It doesn't matter what kind of food it is.",
+                                             @"But food will also go bad every season. People will always eat more perishable food, like meat, before eating food like maize.",
+                                             @"People also provide you with Faith (F). Happiness, excess labor, and prayer are all ways to get Faith.",
+                                             @"You can also sacrifice your people for a boost of Faith, at the cost of happiness.",
+                                             @"Faith allows you to see more of the map.",
+                                             @"It can also be used to purchase technological advancements.",
+                                             @"If your Faith ever goes negative, you die, and your legacy is soon forgotten.",
+                                             @"You win when you feel that the game has nothing left to offer you.",
+                                             @"(because the game isn't finished, right now there's no reason to do anything but hunt forever)"]];
     }];
     
     [[self.cheatButton rac_signalForControlEvents:UIControlEventTouchUpInside] subscribeNext:^(id x) {
@@ -759,27 +782,52 @@ static NSDictionary *foregroundDisplayInfo;
     }];
 }
 
-- (void)showWallOfTextModalWithTitle:(NSString *)title body:(NSString *)body {
+- (void)showWallOfTextModalWithTitle:(NSString *)title pages:(NSArray *)pages {
+    RACReplaySubject *pageSubject = [RACReplaySubject replaySubjectWithCapacity:1];
+    [pageSubject sendNext:@0];
+    
     UIView *view = [[UIView alloc] initWithFrame:CGRectMake(0, 0, 300, 0)];
     view.backgroundColor = UIColor.whiteColor;
     UILabel *titleLabel = [[UILabel alloc] initWithFrame:CGRectMake(0, 0, 300, 44)];
     titleLabel.font = [UIFont fontWithName:@"Menlo" size:13];
-    titleLabel.text = title;
+    RAC(titleLabel, text) = [pageSubject map:^(NSNumber *page) {
+        if (pages.count == 0) {
+            return title;
+        } else {
+            return [NSString stringWithFormat:@"%@ (%@/%@)", title, @(page.unsignedIntegerValue + 1), @(pages.count)];
+        }
+    }];
     titleLabel.textAlignment = NSTextAlignmentCenter;
     UITextView *textView = [[UITextView alloc] initWithFrame:CGRectMake(0, 0, 300, 0)];
     textView.backgroundColor = UIColor.clearColor;
     textView.font = [UIFont fontWithName:@"Menlo" size:13];
     textView.editable = NO;
     textView.selectable = NO;
-    textView.text = body;
-    textView.frameHeight = MIN([textView sizeThatFits:CGSizeMake(300, CGFLOAT_MAX)].height, 200);
     UIButton *closeButton = [UIButton buttonWithType:UIButtonTypeSystem];
-    [closeButton setTitle:@"Done" forState:UIControlStateNormal];
+    [pageSubject subscribeNext:^(NSNumber *page) {
+        BOOL lastPage = page.unsignedIntegerValue == (pages.count - 1);
+        [closeButton setTitle:(lastPage ? @"Done" : @"Next") forState:UIControlStateNormal];
+    }];
     closeButton.frame = CGRectMake(0, 0, 300, 44);
     [view stackViewsVerticallyCentered:@[titleLabel, textView, closeButton]];
+
+    [pageSubject subscribeNext:^(NSNumber *page) {
+        textView.text = pages[page.unsignedIntegerValue];
+        [UIView animateWithDuration:([page isEqualToNumber:@0] ? 0 : 0.25) animations:^{
+            textView.frameHeight = MIN([textView sizeThatFits:CGSizeMake(300, CGFLOAT_MAX)].height, 200);
+            closeButton.frameOriginY = CGRectGetMaxY(textView.frame);
+            view.frameHeight = CGRectGetMaxY(closeButton.frame);
+        }];
+    }];
+
     void (^dismiss)() = [self showModal:view];
     [[closeButton rac_signalForControlEvents:UIControlEventTouchUpInside] subscribeNext:^(id x) {
-        dismiss();
+        NSUInteger page = [[pageSubject first] unsignedIntegerValue];
+        if (page == (pages.count - 1)) {
+            dismiss();
+        } else {
+            [pageSubject sendNext:@(page + 1)];
+        }
     }];
 }
 
