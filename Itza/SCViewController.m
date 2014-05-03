@@ -754,21 +754,20 @@ static NSDictionary *foregroundDisplayInfo;
     
     [[self.helpButton rac_signalForControlEvents:UIControlEventTouchUpInside] subscribeNext:^(id x) {
         [self showWallOfTextModalWithTitle:@"How to Play Itza"
-                                     pages:@[@"Just ask Ian; he's sitting right next to you if you're seeing this.",
+                                     pages:@[@"Just ask Ian; if you're reading this I'm sure he's sitting right next to you.",
                                              @"Okay, okay. Every season you get a certain amount of labor (l) from your people (p).",
                                              @"People without shelter will eat food, but they won't provide any labor.",
                                              @"Your temple provides some shelter, but as your city grows you will need to build houses.",
                                              @"Everything you do requires the labor of your people. Don't squander it.",
                                              @"There are three types of food: meat, fish, and maize.",
                                              @"1 person needs 1 food to survive a season. It doesn't matter what kind of food it is.",
-                                             @"But food will also go bad every season. People will always eat more perishable food, like meat, before eating food like maize.",
+                                             @"But food spoils. People will always eat more perishable food, like meat, before eating hardy food, like maize.",
                                              @"People also provide you with Faith (F). Happiness, excess labor, and prayer are all ways to get Faith.",
                                              @"You can also sacrifice your people for a boost of Faith, at the cost of happiness.",
                                              @"Faith allows you to see more of the map.",
                                              @"It can also be used to purchase technological advancements.",
-                                             @"If your Faith ever goes negative, you die, and your legacy is soon forgotten.",
-                                             @"You win when you feel that the game has nothing left to offer you.",
-                                             @"(because the game isn't finished, right now there's no reason to do anything but hunt forever)"]];
+                                             @"You lose when all of your people die, or you have zero faith."
+                                             @"You win when you feel that the game has nothing left to offer you."]];
     }];
     
     [[self.cheatButton rac_signalForControlEvents:UIControlEventTouchUpInside] subscribeNext:^(id x) {
