@@ -7,6 +7,7 @@
 //
 
 #import "SCCity.h"
+#import "SCBuildings.h"
 
 @interface SCCity ()
 
@@ -82,13 +83,25 @@
     log(peopleToBeBorn, @"% people were born");
     log(peopleToDie, @"% people died");
     
-    [self setQuantity:[self currentQuantityOfResource:SCResourcePeople] ofResource:SCResourceLabor];
+    [self setQuantity:MIN([self currentQuantityOfResource:SCResourcePeople], self.shelter) ofResource:SCResourceLabor];
     
     [messages addObject:@""];
 
     logDelta((NSInteger)[self currentQuantityOfResource:SCResourcePeople] - (NSInteger)populationBefore, @"people");
     
     return messages;
+}
+
+- (NSUInteger)shelter {
+    return [[[[[self.world.tiles.rac_sequence map:^(SCTile *tile) {
+        return tile.foreground;
+    }] filter:^BOOL(SCForeground *foreground) {
+        return [foreground isKindOfClass:SCHouse.class];
+    }] map:^(SCHouse *house) {
+        return @(house.shelter);
+    }] foldLeftWithStart:@0 reduce:^(NSNumber *accumulator, NSNumber *value) {
+        return @(accumulator.unsignedIntegerValue + value.unsignedIntegerValue);
+    }] unsignedIntegerValue];
 }
 
 + (instancetype)cityWithWorld:(SCWorld *)world {

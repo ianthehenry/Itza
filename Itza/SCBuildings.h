@@ -25,4 +25,9 @@
 @end
 
 @interface SCHouse : SCBuilding
+
+- (NSUInteger)shelter;
++ (NSUInteger)baseShelter;
++ (NSUInteger)shelterPerNeighbor;
+
 @end

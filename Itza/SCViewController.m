@@ -61,6 +61,8 @@ static NSDictionary *foregroundDisplayInfo;
     UIColor *blueColor = [UIColor colorWithHue:0.66 saturation:0.9 brightness:0.6 alpha:1];
     UIColor *yellowColor = [UIColor colorWithHue:0.15 saturation:1.0 brightness:0.7 alpha:1];
     
+    NSString *houseDescription = [NSString stringWithFormat:@"Provides %u shelter, +%u more for each adjacent house", SCHouse.baseShelter, SCHouse.shelterPerNeighbor];
+    
     foregroundDisplayInfo =
     @{
       SCGrass.class.pointerValue: RACTuplePack(@"Grass", @"", greenColor, @"You can build here"),
@@ -69,9 +71,9 @@ static NSDictionary *foregroundDisplayInfo;
       SCTemple.class.pointerValue: RACTuplePack(@"Temple", @"T", yellowColor, @"A myserious temple"),
       SCFarm.class.pointerValue: RACTuplePack(@"Farm", @"=", yellowColor, @"Farms don't do anything yet."),
       SCGranary.class.pointerValue: RACTuplePack(@"Granary", @"G", buildingColor, @"95% preservation of up to 200 maize"),
-      SCFishery.class.pointerValue: RACTuplePack(@"Fishery", @"F", buildingColor, @"+2 fish per labor in adjacent rivers and lakes"),
-      SCLumberMill.class.pointerValue: RACTuplePack(@"Lumbery", @"L", buildingColor, @"+1 wood per labor in adjacent forests"),
-      SCHouse.class.pointerValue: RACTuplePack(@"House", @"H", buildingColor, @"+100 max pop, +10 more for each adjacent house"),
+      SCFishery.class.pointerValue: RACTuplePack(@"Fishery", @"F", buildingColor, @"River tiles adjacent to fisheries yield +2 fish per labor"),
+      SCLumberMill.class.pointerValue: RACTuplePack(@"Lumbery", @"L", buildingColor, @"Forests adjacent to lumberyards require 1 fewer labor to chop"),
+      SCHouse.class.pointerValue: RACTuplePack(@"House", @"H", buildingColor, houseDescription),
       };
 }
 
@@ -628,11 +630,26 @@ static NSDictionary *foregroundDisplayInfo;
             }];
         } else if ([foreground isKindOfClass:SCBuilding.class]) {
             SCBuilding *building = (SCBuilding *)foreground;
-            return [RACSignal combineLatest:@[[building quantityOfResource:SCResourceConstruction],
-                                              [building capacityForResource:SCResourceConstruction],
-                                              ] reduce:^(NSNumber *taken, NSNumber *total) {
-                                                  return [taken isEqual:total] ? @"" : [NSString stringWithFormat:@"(%@ / %@)", taken, total];
-                                              }];
+            
+            RACSignal *constructionSignal = [RACSignal combineLatest:@[[building quantityOfResource:SCResourceConstruction],
+                                                                       [building capacityForResource:SCResourceConstruction]]];
+            
+            RACSignal *isCompleteSignal = [constructionSignal reduceEach:^(NSNumber *current, NSNumber *max) {
+                return @([current isEqual:max]);
+            }];
+            
+            RACSignal *completeTextSignal = [RACSignal return:@""];
+            
+            if ([building isKindOfClass:SCHouse.class]) {
+                SCHouse *house = (SCHouse *)building;
+                completeTextSignal = [RACSignal defer:^RACSignal *{
+                    return [RACSignal return:[NSString stringWithFormat:@"%u shelter", house.shelter]];
+                }];
+            }
+            
+            return [RACSignal if:isCompleteSignal then:completeTextSignal else:[constructionSignal reduceEach:^(NSNumber *current, NSNumber *max) {
+                return [NSString stringWithFormat:@"(%@ / %@)", current, max];
+            }]];
         } else {
             return [RACSignal return:nil];
         }
@@ -766,7 +783,7 @@ static NSDictionary *foregroundDisplayInfo;
                                              @"You can also sacrifice your people for a boost of Faith, at the cost of happiness.",
                                              @"Faith allows you to see more of the map.",
                                              @"It can also be used to purchase technological advancements.",
-                                             @"You lose when all of your people die, or you have zero faith."
+                                             @"You lose when all of your people die, or you have zero faith.",
                                              @"You win when you feel that the game has nothing left to offer you."]];
     }];
     

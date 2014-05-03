@@ -10,11 +10,15 @@
 #import "SCPosition.h"
 #import "SCForeground.h"
 
+@class SCWorld;
+
 @interface SCTile : NSObject
 
-- (id)initWithHex:(SCHex *)hex;
+- (id)initWithHex:(SCHex *)hex world:(SCWorld *)world;
 
+@property (nonatomic, weak, readonly) SCWorld *world;
 @property (nonatomic, strong, readonly) SCHex *hex;
 @property (nonatomic, strong) SCForeground *foreground;
+@property (nonatomic, readonly) RACSequence *adjacentTiles;
 
 @end

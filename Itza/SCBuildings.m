@@ -7,6 +7,7 @@
 //
 
 #import "SCBuildings.h"
+#import "SCTile.h"
 
 @implementation SCTemple
 @end
@@ -30,4 +31,25 @@
 @end
 
 @implementation SCHouse
+
+- (NSUInteger)shelter {
+    if (!self.isComplete) {
+        return 0;
+    }
+    NSUInteger count = [[[self.tile.adjacentTiles filter:^BOOL(SCTile *tile) {
+        return [tile.foreground isKindOfClass:SCHouse.class] && [(SCHouse *)tile.foreground isComplete];
+    }] foldLeftWithStart:@0 reduce:^id(NSNumber *accumulator, id value) {
+        return @(accumulator.unsignedIntegerValue + 1);
+    }] unsignedIntegerValue];
+    return SCHouse.baseShelter + count * SCHouse.shelterPerNeighbor;
+}
+
++ (NSUInteger)baseShelter {
+    return 30;
+}
+
++ (NSUInteger)shelterPerNeighbor {
+    return 5;
+}
+
 @end

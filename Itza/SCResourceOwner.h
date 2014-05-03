@@ -24,7 +24,6 @@
 - (NSUInteger)currentCapacityForResource:(SCResource)resource;
 - (NSUInteger)currentUnusedCapacityForResource:(SCResource)resource;
 
-
 - (RACSignal *)quantityOfResource:(SCResource)resource;
 - (RACSignal *)capacityForResource:(SCResource)resource;
 - (RACSignal *)unusedCapacityForResource:(SCResource)resource;

@@ -84,7 +84,7 @@
 - (void)addTileForPosition:(SCPosition *)position foreground:(SCForeground *)foreground {
     SCHex *hex = [[SCHex alloc] init];
     hex.position = position;
-    SCTile *tile = [[SCTile alloc] initWithHex:hex];
+    SCTile *tile = [[SCTile alloc] initWithHex:hex world:self];
     tile.foreground = foreground;
 
     [self.mutableTiles addObject:tile];
