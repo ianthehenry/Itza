@@ -12,6 +12,7 @@
 @interface SCCity ()
 
 @property (nonatomic, strong, readwrite) SCWorld *world;
+@property (nonatomic, assign) NSUInteger shelter;
 
 @end
 
@@ -92,21 +93,10 @@
     return messages;
 }
 
-- (NSUInteger)shelter {
-    return [[[[[self.world.tiles.rac_sequence map:^(SCTile *tile) {
-        return tile.foreground;
-    }] filter:^BOOL(SCForeground *foreground) {
-        return [foreground isKindOfClass:SCHouse.class];
-    }] map:^(SCHouse *house) {
-        return @(house.shelter);
-    }] foldLeftWithStart:@0 reduce:^(NSNumber *accumulator, NSNumber *value) {
-        return @(accumulator.unsignedIntegerValue + value.unsignedIntegerValue);
-    }] unsignedIntegerValue];
-}
-
 + (instancetype)cityWithWorld:(SCWorld *)world {
     SCCity *city = [[self alloc] init];
     city.world = world;
+    [world tileAt:SCPosition.origin].foreground = [[SCTemple alloc] initWithCity:city resources:[RACSequence empty] args:nil];
     [city gainQuantity:100 ofResource:SCResourceLabor];
     [city gainQuantity:100 ofResource:SCResourceMeat];
     [city gainQuantity:100 ofResource:SCResourceMaize];
@@ -121,6 +111,14 @@
     return [[RACSignal combineLatest:@[[self quantityOfResource:SCResourceMaize],
                                        [self quantityOfResource:SCResourceMeat],
                                        [self quantityOfResource:SCResourceFish]]] sum];
+}
+
+- (RACSignal *)quantityOfShelter {
+    return RACObserve(self, shelter);
+}
+
+- (void)gainShelter:(NSUInteger)shelter {
+    self.shelter += shelter;
 }
 
 @end

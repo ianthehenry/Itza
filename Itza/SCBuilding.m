@@ -44,19 +44,31 @@ static NSUInteger gcd(NSUInteger a, NSUInteger b) {
 
 @implementation SCBuilding
 
-- (instancetype)initWithRequiredResources:(RACSequence *)requiredResources args:(NSDictionary *)args {
+- (instancetype)initWithCity:(SCCity *)city resources:(RACSequence *)resources args:(NSDictionary *)args {
     if (self = [super init]) {
+        _city = city;
         NSUInteger stepCount = 0;
-        for (RACTuple *tuple in requiredResources) {
+        for (RACTuple *tuple in resources) {
             stepCount = gcd(stepCount, [tuple[1] unsignedIntegerValue]);
         }
-        self.inputRates = [requiredResources reduceEach:^(NSNumber *resource, NSNumber *quantity) {
+        self.inputRates = [resources reduceEach:^(NSNumber *resource, NSNumber *quantity) {
             return RACTuplePack(resource, @(quantity.unsignedIntegerValue / stepCount));
         }];
         [self setCapacity:stepCount forResource:SCResourceConstruction];
         [self initalize:args];
+        
+        @weakify(self);
+        [[[[self unusedCapacityForResource:SCResourceConstruction] filter:^BOOL(NSNumber *number) {
+            return number.unsignedIntegerValue == 0;
+        }] take:1] subscribeNext:^(id x) {
+            @strongify(self);
+            [self didComplete];
+        }];
     }
     return self;
+}
+
+- (void)didComplete {
 }
 
 - (void)initalize:(NSDictionary *)args {
@@ -67,4 +79,5 @@ static NSUInteger gcd(NSUInteger a, NSUInteger b) {
 - (BOOL)isComplete {
     return [self currentUnusedCapacityForResource:SCResourceConstruction] == 0;
 }
+
 @end

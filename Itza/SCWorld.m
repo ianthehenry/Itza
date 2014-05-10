@@ -38,7 +38,7 @@
     world.tileForLocation = [[NSMutableDictionary alloc] init];
     world.mutableTiles = [[NSMutableSet alloc] init];
     
-    [world addTileForPosition:[SCPosition x:0 y:0] foreground:[[SCTemple alloc] initWithRequiredResources:[RACSequence empty] args:nil]];
+    [world addTileForPosition:SCPosition.origin foreground:[self randomForeground]];
     
     for (NSInteger distance = 1; distance <= radius; distance++) {
         SCPosition *position = [SCPosition x:0 y:-distance];

@@ -19,5 +19,7 @@
 + (instancetype)cityWithWorld:(SCWorld *)world;
 
 - (RACSignal *)quantityOfFood;
+- (RACSignal *)quantityOfShelter;
+- (void)gainShelter:(NSUInteger)shelter;
 
 @end

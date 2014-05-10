@@ -9,11 +9,17 @@
 #import "SCForeground.h"
 #import "SCResourceOwner.h"
 
+@class SCCity;
+
 @interface SCBuilding : SCForeground <SCResourceOwner>
 
+@property (nonatomic, weak, readonly) SCCity *city;
 @property (nonatomic, assign, readonly) BOOL isComplete;
 @property (nonatomic, strong, readonly) RACSequence *inputRates;
-- (instancetype)initWithRequiredResources:(RACSequence *)requiredResources args:(NSDictionary *)args;
+- (instancetype)initWithCity:(SCCity *)city resources:(RACSequence *)resources args:(NSDictionary *)args;
+
+// Protected methods...
 - (void)initalize:(NSDictionary *)args;
+- (void)didComplete;
 
 @end

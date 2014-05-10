@@ -8,6 +8,7 @@
 
 #import "SCBuildings.h"
 #import "SCTile.h"
+#import "SCCity.h"
 
 @implementation SCTemple
 @end
@@ -30,18 +31,46 @@
 @implementation SCFishery
 @end
 
+@interface SCHouse ()
+@property (nonatomic, assign) NSUInteger shelter;
+@end
+
 @implementation SCHouse
 
-- (NSUInteger)shelter {
-    if (!self.isComplete) {
-        return 0;
+- (void)initalize:(NSDictionary *)args {
+    [super initalize:args];
+    @weakify(self);
+    [[[RACObserve(self, shelter) combinePreviousWithStart:@(self.shelter) reduce:^id(NSNumber *before, NSNumber *after) {
+        return @(after.unsignedIntegerValue - before.unsignedIntegerValue);
+    }] ignore:@0] subscribeNext:^(NSNumber *delta) {
+        @strongify(self);
+        [self.city gainShelter:delta.unsignedIntegerValue];
+    }];
+}
+
+- (RACSignal *)quantityOfShelter {
+    return RACObserve(self, shelter);
+}
+
+- (NSUInteger)currentQuantityOfShelter {
+    return self.shelter;
+}
+
+- (void)didComplete {
+    NSUInteger shelter = SCHouse.baseShelter;
+    RACSequence *neighboringHouses = [[[self.tile.adjacentTiles map:^id(SCTile *tile) {
+        return tile.foreground;
+    }] filter:^BOOL(SCForeground *foreground) {
+        return [foreground isKindOfClass:SCHouse.class];
+    }] filter:^BOOL(SCHouse *house) {
+        return house.isComplete;
+    }];
+    
+    for (SCHouse *house in neighboringHouses) {
+        shelter += SCHouse.shelterPerNeighbor;
+        house.shelter += SCHouse.shelterPerNeighbor;
     }
-    NSUInteger count = [[[self.tile.adjacentTiles filter:^BOOL(SCTile *tile) {
-        return [tile.foreground isKindOfClass:SCHouse.class] && [(SCHouse *)tile.foreground isComplete];
-    }] foldLeftWithStart:@0 reduce:^id(NSNumber *accumulator, id value) {
-        return @(accumulator.unsignedIntegerValue + 1);
-    }] unsignedIntegerValue];
-    return SCHouse.baseShelter + count * SCHouse.shelterPerNeighbor;
+    self.shelter = shelter;
 }
 
 + (NSUInteger)baseShelter {

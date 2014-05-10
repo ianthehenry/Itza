@@ -468,12 +468,13 @@ static NSDictionary *foregroundDisplayInfo;
         
         [[control rac_signalForControlEvents:UIControlEventTouchUpInside] subscribeNext:^(id x) {
             dismiss();
-            RACSequence *requiredResources = [@[RACTuplePack(@(SCResourceLabor), labor),
-                                                RACTuplePack(@(SCResourceWood), wood),
-                                                RACTuplePack(@(SCResourceStone), stone)].rac_sequence filter:^BOOL(RACTuple *tuple) {
-                                                    return [tuple[1] unsignedIntegerValue] > 0;
-                                                }];
-            SCBuilding *building = (SCBuilding *)[[class alloc] initWithRequiredResources:requiredResources args:args];
+            RACSequence *resources = [@{@(SCResourceLabor): labor,
+                                        @(SCResourceWood): wood,
+                                        @(SCResourceStone): stone}.rac_sequence filter:^BOOL(RACTuple *tuple) {
+                                            return [tuple[1] unsignedIntegerValue] > 0;
+                                        }];
+            
+            SCBuilding *building = (SCBuilding *)[[class alloc] initWithCity:self.city resources:resources args:args];
             tile.foreground = building;
             [self showConstructionModalForBuilding:building];
         }];
@@ -642,8 +643,8 @@ static NSDictionary *foregroundDisplayInfo;
             
             if ([building isKindOfClass:SCHouse.class]) {
                 SCHouse *house = (SCHouse *)building;
-                completeTextSignal = [RACSignal defer:^RACSignal *{
-                    return [RACSignal return:[NSString stringWithFormat:@"%u shelter", house.shelter]];
+                completeTextSignal = [house.quantityOfShelter map:^(NSNumber *shelter) {
+                    return [NSString stringWithFormat:@"%@ shelter", shelter];
                 }];
             }
             
@@ -750,15 +751,17 @@ static NSDictionary *foregroundDisplayInfo;
     RAC(infoLabel, text) =
     [RACSignal combineLatest:@[RACObserve(self.world, turn),
                                [self.city quantityOfResource:SCResourcePeople],
+                               [self.city quantityOfShelter],
                                [self.city quantityOfFood],
                                [self.city quantityOfResource:SCResourceLabor],
                                [self.city quantityOfResource:SCResourceWood],
-                               [self.city quantityOfResource:SCResourceStone],
-                               ]
-                      reduce:^(NSNumber *turn, NSNumber *population, NSNumber *food, NSNumber *labor, NSNumber *wood, NSNumber *stone) {
+                               [self.city quantityOfResource:SCResourceStone],]
+                      reduce:^(NSNumber *turn, NSNumber *population, NSNumber *shelter, NSNumber *food, NSNumber *labor, NSNumber *wood, NSNumber *stone) {
                           NSUInteger year = turn.unsignedIntegerValue / 4;
                           NSString *season = seasonNameMap[@(self.world.season)];
-                          return [NSString stringWithFormat:@"%@ - Year %@\n%@l %@p %@f %@w %@s", season, @(year), labor, population, food, wood, stone];
+                          NSString *title = [NSString stringWithFormat:@"%@ - Year %@", season, @(year)];
+                          NSString *body = [NSString stringWithFormat:@"%@l %@sh %@p %@f %@w %@s", labor, shelter, population, food, wood, stone];
+                          return [@[title, body] componentsJoinedByString:@"\n"];
                       }];
     
     [[self.endTurnButton rac_signalForControlEvents:UIControlEventTouchUpInside] subscribeNext:^(id x) {

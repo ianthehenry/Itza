@@ -26,7 +26,8 @@
 
 @interface SCHouse : SCBuilding
 
-- (NSUInteger)shelter;
+- (RACSignal *)quantityOfShelter;
+- (NSUInteger)currentQuantityOfShelter;
 + (NSUInteger)baseShelter;
 + (NSUInteger)shelterPerNeighbor;
 
