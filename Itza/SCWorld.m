@@ -97,7 +97,12 @@
     
     static NSArray *directions = nil;
     if (directions == nil) {
-        directions = @[@(SCHexDirectionNorth), @(SCHexDirectionNorthEast), @(SCHexDirectionSouthEast), @(SCHexDirectionSouth), @(SCHexDirectionSouthWest), @(SCHexDirectionNorthWest)];
+        directions = @[@(SCHexDirectionNorth),
+                       @(SCHexDirectionNorthEast),
+                       @(SCHexDirectionSouthEast),
+                       @(SCHexDirectionSouth),
+                       @(SCHexDirectionSouthWest),
+                       @(SCHexDirectionNorthWest)];
     }
     for (NSNumber *directionNumber in directions) {
         SCHexDirection direction = directionNumber.unsignedIntegerValue;
