@@ -764,6 +764,28 @@ static NSDictionary *foregroundDisplayInfo;
                           return [@[title, body] componentsJoinedByString:@"\n"];
                       }];
     
+    for (NSNumber *resourceNumber in @[@(SCResourceFish),
+                                 @(SCResourceMaize),
+                                 @(SCResourceMeat),
+                                 @(SCResourceWood),
+                                 @(SCResourceStone)]) {
+        SCResource resource = resourceNumber.unsignedIntegerValue;
+        NSUInteger current = [self.city currentQuantityOfResource:resource];
+        [[[[self.city quantityOfResource:resource] combinePreviousWithStart:@(current) reduce:^id(NSNumber *before, NSNumber *after) {
+            return @(after.integerValue - before.integerValue);
+        }] ignore:@0] subscribeNext:^(NSNumber *deltaNumber) {
+            @strongify(self);
+            NSInteger delta = deltaNumber.integerValue;
+            NSString *deltaString;
+            if (delta < 0) {
+                deltaString = [NSString stringWithFormat:@"-%@", @(ABS(delta))];
+            } else {
+                deltaString = [NSString stringWithFormat:@"+%@", deltaNumber];
+            }
+            [self flashMessage:[NSString stringWithFormat:@"%@ %@", deltaString, [self nameForResource:resource]]];
+        }];
+    }
+    
     [[self.endTurnButton rac_signalForControlEvents:UIControlEventTouchUpInside] subscribeNext:^(id x) {
         NSUInteger year = self.world.turn / 4;
         NSString *season = seasonNameMap[@(self.world.season)];
