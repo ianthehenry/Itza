@@ -273,7 +273,7 @@ double usefulrand() {
 - (RACSignal *)sum {
     return [self map:^id(RACTuple *tuple) {
         NSUInteger sum = 0;
-        for (NSUInteger i = 1; i < tuple.count; i++) {
+        for (NSUInteger i = 0; i < tuple.count; i++) {
             sum += [tuple[i] unsignedIntegerValue];
         }
         return @(sum);
