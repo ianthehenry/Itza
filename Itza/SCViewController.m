@@ -96,8 +96,8 @@ static NSDictionary *foregroundDisplayInfo;
     }
     SCTileView *tileView = self.tileViewForTile[tile.pointerValue];
     if (tileView == nil) {
-        tileView =
-        self.tileViewForTile[tile.pointerValue] = [self makeTileViewForTile:tile];
+        tileView = [self makeTileViewForTile:tile];
+        self.tileViewForTile[tile.pointerValue] = tileView;
     }
     return tileView;
 }
@@ -125,15 +125,20 @@ static NSDictionary *foregroundDisplayInfo;
 
 - (void)setupGrid {
     self.tileViewForTile = [[NSMutableDictionary alloc] init];
-    
-    for (SCTile *tile in self.world.tiles) {
+
+    @weakify(self);
+    [[[self.world.tiles.rac_sequence signalWithScheduler:RACScheduler.immediateScheduler] concat:self.world.newTiles] subscribeNext:^(SCTile *tile) {
+        @strongify(self);
         SCTileView *tileView = [self tileViewForTile:tile];
         tileView.center = [self centerForPosition:tile.hex.position];
+        @weakify(self);
         [[tileView rac_signalForControlEvents:UIControlEventTouchUpInside] subscribeNext:^(SCTileView *tileView) {
+            @strongify(self);
             self.selectedTile = self.selectedTile == tile ? nil : tile;
         }];
         [self.tilesView addSubview:tileView];
-    }
+    }];
+    
     self.scrollView.backgroundColor = UIColor.darkGrayColor;
     self.scrollView.indicatorStyle = UIScrollViewIndicatorStyleWhite;
     [self.view layoutIfNeeded];
@@ -142,7 +147,6 @@ static NSDictionary *foregroundDisplayInfo;
     }];
     RAC(self.scrollView, contentSize) = [self paddedContentSize];
     
-    @weakify(self);
     [[RACSignal combineLatest:@[RACObserve(self, selectedTile), RACObserve(self, showingModal)]] subscribeNext:^(RACTuple *tuple) {
         RACTupleUnpack(SCTile *selectedTile, NSNumber *showingModal) = tuple;
         BOOL shouldShowMenu = selectedTile != nil && !showingModal.boolValue;
@@ -217,7 +221,11 @@ static NSDictionary *foregroundDisplayInfo;
     }
     
     if ([tile.foreground isKindOfClass:SCTemple.class]) {
-        return @[button(@"Pray", @"Praying..."), button(@"Kill", @"Sacrificing...")];
+        return @[button(@"Pray", @"Praying..."),
+                 button(@"Kill", @"Sacrificing..."),
+                 [SCButtonDescription buttonWithText:@"Grow" handler:^{
+                     [self.city.world generateRing];
+                 }]];
     }
     
     if ([tile.foreground isKindOfClass:SCForest.class]) {
@@ -712,7 +720,7 @@ static NSDictionary *foregroundDisplayInfo;
         return [NSValue valueWithCGRect:CGRectMakeSize(0, 0, contentSizeValue.CGSizeValue)];
     }];
     
-    self.city = [SCCity cityWithWorld:[SCWorld worldWithRadius:6]];
+    self.city = [SCCity cityWithWorld:[SCWorld worldWithRadius:3]];
     [self setupGrid];
     [self.view layoutIfNeeded];
     

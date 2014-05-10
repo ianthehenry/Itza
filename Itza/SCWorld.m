@@ -14,7 +14,7 @@
 @property (nonatomic, strong) NSMutableSet *mutableTiles;
 @property (nonatomic, strong) NSMutableDictionary *tileForLocation;
 @property (nonatomic, assign, readwrite) NSUInteger radius;
-
+@property (nonatomic, strong) RACSubject *tileSubject;
 @property (nonatomic, assign, readwrite) NSUInteger turn;
 
 @end
@@ -34,32 +34,37 @@
 
 + (instancetype)worldWithRadius:(NSUInteger)radius {
     SCWorld *world = [[self alloc] init];
-    world.radius = radius;
+    world.tileSubject = [RACSubject subject];
     world.tileForLocation = [[NSMutableDictionary alloc] init];
     world.mutableTiles = [[NSMutableSet alloc] init];
     
-    [world addTileForPosition:SCPosition.origin foreground:[self randomForeground]];
-    
-    for (NSInteger distance = 1; distance <= radius; distance++) {
-        SCPosition *position = [SCPosition x:0 y:-distance];
-        
-        for (NSNumber *directionNumber in @[@(SCHexDirectionSouthWest),
-                                            @(SCHexDirectionSouth),
-                                            @(SCHexDirectionSouthEast),
-                                            @(SCHexDirectionNorthEast),
-                                            @(SCHexDirectionNorth),
-                                            @(SCHexDirectionNorthWest)]) {
-            SCHexDirection direction = directionNumber.unsignedIntegerValue;
-            for (NSInteger i = 0; i < distance; i++) {
-                [world addTileForPosition:position foreground:[self randomForeground]];
-                position = [position positionInDirection:direction];
-            }
-        }
+    [world addTileForPosition:SCPosition.origin foreground:[world randomForeground]];
+    while (world.radius < radius) {
+        [world generateRing];
     }
+    
     return world;
 }
 
-+ (SCForeground *)randomForeground {
+- (void)generateRing {
+    self.radius++;
+
+    SCPosition *position = [SCPosition x:0 y:-self.radius];
+    for (NSNumber *directionNumber in @[@(SCHexDirectionSouthWest),
+                                        @(SCHexDirectionSouth),
+                                        @(SCHexDirectionSouthEast),
+                                        @(SCHexDirectionNorthEast),
+                                        @(SCHexDirectionNorth),
+                                        @(SCHexDirectionNorthWest)]) {
+        SCHexDirection direction = directionNumber.unsignedIntegerValue;
+        for (NSInteger i = 0; i < self.radius; i++) {
+            [self addTileForPosition:position foreground:[self randomForeground]];
+            position = [position positionInDirection:direction];
+        }
+    }
+}
+
+- (SCForeground *)randomForeground {
     switch (arc4random_uniform(10)) {
         case 0: case 1: case 2: {
             SCForest *forest = [[SCForest alloc] init];
@@ -98,6 +103,11 @@
         SCHexDirection direction = directionNumber.unsignedIntegerValue;
         [hex connectToHex:[self tileAt:[hex.position positionInDirection:direction]].hex inDirection:direction];
     }
+    [self.tileSubject sendNext:tile];
+}
+
+- (RACSignal *)newTiles {
+    return self.tileSubject;
 }
 
 

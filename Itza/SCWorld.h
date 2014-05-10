@@ -27,6 +27,9 @@ typedef NS_ENUM(NSUInteger, SCSeason) {
 - (void)iterate;
 - (NSSet *)tiles;
 - (SCTile *)tileAt:(SCPosition *)position;
+- (void)generateRing;
 + (instancetype)worldWithRadius:(NSUInteger)radius;
+- (RACSignal *)newTiles;
+
 
 @end
