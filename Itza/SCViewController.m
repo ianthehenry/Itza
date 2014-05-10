@@ -760,7 +760,7 @@ static NSDictionary *foregroundDisplayInfo;
                           NSUInteger year = turn.unsignedIntegerValue / 4;
                           NSString *season = seasonNameMap[@(self.world.season)];
                           NSString *title = [NSString stringWithFormat:@"%@ - Year %@", season, @(year)];
-                          NSString *body = [NSString stringWithFormat:@"%@l %@sh %@p %@f %@w %@s", labor, shelter, population, food, wood, stone];
+                          NSString *body = [NSString stringWithFormat:@"%@l %@p %@sh %@f %@w %@s", labor, population, shelter, food, wood, stone];
                           return [@[title, body] componentsJoinedByString:@"\n"];
                       }];
     
