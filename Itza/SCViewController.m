@@ -847,7 +847,7 @@ static NSDictionary *foregroundDisplayInfo;
         }
     }];
     titleLabel.textAlignment = NSTextAlignmentCenter;
-    UITextView *textView = [[UITextView alloc] initWithFrame:CGRectMake(0, 0, 300, 0)];
+    UITextView *textView = [[UITextView alloc] initWithFrame:CGRectMake(0, 0, 300, 100)];
     textView.backgroundColor = UIColor.clearColor;
     textView.font = [UIFont fontWithName:@"Menlo" size:13];
     textView.editable = NO;
@@ -860,13 +860,13 @@ static NSDictionary *foregroundDisplayInfo;
     closeButton.frame = CGRectMake(0, 0, 300, 44);
     [view stackViewsVerticallyCentered:@[titleLabel, textView, closeButton]];
 
+    // TODO: figure out why this makes the tap away gesture
+    // recognizer raise "pointer being freed was not allocated"
+    // RAC(textView, text) = [pageSubject map:^(NSNumber *page) {
+    //     return pages[page.unsignedIntegerValue];
+    // }];
     [pageSubject subscribeNext:^(NSNumber *page) {
         textView.text = pages[page.unsignedIntegerValue];
-        [UIView animateWithDuration:([page isEqualToNumber:@0] ? 0 : 0.25) animations:^{
-            textView.frameHeight = MIN([textView sizeThatFits:CGSizeMake(300, CGFLOAT_MAX)].height, 200);
-            closeButton.frameOriginY = CGRectGetMaxY(textView.frame);
-            view.frameHeight = CGRectGetMaxY(closeButton.frame);
-        }];
     }];
 
     void (^dismiss)() = [self showModal:view];
