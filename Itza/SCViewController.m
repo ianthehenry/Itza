@@ -88,6 +88,7 @@ static NSDictionary *foregroundDisplayInfo;
         case SCResourceMeat: return @"meat";
         case SCResourceStone: return @"stone";
         case SCResourceConstruction: return @"construction";
+        case SCResourceFaith: return @"faith";
     }
 }
 
@@ -235,10 +236,41 @@ static NSDictionary *foregroundDisplayInfo;
     }
     
     if ([tile.foreground isKindOfClass:SCTemple.class]) {
-        return @[button(@"Pray", @"Praying..."),
-                 button(@"Kill", @"Sacrificing..."),
+        return @[laborInputRange(@"Pray", @"Worship", 1, 1, 2, SCResourceFaith),
+                 [SCButtonDescription buttonWithText:@"Kill" handler:^{
+                     [self showCompoundModalWithInputs:@[RACTuplePack(@(SCResourceLabor), @(1), self.city),
+                                                         RACTuplePack(@(SCResourcePeople), @(1), self.city)].rac_sequence
+                                               outputs:[RACSequence return:RACTuplePack(@(SCResourceFaith), @1, @5, self.city)]
+                                                 title:@"Sacrifice"];
+                 }],
                  [SCButtonDescription buttonWithText:@"Grow" handler:^{
-                     [self.city.world generateRing];
+                     NSUInteger cost = 6 * powf(2, self.city.world.radius);
+                     UIAlertView *alertView;
+                     if ([self.city currentQuantityOfResource:SCResourceFaith] >= cost) {
+                         alertView = [[UIAlertView alloc] initWithTitle:@"Grow"
+                                                                message:[NSString stringWithFormat:@"Spend %u faith to expand your sight?", cost]
+                                                               delegate:nil
+                                                      cancelButtonTitle:@"No"
+                                                      otherButtonTitles:@"Yes", nil];
+                         [alertView.rac_buttonClickedSignal subscribeNext:^(NSNumber *indexNumber) {
+                             if (indexNumber.integerValue == alertView.cancelButtonIndex) {
+                             } else {
+                                 [self.city loseQuantity:cost ofResource:SCResourceFaith];
+                                 [self.city.world generateRing];
+                             }
+                         }];
+                     } else {
+                         alertView = [[UIAlertView alloc] initWithTitle:@"Not Enough Faith"
+                                                                message:[NSString stringWithFormat:@"You need %u faith to expand again", cost]
+                                                               delegate:nil
+                                                      cancelButtonTitle:@"OK"
+                                                      otherButtonTitles:nil];
+                     }
+                     self.showingModal = YES;
+                     [alertView.rac_buttonClickedSignal subscribeNext:^(id x) {
+                         self.showingModal = NO;
+                     }];
+                     [alertView show];
                  }]];
     }
     
@@ -799,12 +831,14 @@ static NSDictionary *foregroundDisplayInfo;
                                [self.city quantityOfFood],
                                [self.city quantityOfResource:SCResourceLabor],
                                [self.city quantityOfResource:SCResourceWood],
-                               [self.city quantityOfResource:SCResourceStone],]
-                      reduce:^(NSNumber *turn, NSNumber *population, NSNumber *shelter, NSNumber *food, NSNumber *labor, NSNumber *wood, NSNumber *stone) {
+                               [self.city quantityOfResource:SCResourceStone],
+                               [self.city quantityOfResource:SCResourceFaith],
+                               ]
+                      reduce:^(NSNumber *turn, NSNumber *population, NSNumber *shelter, NSNumber *food, NSNumber *labor, NSNumber *wood, NSNumber *stone, NSNumber *faith) {
                           NSUInteger year = turn.unsignedIntegerValue / 4;
                           NSString *season = seasonNameMap[@(self.world.season)];
                           NSString *title = [NSString stringWithFormat:@"%@ - Year %@", season, @(year)];
-                          NSString *body = [NSString stringWithFormat:@"%@l %@p %@sh %@f %@w %@s", labor, population, shelter, food, wood, stone];
+                          NSString *body = [NSString stringWithFormat:@"%@l %@p %@sh %@f %@w %@s %@F", labor, population, shelter, food, wood, stone, faith];
                           return [@[title, body] componentsJoinedByString:@"\n"];
                       }];
     

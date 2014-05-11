@@ -96,6 +96,7 @@
 + (instancetype)cityWithWorld:(SCWorld *)world {
     SCCity *city = [[self alloc] init];
     city.world = world;
+    city.shelter = 50;
     [world tileAt:SCPosition.origin].foreground = [[SCTemple alloc] initWithCity:city resources:[RACSequence empty] args:nil];
     [city gainQuantity:100 ofResource:SCResourceLabor];
     [city gainQuantity:100 ofResource:SCResourceMeat];
@@ -104,6 +105,7 @@
     [city gainQuantity:100 ofResource:SCResourceFish];
     [city gainQuantity:100 ofResource:SCResourceStone];
     [city gainQuantity:100 ofResource:SCResourcePeople];
+    [city gainQuantity:100 ofResource:SCResourceFaith];
     return city;
 }
 
