@@ -62,6 +62,7 @@ static NSDictionary *foregroundDisplayInfo;
     UIColor *yellowColor = [UIColor colorWithHue:0.15 saturation:1.0 brightness:0.7 alpha:1];
     
     NSString *houseDescription = [NSString stringWithFormat:@"Provides %u shelter, +%u more for each adjacent house", SCHouse.baseShelter, SCHouse.shelterPerNeighbor];
+    NSString *fisheryDescription = [NSString stringWithFormat:@"Adjacent river tiles yield +%u fish minimum", SCFishery.minFishAdjustment];
     
     foregroundDisplayInfo =
     @{
@@ -71,7 +72,7 @@ static NSDictionary *foregroundDisplayInfo;
       SCTemple.class.pointerValue: RACTuplePack(@"Temple", @"T", yellowColor, @"A mysterious temple"),
       SCFarm.class.pointerValue: RACTuplePack(@"Farm", @"=", yellowColor, @"Maize goes in, maize comes out; you can't explain that"),
       SCGranary.class.pointerValue: RACTuplePack(@"Granary", @"G", buildingColor, @"95% preservation of up to 100 maize"),
-      SCFishery.class.pointerValue: RACTuplePack(@"Fishery", @"F", buildingColor, @"River tiles adjacent to fisheries yield +2 fish per labor"),
+      SCFishery.class.pointerValue: RACTuplePack(@"Fishery", @"F", buildingColor, fisheryDescription),
       SCLumberMill.class.pointerValue: RACTuplePack(@"Lumbery", @"L", buildingColor, @"Forests adjacent to lumberyards require 1 fewer labor to chop"),
       SCHouse.class.pointerValue: RACTuplePack(@"House", @"H", buildingColor, houseDescription),
       };
@@ -211,7 +212,21 @@ static NSDictionary *foregroundDisplayInfo;
     // TODO: make a proper flashMessage for changes to your city
     
     if ([tile.foreground isKindOfClass:SCRiver.class]) {
-        return @[laborInputRange(@"Fish", @"Fish for Fishes", 3, 0, 5, SCResourceFish)];
+        BOOL hasFishery = [[[tile.adjacentTiles map:^(SCTile *tile) {
+            return tile.foreground;
+        }] filter:^BOOL(SCForeground *foreground) {
+            return [foreground isKindOfClass:SCFishery.class];
+        }] any:^BOOL(SCFishery *fishery) {
+            return fishery.isComplete;
+        }];
+        
+        NSUInteger labor = SCRiver.baseLaborToFish;
+        NSInteger outputMin = SCRiver.baseMinFish;
+        NSInteger outputMax = SCRiver.baseMaxFish;
+        if (hasFishery) {
+            outputMin += SCFishery.minFishAdjustment;
+        }
+        return @[laborInputRange(@"Fish", @"Fish for Fishes", labor, outputMin, outputMax, SCResourceFish)];
     }
     
     if ([tile.foreground isKindOfClass:SCGrass.class]) {
@@ -773,10 +788,10 @@ static NSDictionary *foregroundDisplayInfo;
                       }];
     
     for (NSNumber *resourceNumber in @[@(SCResourceFish),
-                                 @(SCResourceMaize),
-                                 @(SCResourceMeat),
-                                 @(SCResourceWood),
-                                 @(SCResourceStone)]) {
+                                       @(SCResourceMaize),
+                                       @(SCResourceMeat),
+                                       @(SCResourceWood),
+                                       @(SCResourceStone)]) {
         SCResource resource = resourceNumber.unsignedIntegerValue;
         NSUInteger current = [self.city currentQuantityOfResource:resource];
         [[[[self.city quantityOfResource:resource] combinePreviousWithStart:@(current) reduce:^id(NSNumber *before, NSNumber *after) {

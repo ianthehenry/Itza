@@ -29,6 +29,11 @@
 @end
 
 @implementation SCFishery
+
++ (NSUInteger)minFishAdjustment {
+    return 2;
+}
+
 @end
 
 @interface SCHouse ()

@@ -22,6 +22,9 @@
 @end
 
 @interface SCFishery : SCBuilding
+
++ (NSUInteger)minFishAdjustment;
+
 @end
 
 @interface SCHouse : SCBuilding

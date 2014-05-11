@@ -21,4 +21,9 @@
 @end
 
 @interface SCRiver : SCForeground
+
++ (NSUInteger)baseLaborToFish;
++ (NSUInteger)baseMinFish;
++ (NSUInteger)baseMaxFish;
+
 @end

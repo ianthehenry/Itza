@@ -32,8 +32,12 @@
 }
 
 - (RACSequence *)adjacentTiles {
-    return [[@[@(SCHexDirectionNorth), @(SCHexDirectionNorthEast), @(SCHexDirectionNorthWest),
-               @(SCHexDirectionSouth), @(SCHexDirectionSouthEast), @(SCHexDirectionSouthWest)].rac_sequence map:^id(NSNumber *direction) {
+    return [[@[@(SCHexDirectionNorth),
+               @(SCHexDirectionNorthEast),
+               @(SCHexDirectionNorthWest),
+               @(SCHexDirectionSouth),
+               @(SCHexDirectionSouthEast),
+               @(SCHexDirectionSouthWest)].rac_sequence map:^id(NSNumber *direction) {
                    SCPosition *position = [self.hex.position positionInDirection:direction.unsignedIntegerValue];
                    return [self.world tileAt:position];
                }] ignore:nil];

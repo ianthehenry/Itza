@@ -19,4 +19,17 @@
 @end
 
 @implementation SCRiver
+
++ (NSUInteger)baseLaborToFish {
+    return 3;
+}
+
++ (NSUInteger)baseMinFish {
+    return 0;
+}
+
++ (NSUInteger)baseMaxFish {
+    return 5;
+}
+
 @end
