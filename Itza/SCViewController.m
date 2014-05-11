@@ -618,6 +618,9 @@ static NSDictionary *foregroundDisplayInfo;
     self.currentMenuView.center = [self centerForPosition:tile.hex.position];
     
     [self popOpen:self.currentMenuView inView:self.tilesView];
+    [self.scrollView scrollRectToVisible:[self.tilesView convertRect:self.currentMenuView.frame
+                                                              toView:self.scrollView]
+                                animated:YES];
 }
 
 - (NSArray *)iterate {
