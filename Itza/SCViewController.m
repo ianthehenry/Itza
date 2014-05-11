@@ -137,7 +137,15 @@ static NSDictionary *foregroundDisplayInfo;
             @strongify(self);
             self.selectedTile = self.selectedTile == tile ? nil : tile;
         }];
-        [self.tilesView addSubview:tileView];
+        
+        tileView.alpha = 0;
+        
+        [[[RACSignal interval:(usefulrand()) onScheduler:RACScheduler.mainThreadScheduler] take:1] subscribeNext:^(id x) {
+            [self.tilesView addSubview:tileView];
+            [UIView animateWithDuration:1 animations:^{
+                tileView.alpha = 1;
+            }];
+        }];
     }];
     
     self.scrollView.backgroundColor = UIColor.darkGrayColor;
