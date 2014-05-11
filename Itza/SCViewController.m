@@ -139,13 +139,13 @@ static NSDictionary *foregroundDisplayInfo;
         }];
         
         tileView.alpha = 0;
-        
-        [[[RACSignal interval:(usefulrand()) onScheduler:RACScheduler.mainThreadScheduler] take:1] subscribeNext:^(id x) {
-            [self.tilesView addSubview:tileView];
-            [UIView animateWithDuration:1 animations:^{
-                tileView.alpha = 1;
-            }];
-        }];
+        [self.tilesView addSubview:tileView];
+        [UIView animateWithDuration:1
+                              delay:usefulrand()
+                            options:0
+                         animations:^{
+                             tileView.alpha = 1;
+                         } completion:nil];
     }];
     
     self.scrollView.backgroundColor = UIColor.darkGrayColor;
@@ -171,6 +171,8 @@ static NSDictionary *foregroundDisplayInfo;
         selectedTileView.selected = YES;
         [selectedTileView.superview bringSubviewToFront:selectedTileView];
     } start:self.selectedTile];
+    
+    [self scrollToTile:[self.city.world tileAt:SCPosition.origin]];
 }
 
 - (RACSignal *)paddedContentSize {
