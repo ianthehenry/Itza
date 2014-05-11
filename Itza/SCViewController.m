@@ -115,7 +115,21 @@ static NSDictionary *foregroundDisplayInfo;
     
     RACSignal *foregroundInfo = [self foregroundInfoForTile:tile];
     
-    RAC(tileView.label, text, @"?") = [foregroundInfo index:1];
+    RACSignal *shouldLowerCase = [[RACObserve(tile, foreground) map:^(SCForeground *foreground) {
+        if ([foreground isKindOfClass:SCBuilding.class]) {
+            return [[[(SCBuilding *)foreground unusedCapacityForResource:SCResourceConstruction] is:@0] not];
+        } else {
+            return [RACSignal return:@NO];
+        }
+    }] switchToLatest];
+    
+    RACSignal *text = [RACSignal combineLatest:@[[foregroundInfo index:1],
+                                                 shouldLowerCase
+                                                 ] reduce:^(NSString *icon, NSNumber *shouldLowerCase){
+                                                     return shouldLowerCase.boolValue ? [icon lowercaseString] : icon;
+                                                 }];
+    
+    RAC(tileView.label, text, @"?") = text;
     tileView.label.font = [UIFont fontWithName:@"Menlo" size:20];
     RAC(tileView, fillColor) = [foregroundInfo index:2];
     return tileView;
