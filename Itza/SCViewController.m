@@ -741,9 +741,6 @@ static NSDictionary *foregroundDisplayInfo;
                                            contentSize.height);
         self.tilesView.frame = CGRectMakeSize(0, 0, contentSize);
         CGSize previousSize = self.scrollView.contentSize;
-        NSLog(@"previous offset = %f %f", previousOffset.x, previousOffset.y);
-        NSLog(@"previous size   = %f %f", previousSize.width, previousSize.height);
-        NSLog(@"new size        = %f %f", contentSize.width, contentSize.height);
         self.scrollView.contentSize = contentSize;
         // TODO: this relies on the fact that we're (currently) always adding
         // the same amount of content to the left and to the right. We need a
