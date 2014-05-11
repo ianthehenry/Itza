@@ -936,6 +936,10 @@ static NSDictionary *foregroundDisplayInfo;
                                                      scrollView.contentSize.height * 0.5 + offsetY);
 }
 
+- (void)willAnimateRotationToInterfaceOrientation:(UIInterfaceOrientation)toInterfaceOrientation duration:(NSTimeInterval)duration {
+    [self centerCanvas];
+}
+
 - (void)scrollViewDidZoom:(UIScrollView *)scrollView {
     [self centerCanvas];
 }
