@@ -154,7 +154,6 @@ static NSDictionary *foregroundDisplayInfo;
     RAC(self, contentSize) = [RACObserve(self, world.radius) map:^(NSNumber *worldRadius) {
         return [NSValue valueWithCGSize:boundingSizeForHexagons(APOTHEM, worldRadius.unsignedIntegerValue * 2 + 1)];
     }];
-    RAC(self.scrollView, contentSize) = [self paddedContentSize];
     
     [[RACSignal combineLatest:@[RACObserve(self, selectedTile), RACObserve(self, showingModal)]] subscribeNext:^(RACTuple *tuple) {
         RACTupleUnpack(SCTile *selectedTile, NSNumber *showingModal) = tuple;
@@ -729,14 +728,30 @@ static NSDictionary *foregroundDisplayInfo;
     
     self.tilesView = [[SCPassthroughView alloc] initWithFrame:self.scrollView.contentView.bounds];
     [self.scrollView.contentView addSubview:self.tilesView];
-    
-    RAC(self.tilesView, bounds) = [self.paddedContentSize map:^(NSValue *contentSizeValue) {
+
+    [self.paddedContentSize subscribeNext:^(NSValue *contentSizeValue) {
+        @strongify(self);
+        CGFloat currentZoomScale = self.scrollView.zoomScale;
+        self.scrollView.zoomScale = 1;
+        CGPoint previousOffset = self.scrollView.contentOffset;
         CGSize contentSize = contentSizeValue.CGSizeValue;
-        CGRect bounds = CGRectMake(contentSize.width * -0.5, contentSize.height * -0.5, contentSize.width, contentSize.height);
-        return [NSValue valueWithCGRect:bounds];
-    }];
-    RAC(self.tilesView, frame) = [self.paddedContentSize map:^(NSValue *contentSizeValue) {
-        return [NSValue valueWithCGRect:CGRectMakeSize(0, 0, contentSizeValue.CGSizeValue)];
+        self.tilesView.bounds = CGRectMake(contentSize.width * -0.5,
+                                           contentSize.height * -0.5,
+                                           contentSize.width,
+                                           contentSize.height);
+        self.tilesView.frame = CGRectMakeSize(0, 0, contentSize);
+        CGSize previousSize = self.scrollView.contentSize;
+        NSLog(@"previous offset = %f %f", previousOffset.x, previousOffset.y);
+        NSLog(@"previous size   = %f %f", previousSize.width, previousSize.height);
+        NSLog(@"new size        = %f %f", contentSize.width, contentSize.height);
+        self.scrollView.contentSize = contentSize;
+        // TODO: this relies on the fact that we're (currently) always adding
+        // the same amount of content to the left and to the right. We need a
+        // better way to keep this from screwing up the offset.
+        previousOffset.x += (contentSize.width - previousSize.width) * 0.5;
+        previousOffset.y += (contentSize.height - previousSize.height) * 0.5;
+        self.scrollView.contentOffset = previousOffset;
+        self.scrollView.zoomScale = currentZoomScale;
     }];
     
     self.city = [SCCity cityWithWorld:[SCWorld worldWithRadius:3]];
