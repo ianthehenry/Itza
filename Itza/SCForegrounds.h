@@ -7,4 +7,3 @@
 //
 
 #import "SCBuildings.h"
-#import "SCForest.h"

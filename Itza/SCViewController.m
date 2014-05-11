@@ -63,17 +63,17 @@ static NSDictionary *foregroundDisplayInfo;
     
     NSString *houseDescription = [NSString stringWithFormat:@"Provides %u shelter, +%u more for each adjacent house", SCHouse.baseShelter, SCHouse.shelterPerNeighbor];
     NSString *fisheryDescription = [NSString stringWithFormat:@"Adjacent river tiles yield +%u fish minimum", SCFishery.minFishAdjustment];
+    NSString *lumberYardDescription = [NSString stringWithFormat:@"Adjacents forests require -%u labor per tree to chop", SCLumberYard.laborAdjustment];
     
     foregroundDisplayInfo =
-    @{
-      SCGrass.class.pointerValue: RACTuplePack(@"Grass", @"", greenColor, @"You can build here"),
+    @{SCGrass.class.pointerValue: RACTuplePack(@"Grass", @"", greenColor, @"You can build here"),
       SCForest.class.pointerValue: RACTuplePack(@"Forest", @"♣", greenColor, @"Possibly haunted"),
       SCRiver.class.pointerValue: RACTuplePack(@"River", @"", blueColor, @"You can fish in it"),
       SCTemple.class.pointerValue: RACTuplePack(@"Temple", @"T", yellowColor, @"A mysterious temple"),
       SCFarm.class.pointerValue: RACTuplePack(@"Farm", @"=", yellowColor, @"Maize goes in, maize comes out; you can't explain that"),
       SCGranary.class.pointerValue: RACTuplePack(@"Granary", @"G", buildingColor, @"95% preservation of up to 100 maize"),
       SCFishery.class.pointerValue: RACTuplePack(@"Fishery", @"F", buildingColor, fisheryDescription),
-      SCLumberMill.class.pointerValue: RACTuplePack(@"Lumbery", @"L", buildingColor, @"Forests adjacent to lumberyards require 1 fewer labor to chop"),
+      SCLumberYard.class.pointerValue: RACTuplePack(@"Lumbery", @"L", buildingColor, lumberYardDescription),
       SCHouse.class.pointerValue: RACTuplePack(@"House", @"H", buildingColor, houseDescription),
       };
 }
@@ -209,21 +209,11 @@ static NSDictionary *foregroundDisplayInfo;
         }];
     };
     
-    // TODO: make a proper flashMessage for changes to your city
-    
     if ([tile.foreground isKindOfClass:SCRiver.class]) {
-        BOOL hasFishery = [[[tile.adjacentTiles map:^(SCTile *tile) {
-            return tile.foreground;
-        }] filter:^BOOL(SCForeground *foreground) {
-            return [foreground isKindOfClass:SCFishery.class];
-        }] any:^BOOL(SCFishery *fishery) {
-            return fishery.isComplete;
-        }];
-        
         NSUInteger labor = SCRiver.baseLaborToFish;
         NSInteger outputMin = SCRiver.baseMinFish;
         NSInteger outputMax = SCRiver.baseMaxFish;
-        if (hasFishery) {
+        if ([tile hasAdjacentBuilding:SCFishery.class]) {
             outputMin += SCFishery.minFishAdjustment;
         }
         return @[laborInputRange(@"Fish", @"Fish for Fishes", labor, outputMin, outputMax, SCResourceFish)];
@@ -245,12 +235,18 @@ static NSDictionary *foregroundDisplayInfo;
     
     if ([tile.foreground isKindOfClass:SCForest.class]) {
         SCForest *forest = (SCForest *)tile.foreground;
+        
         return @[laborInputRange(@"Hunt", @"Hunt for Animals", 1, 1, 2, SCResourceMeat),
                  laborInputRange(@"Gthr", @"Gather Maize", 2, 0, 2, SCResourceMaize),
                  [SCButtonDescription buttonWithText:@"Chop" handler:^{
-                     [self showCompoundModalWithInputs:@[RACTuplePack(@(SCResourceLabor), @3, self.city),
+                     NSUInteger laborPerTree = SCForest.baseLaborPerTree;
+                     NSInteger woodPerTree = SCForest.baseWoodPerTree;
+                     if ([tile hasAdjacentBuilding:SCLumberYard.class]) {
+                         laborPerTree -= 1;
+                     }
+                     [self showCompoundModalWithInputs:@[RACTuplePack(@(SCResourceLabor), @(laborPerTree), self.city),
                                                          RACTuplePack(@(SCResourceWood), @1, forest)].rac_sequence
-                                               outputs:@[RACTuplePack(@(SCResourceWood), @1, @1, self.city)].rac_sequence
+                                               outputs:@[RACTuplePack(@(SCResourceWood), @(woodPerTree), @(woodPerTree), self.city)].rac_sequence
                                                  title:@"Chop Wood"];
                  }]];
     }
@@ -452,7 +448,7 @@ static NSDictionary *foregroundDisplayInfo;
       RACTuplePack(SCFarm.class, @10, @0, @0, @{@"capacity": @20}),
       RACTuplePack(SCGranary.class, @30, @30, @0, nil),
       RACTuplePack(SCTemple.class, @60, @0, @30, nil),
-      RACTuplePack(SCLumberMill.class, @20, @10, @0, nil),
+      RACTuplePack(SCLumberYard.class, @20, @10, @0, nil),
       RACTuplePack(SCFishery.class, @50, @30, @0, nil),
       ];
     CGFloat padding = 10;

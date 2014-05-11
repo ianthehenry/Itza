@@ -25,7 +25,12 @@
 
 @end
 
-@implementation SCLumberMill
+@implementation SCLumberYard
+
++ (NSUInteger)laborAdjustment {
+    return 1;
+}
+
 @end
 
 @implementation SCFishery

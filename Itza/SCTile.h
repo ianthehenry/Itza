@@ -20,5 +20,6 @@
 @property (nonatomic, strong, readonly) SCHex *hex;
 @property (nonatomic, strong) SCForeground *foreground;
 @property (nonatomic, readonly) RACSequence *adjacentTiles;
+- (BOOL)hasAdjacentBuilding:(Class)buildingClass;
 
 @end

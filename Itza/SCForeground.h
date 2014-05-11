@@ -7,6 +7,7 @@
 //
 
 #import <Foundation/Foundation.h>
+#import "SCResourceOwner.h"
 
 @class SCTile;
 
@@ -18,6 +19,13 @@
 @end
 
 @interface SCGrass : SCForeground
+@end
+
+@interface SCForest : SCForeground <SCResourceOwner>
+
++ (NSUInteger)baseLaborPerTree;
++ (NSUInteger)baseWoodPerTree;
+
 @end
 
 @interface SCRiver : SCForeground

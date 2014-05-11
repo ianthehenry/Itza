@@ -18,6 +18,18 @@
 @implementation SCGrass
 @end
 
+@implementation SCForest
+
++ (NSUInteger)baseLaborPerTree {
+    return 3;
+}
+
++ (NSUInteger)baseWoodPerTree {
+    return 1;
+}
+
+@end
+
 @implementation SCRiver
 
 + (NSUInteger)baseLaborToFish {

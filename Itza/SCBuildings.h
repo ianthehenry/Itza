@@ -18,7 +18,10 @@
 @interface SCFarm : SCBuilding <SCResourceOwner>
 @end
 
-@interface SCLumberMill : SCBuilding
+@interface SCLumberYard : SCBuilding
+
++ (NSUInteger)laborAdjustment;
+
 @end
 
 @interface SCFishery : SCBuilding

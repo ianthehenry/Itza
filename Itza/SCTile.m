@@ -8,6 +8,7 @@
 
 #import "SCTile.h"
 #import "SCWorld.h"
+#import "SCBuilding.h"
 
 @interface SCTile ()
 
@@ -41,6 +42,17 @@
                    SCPosition *position = [self.hex.position positionInDirection:direction.unsignedIntegerValue];
                    return [self.world tileAt:position];
                }] ignore:nil];
+}
+
+- (BOOL)hasAdjacentBuilding:(Class)buildingClass {
+    NSAssert([buildingClass isSubclassOfClass:SCBuilding.class], @"Only works with buildings!");
+    return [[[self.adjacentTiles map:^(SCTile *tile) {
+        return tile.foreground;
+    }] filter:^BOOL(SCForeground *foreground) {
+        return [foreground isKindOfClass:buildingClass];
+    }] any:^BOOL(SCBuilding *building) {
+        return building.isComplete;
+    }];
 }
 
 @end
