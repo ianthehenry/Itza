@@ -911,9 +911,14 @@ static NSDictionary *foregroundDisplayInfo;
     }];
     
     [[self.cheatButton rac_signalForControlEvents:UIControlEventTouchUpInside] subscribeNext:^(id x) {
-        [self flashMessage:@"+100 people"];
-        [self.city gainQuantity:100 ofResource:SCResourcePeople];
         [self.city gainQuantity:100 ofResource:SCResourceLabor];
+        [self.city gainQuantity:100 ofResource:SCResourcePeople];
+        [self.city gainQuantity:100 ofResource:SCResourceMeat];
+        [self.city gainQuantity:100 ofResource:SCResourceMaize];
+        [self.city gainQuantity:100 ofResource:SCResourceWood];
+        [self.city gainQuantity:100 ofResource:SCResourceFish];
+        [self.city gainQuantity:100 ofResource:SCResourceStone];
+        [self.city gainQuantity:100 ofResource:SCResourceFaith];
     }];
     
     [[[self rac_signalForSelector:@selector(viewWillAppear:)] take:1] subscribeNext:^(id x) {

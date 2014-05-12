@@ -98,14 +98,8 @@
     city.world = world;
     city.shelter = 50;
     [world tileAt:SCPosition.origin].foreground = [[SCTemple alloc] initWithCity:city resources:[RACSequence empty] args:nil];
-    [city gainQuantity:100 ofResource:SCResourceLabor];
-    [city gainQuantity:100 ofResource:SCResourceMeat];
-    [city gainQuantity:100 ofResource:SCResourceMaize];
-    [city gainQuantity:100 ofResource:SCResourceWood];
-    [city gainQuantity:100 ofResource:SCResourceFish];
-    [city gainQuantity:100 ofResource:SCResourceStone];
-    [city gainQuantity:100 ofResource:SCResourcePeople];
-    [city gainQuantity:100 ofResource:SCResourceFaith];
+    [city gainQuantity:50 ofResource:SCResourceLabor];
+    [city gainQuantity:50 ofResource:SCResourcePeople];
     return city;
 }
 
