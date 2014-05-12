@@ -186,8 +186,6 @@ static NSDictionary *foregroundDisplayInfo;
         selectedTileView.selected = YES;
         [selectedTileView.superview bringSubviewToFront:selectedTileView];
     } start:self.selectedTile];
-    
-    [self scrollToTile:[self.city.world tileAt:SCPosition.origin]];
 }
 
 - (RACSignal *)paddedContentSize {
@@ -684,7 +682,7 @@ static NSDictionary *foregroundDisplayInfo;
     @weakify(self);
     [[tileView rac_signalForControlEvents:UIControlEventTouchUpInside] subscribeNext:^(id x) {
         @strongify(self);
-        [self scrollToTile:tile];
+        [self scrollToTile:tile animated:YES];
     }];
     
     UILabel *nameLabel = [[UILabel alloc] initWithFrame:CGRectMake(0, APOTHEM * 2, RADIUS * 2, APOTHEM)];
@@ -757,6 +755,8 @@ static NSDictionary *foregroundDisplayInfo;
 - (void)viewWillAppear:(BOOL)animated {
     [super viewWillAppear:animated];
     self.unobscuredFrame = self.view.bounds;
+    [self centerCanvas];
+    [self scrollToTile:[self.city.world tileAt:SCPosition.origin] animated:NO];
 }
 
 - (void)viewDidAppear:(BOOL)animated {
@@ -920,10 +920,6 @@ static NSDictionary *foregroundDisplayInfo;
         [self.city gainQuantity:100 ofResource:SCResourceStone];
         [self.city gainQuantity:100 ofResource:SCResourceFaith];
     }];
-    
-    [[[self rac_signalForSelector:@selector(viewWillAppear:)] take:1] subscribeNext:^(id x) {
-        [self scrollToTile:[self.world tileAt:[SCPosition origin]]];
-    }];
 }
 
 - (void)showWallOfTextModalWithTitle:(NSString *)title pages:(NSArray *)pages {
@@ -975,10 +971,11 @@ static NSDictionary *foregroundDisplayInfo;
     }];
 }
 
-- (void)scrollToTile:(SCTile *)tile {
+- (void)scrollToTile:(SCTile *)tile animated:(BOOL)animated {
     UIView *tileView = [self tileViewForTile:tile];
-    CGRect rect = [self.scrollView.contentView convertRect:tileView.frame fromView:tileView.superview];
-    [self.scrollView zoomToRect:rect animated:YES];
+    CGRect rect = [self.scrollView convertRect:tileView.frame
+                                      fromView:tileView.superview];
+    [self.scrollView zoomToRect:rect animated:animated];
 }
 
 - (CGPoint)centerForPosition:(SCPosition *)position {
