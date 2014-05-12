@@ -860,7 +860,8 @@ static NSDictionary *foregroundDisplayInfo;
                                        @(SCResourceMaize),
                                        @(SCResourceMeat),
                                        @(SCResourceWood),
-                                       @(SCResourceStone)]) {
+                                       @(SCResourceStone),
+                                       @(SCResourceFaith)]) {
         SCResource resource = resourceNumber.unsignedIntegerValue;
         NSUInteger current = [self.city currentQuantityOfResource:resource];
         [[[[self.city quantityOfResource:resource] combinePreviousWithStart:@(current) reduce:^id(NSNumber *before, NSNumber *after) {
