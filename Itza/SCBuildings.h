@@ -16,6 +16,7 @@
 @end
 
 @interface SCFarm : SCBuilding <SCResourceOwner>
+
 @end
 
 @interface SCLumberYard : SCBuilding

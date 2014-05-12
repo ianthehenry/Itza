@@ -9,7 +9,25 @@
 #import "SCForeground.h"
 #import "SCTile.h"
 
+@interface SCForeground ()
+
+@property (nonatomic, assign) BOOL initialized;
+
+@end
+
 @implementation SCForeground
+
+- (id)initWithArgs:(NSDictionary *)args {
+    if (self = [super init]) {
+        [self initalize:args];
+    }
+    return self;
+}
+
+- (void)initalize:(NSDictionary *)args {
+    NSAssert(!self.initialized, @"initialize invoked twice!");
+    self.initialized = YES;
+}
 
 - (void)iterate {}
 

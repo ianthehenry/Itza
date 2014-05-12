@@ -13,8 +13,12 @@
 
 @interface SCForeground : NSObject
 
+- (id)initWithArgs:(NSDictionary *)args;
 @property (nonatomic, weak) SCTile *tile;
 - (void)iterate;
+
+// protected!
+- (void)initalize:(NSDictionary *)args;
 
 @end
 

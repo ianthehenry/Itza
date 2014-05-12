@@ -328,9 +328,9 @@ static NSDictionary *foregroundDisplayInfo;
                 return @[button(@"Wait", @"You can't do anything in the summer.")];
             case SCSeasonAutumn:
                 return @[[SCButtonDescription buttonWithText:@"Reap" handler:^{
-                    [self showCompoundModalWithInputs:@[RACTuplePack(@(SCResourceLabor), @2, self.city),
-                                                        RACTuplePack(@(SCResourceMaize), @1, farm)].rac_sequence
-                                              outputs:@[RACTuplePack(@(SCResourceMaize), @3, @6, self.city)].rac_sequence
+                    [self showCompoundModalWithInputs:@[RACTuplePack(@(SCResourceLabor), @1, self.city),
+                                                        RACTuplePack(@(SCResourceMaize), @3, farm)].rac_sequence
+                                              outputs:@[RACTuplePack(@(SCResourceMaize), @3, @3, self.city)].rac_sequence
                                                 title:@"Harvest Maize"];
                 }]];
             case SCSeasonWinter:
@@ -716,12 +716,17 @@ static NSDictionary *foregroundDisplayInfo;
                 return @([current isEqual:max]);
             }];
             
-            RACSignal *completeTextSignal = [RACSignal return:@""];
+            RACSignal *completeTextSignal = [RACSignal return:nil];
             
             if ([building isKindOfClass:SCHouse.class]) {
                 SCHouse *house = (SCHouse *)building;
                 completeTextSignal = [house.quantityOfShelter map:^(NSNumber *shelter) {
                     return [NSString stringWithFormat:@"%@ shelter", shelter];
+                }];
+            } else if ([building isKindOfClass:SCFarm.class]) {
+                SCFarm *farm = (SCFarm *)building;
+                completeTextSignal = [[farm quantityOfResource:SCResourceMaize] map:^(NSNumber *maize) {
+                    return [NSString stringWithFormat:@"%@ maize", maize];
                 }];
             }
             

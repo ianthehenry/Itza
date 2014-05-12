@@ -16,8 +16,6 @@
 @property (nonatomic, assign, readwrite) NSUInteger woodPerStep;
 @property (nonatomic, assign, readwrite) NSUInteger stonePerStep;
 
-@property (nonatomic, assign) BOOL initialized;
-
 @end
 
 static NSUInteger gcd(NSUInteger a, NSUInteger b) {
@@ -45,7 +43,7 @@ static NSUInteger gcd(NSUInteger a, NSUInteger b) {
 @implementation SCBuilding
 
 - (instancetype)initWithCity:(SCCity *)city resources:(RACSequence *)resources args:(NSDictionary *)args {
-    if (self = [super init]) {
+    if (self = [super initWithArgs:args]) {
         _city = city;
         NSUInteger stepCount = 0;
         for (RACTuple *tuple in resources) {
@@ -55,7 +53,6 @@ static NSUInteger gcd(NSUInteger a, NSUInteger b) {
             return RACTuplePack(resource, @(quantity.unsignedIntegerValue / stepCount));
         }];
         [self setCapacity:stepCount forResource:SCResourceConstruction];
-        [self initalize:args];
         
         @weakify(self);
         [[[[self unusedCapacityForResource:SCResourceConstruction] filter:^BOOL(NSNumber *number) {
@@ -69,11 +66,6 @@ static NSUInteger gcd(NSUInteger a, NSUInteger b) {
 }
 
 - (void)didComplete {
-}
-
-- (void)initalize:(NSDictionary *)args {
-    NSAssert(!self.initialized, @"initialize invoked twice!");
-    self.initialized = YES;
 }
 
 - (BOOL)isComplete {

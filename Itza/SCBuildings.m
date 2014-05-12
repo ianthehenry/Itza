@@ -18,6 +18,20 @@
 
 @implementation SCFarm
 
+- (void)iterate {
+    [super iterate];
+    if (self.tile.world.season != SCSeasonAutumn) {
+        return;
+    }
+    NSUInteger bonusMaize = 0;
+    NSUInteger times = [self currentQuantityOfResource:SCResourceMaize];
+    for (NSUInteger i = 0; i < times; i++) {
+        bonusMaize += arc4random_uniform(2);
+    }
+    [self setCapacity:([self currentQuantityOfResource:SCResourceMaize] + bonusMaize) forResource:SCResourceMaize];
+    [self gainQuantity:bonusMaize ofResource:SCResourceMaize];
+}
+
 - (void)initalize:(NSDictionary *)args {
     [super initalize:args];
     [self setCapacity:[args[@"capacity"] unsignedIntegerValue] forResource:SCResourceMaize];

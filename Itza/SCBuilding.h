@@ -19,7 +19,6 @@
 - (instancetype)initWithCity:(SCCity *)city resources:(RACSequence *)resources args:(NSDictionary *)args;
 
 // Protected methods...
-- (void)initalize:(NSDictionary *)args;
 - (void)didComplete;
 
 @end
