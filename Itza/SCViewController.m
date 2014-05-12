@@ -807,7 +807,7 @@ static NSDictionary *foregroundDisplayInfo;
         self.scrollView.zoomScale = currentZoomScale;
     }];
     
-    self.city = [SCCity cityWithWorld:[SCWorld worldWithRadius:3]];
+    self.city = [SCCity cityWithWorld:[SCWorld worldWithRadius:2]];
     [self setupGrid];
     [self.view layoutIfNeeded];
     
