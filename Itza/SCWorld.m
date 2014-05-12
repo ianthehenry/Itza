@@ -67,14 +67,12 @@
 - (SCForeground *)randomForeground {
     switch (arc4random_uniform(10)) {
         case 0: case 1: case 2: {
-            SCForest *forest = [[SCForest alloc] init];
-            [forest gainQuantity:(75 + arc4random_uniform(51)) ofResource:SCResourceWood];
-            return forest;
+            return [[SCForest alloc] initWithArgs:@{ @"wood": @(40 + arc4random_uniform(31)) }];
         }
         case 3: case 4:
-            return [[SCRiver alloc] init];
+            return [[SCRiver alloc] initWithArgs:nil];
         default:
-            return [[SCGrass alloc] init];
+            return [[SCGrass alloc] initWithArgs:nil];
     }
 }
 

@@ -17,6 +17,10 @@
 
 @implementation SCForeground
 
+- (id)init {
+    @throw [NSException exceptionWithName:NSInternalInconsistencyException reason:@"you must use initWithArgs:" userInfo:nil];
+}
+
 - (id)initWithArgs:(NSDictionary *)args {
     if (self = [super init]) {
         [self initalize:args];
@@ -37,6 +41,18 @@
 @end
 
 @implementation SCForest
+
+- (void)initalize:(NSDictionary *)args {
+    [super initalize:args];
+    [self gainQuantity:[args[@"wood"] unsignedIntegerValue] ofResource:SCResourceWood];
+    @weakify(self);
+    [[[[self quantityOfResource:SCResourceWood] filter:^BOOL(NSNumber *wood) {
+        return wood.unsignedIntegerValue == 0;
+    }] take:1] subscribeNext:^(id x) {
+        @strongify(self);
+        self.tile.foreground = [[SCGrass alloc] initWithArgs:nil];
+    }];
+}
 
 + (NSUInteger)baseLaborPerTree {
     return 3;
