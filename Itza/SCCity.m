@@ -100,6 +100,8 @@
     [world tileAt:SCPosition.origin].foreground = [[SCTemple alloc] initWithCity:city resources:[RACSequence empty] args:nil];
     [city gainQuantity:50 ofResource:SCResourceLabor];
     [city gainQuantity:50 ofResource:SCResourcePeople];
+    [city gainQuantity:10 ofResource:SCResourceWood];
+    [city gainQuantity:10 ofResource:SCResourceFaith];
     return city;
 }
 
