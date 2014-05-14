@@ -61,9 +61,9 @@ static NSDictionary *foregroundDisplayInfo;
     UIColor *blueColor = [UIColor colorWithHue:0.66 saturation:0.9 brightness:0.6 alpha:1];
     UIColor *yellowColor = [UIColor colorWithHue:0.15 saturation:1.0 brightness:0.7 alpha:1];
     
-    NSString *houseDescription = [NSString stringWithFormat:@"Provides %u shelter, +%u more for each adjacent house", SCHouse.baseShelter, SCHouse.shelterPerNeighbor];
-    NSString *fisheryDescription = [NSString stringWithFormat:@"Adjacent river tiles yield +%u fish minimum", SCFishery.minFishAdjustment];
-    NSString *lumberYardDescription = [NSString stringWithFormat:@"Adjacents forests require -%u labor per tree to chop", SCLumberYard.laborAdjustment];
+    NSString *houseDescription = [NSString stringWithFormat:@"Provides %u shelter, +%u more for each adjacent house", (unsigned int)SCHouse.baseShelter, (unsigned int)SCHouse.shelterPerNeighbor];
+    NSString *fisheryDescription = [NSString stringWithFormat:@"Adjacent river tiles yield +%u fish minimum", (unsigned int)SCFishery.minFishAdjustment];
+    NSString *lumberYardDescription = [NSString stringWithFormat:@"Adjacents forests require -%u labor per tree to chop", (unsigned int)SCLumberYard.laborAdjustment];
     
     foregroundDisplayInfo =
     @{SCGrass.class.pointerValue: RACTuplePack(@"Grass", @"", greenColor, @"You can build here"),
@@ -260,7 +260,7 @@ static NSDictionary *foregroundDisplayInfo;
                      UIAlertView *alertView;
                      if ([self.city currentQuantityOfResource:SCResourceFaith] >= cost) {
                          alertView = [[UIAlertView alloc] initWithTitle:@"Grow"
-                                                                message:[NSString stringWithFormat:@"Spend %u faith to expand your sight?", cost]
+                                                                message:[NSString stringWithFormat:@"Spend %u faith to expand your sight?", (unsigned int)cost]
                                                                delegate:nil
                                                       cancelButtonTitle:@"No"
                                                       otherButtonTitles:@"Yes", nil];
@@ -273,7 +273,7 @@ static NSDictionary *foregroundDisplayInfo;
                          }];
                      } else {
                          alertView = [[UIAlertView alloc] initWithTitle:@"Not Enough Faith"
-                                                                message:[NSString stringWithFormat:@"You need %u faith to expand again", cost]
+                                                                message:[NSString stringWithFormat:@"You need %u faith to expand again", (unsigned int)cost]
                                                                delegate:nil
                                                       cancelButtonTitle:@"OK"
                                                       otherButtonTitles:nil];
@@ -843,22 +843,65 @@ static NSDictionary *foregroundDisplayInfo;
                           @(SCSeasonWinter): @"Winter"};
     }
     
-    RAC(infoLabel, text) =
+    NSAttributedString *(^colored)(RACTuple *tuple, UIColor *color) = ^(RACTuple *tuple, UIColor *color) {
+        return [[NSAttributedString alloc] initWithString:[NSString stringWithFormat:@"%@%@", tuple[0], tuple[1]]
+                                               attributes:@{NSFontAttributeName: [UIFont fontWithName:@"Menlo" size:13],
+                                                            NSForegroundColorAttributeName: color}];
+        
+    };
+    
+    NSAttributedString *(^join)(NSArray *components, NSString *joiner) = ^(NSArray *components, NSString *joiner) {
+        NSMutableAttributedString *whole = [[NSMutableAttributedString alloc] init];
+        for (NSUInteger i = 0; i < components.count; i++) {
+            [whole appendAttributedString:components[i]];
+            if (i != components.count - 1) {
+                [whole appendAttributedString:[[NSAttributedString alloc] initWithString:joiner]];
+            }
+        }
+        return whole;
+    };
+    
+    RAC(infoLabel, attributedText) =
     [RACSignal combineLatest:@[RACObserve(self.world, turn),
                                [self.city quantityOfResource:SCResourcePeople],
                                [self.city quantityOfShelter],
-                               [self.city quantityOfFood],
+                               [self.city quantityOfResource:SCResourceFish],
+                               [self.city quantityOfResource:SCResourceMaize],
+                               [self.city quantityOfResource:SCResourceMeat],
                                [self.city quantityOfResource:SCResourceLabor],
                                [self.city quantityOfResource:SCResourceWood],
                                [self.city quantityOfResource:SCResourceStone],
                                [self.city quantityOfResource:SCResourceFaith],
                                ]
-                      reduce:^(NSNumber *turn, NSNumber *population, NSNumber *shelter, NSNumber *food, NSNumber *labor, NSNumber *wood, NSNumber *stone, NSNumber *faith) {
-                          NSUInteger year = turn.unsignedIntegerValue / 4;
-                          NSString *season = seasonNameMap[@(self.world.season)];
-                          NSString *title = [NSString stringWithFormat:@"%@ - Year %@", season, @(year)];
-                          NSString *body = [NSString stringWithFormat:@"%@l %@p %@sh %@f %@w %@s %@F", labor, population, shelter, food, wood, stone, faith];
-                          return [@[title, body] componentsJoinedByString:@"\n"];
+                      reduce:^(NSNumber *turn,
+                               NSNumber *population,
+                               NSNumber *shelter,
+                               NSNumber *fish,
+                               NSNumber *maize,
+                               NSNumber *meat,
+                               NSNumber *labor,
+                               NSNumber *wood,
+                               NSNumber *stone,
+                               NSNumber *faith) {
+                          // NSUInteger year = turn.unsignedIntegerValue / 4;
+                          // NSString *season = seasonNameMap[@(self.world.season)];
+                          
+                          NSUInteger food = fish.unsignedIntegerValue + maize.unsignedIntegerValue + meat.unsignedIntegerValue;
+                          
+                          NSAttributedString *first = join(@[colored(RACTuplePack(labor, @"lbr"), UIColor.blackColor),
+                                                             colored(RACTuplePack(population, @"p"), UIColor.blackColor),
+                                                             colored(RACTuplePack(shelter, @"sh"), shelter.unsignedIntegerValue < population.unsignedIntegerValue ? UIColor.redColor : UIColor.blackColor),
+                                                             colored(RACTuplePack(@(food), @"food"), food < population.unsignedIntegerValue ? UIColor.redColor : UIColor.blackColor),
+                                                             ], @" ");
+
+                          NSAttributedString *second = join(@[colored(RACTuplePack(meat, @"mt"), UIColor.blackColor),
+                                                              colored(RACTuplePack(fish, @"fsh"), UIColor.blackColor),
+                                                              colored(RACTuplePack(maize, @"mz"), UIColor.blackColor),
+                                                              colored(RACTuplePack(wood, @"wd"), UIColor.blackColor),
+                                                              colored(RACTuplePack(stone, @"stn"), UIColor.blackColor),
+                                                              colored(RACTuplePack(faith, @"fth"), UIColor.blackColor),
+                                                              ], @" ");
+                          return join(@[first, second], @"\n");
                       }];
     
     for (NSNumber *resourceNumber in @[@(SCResourceFish),
